@@ -1,0 +1,8 @@
+# Ignore files
+/build/
+*.class
+.gradle/
+local.properties
+.idea/
+*.iml
+.DS_Store
