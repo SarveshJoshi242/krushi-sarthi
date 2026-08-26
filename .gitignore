@@ -10,3 +10,6 @@ local.properties
 # Environment variables
 .env
 .env.local
+
+android/build/
+android/app/build/
