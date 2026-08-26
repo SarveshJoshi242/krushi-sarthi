@@ -16,14 +16,10 @@ data class CropListing(val id: Int, val name: String, val quantity: String, val 
 @Composable
 fun MarketplaceScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToSell: () -> Unit
+    onNavigateToSell: () -> Unit,
+    viewModel: MarketplaceViewModel
 ) {
-    // Dummy data for now
-    val listings = listOf(
-        CropListing(1, "Wheat", "100 Quintals", "₹2,125 / Quintal", "Pune, MH"),
-        CropListing(2, "Rice (Basmati)", "50 Quintals", "₹3,500 / Quintal", "Karnal, HR"),
-        CropListing(3, "Cotton", "200 Quintals", "₹6,000 / Quintal", "Nagpur, MH")
-    )
+    val listingsState by viewModel.listings.collectAsState()
 
     Column(
         modifier = Modifier
@@ -55,7 +51,7 @@ fun MarketplaceScreen(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(listings) { listing ->
+            items(listingsState) { listing ->
                 CropListingCard(listing)
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -69,18 +65,18 @@ fun MarketplaceScreen(
 }
 
 @Composable
-fun CropListingCard(listing: CropListing) {
+fun CropListingCard(listing: com.krushiadhaar.app.data.local.entity.MarketplaceListingEntity) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(listing.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(listing.price, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                Text(listing.cropName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("₹${listing.pricePerUnit} / ${listing.unit}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Quantity: ${listing.quantity}")
+            Text("Quantity: ${listing.availableQuantity} ${listing.unit}")
             Text("Location: ${listing.location}")
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = { /* TODO: Buying flow */ }, modifier = Modifier.fillMaxWidth()) {

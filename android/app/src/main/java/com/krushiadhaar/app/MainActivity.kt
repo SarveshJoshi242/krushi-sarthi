@@ -1,5 +1,4 @@
 package com.krushiadhaar.app
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,17 +12,19 @@ import com.krushiadhaar.app.ui.theme.KrushiAdhaarTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        val app = application as KrushiAdhaarApplication
+        val factory = ViewModelFactory(app)
+
         setContent {
             KrushiAdhaarTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    AppNavigation(factory)
                 }
             }
         }
     }
 }
-
-

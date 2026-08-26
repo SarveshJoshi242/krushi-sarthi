@@ -103,7 +103,8 @@ fun MainScreen(rootNavController: NavHostController) {
             composable(BottomNavItem.Market.route) {
                 MarketplaceScreen(
                     onNavigateBack = { bottomNavController.popBackStack() },
-                    onNavigateToSell = { bottomNavController.navigate("sell_crop") }
+                    onNavigateToSell = { bottomNavController.navigate("sell_crop") },
+                    viewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = factory)
                 )
             }
             composable(BottomNavItem.Profile.route) {
@@ -115,6 +116,7 @@ fun MainScreen(rootNavController: NavHostController) {
             
             // Sub-routes within the main flow
             composable("disease") {
+                val vm: com.krushiadhaar.app.presentation.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = factory)
                 DiseaseDetectionScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
             composable("management") {
