@@ -1,88 +1,76 @@
-package com.krushiadhaar.app
+﻿package com.krushiadhaar.app
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.krushiadhaar.app.profile.ProfileScreen
-import com.krushiadhaar.app.settings.SettingsScreen
+import com.krushiadhaar.app.disease.DiseaseDetectionScreen
+import com.krushiadhaar.app.management.CropManagementScreen
+import com.krushiadhaar.app.management.ExpenseCalculatorScreen
 import com.krushiadhaar.app.marketplace.MarketplaceScreen
 import com.krushiadhaar.app.marketplace.SellCropScreen
+import com.krushiadhaar.app.profile.ProfileScreen
 import com.krushiadhaar.app.documents.DocumentsScreen
-import com.krushiadhaar.app.management.CropManagementScreen
-import com.krushiadhaar.app.disease.DiseaseDetectionScreen
+import com.krushiadhaar.app.settings.SettingsScreen
+import com.krushiadhaar.app.ui.theme.*
 
-sealed class BottomNavItem(val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String) {
-    object Home : BottomNavItem("home_tab", Icons.Default.Home, "Home")
+sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
+    object Home   : BottomNavItem("home_tab", Icons.Default.Home, "Home")
     object Market : BottomNavItem("market_tab", Icons.Default.ShoppingCart, "Market")
-    object Profile : BottomNavItem("profile_tab", Icons.Default.Person, "Profile")
-    object Settings : BottomNavItem("settings_tab", Icons.Default.Settings, "Settings")
+    object AITool : BottomNavItem("aitool_tab", Icons.Default.Psychology, "AI tool")
+    object Profile: BottomNavItem("profile_tab", Icons.Default.Person, "Profile")
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(rootNavController: NavHostController) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val items = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Market,
-        BottomNavItem.Profile,
-        BottomNavItem.Settings
-    )
-
-    val isTopLevelDestination = items.any { it.route == currentRoute }
+    val items = listOf(BottomNavItem.Home, BottomNavItem.Market, BottomNavItem.AITool, BottomNavItem.Profile)
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Krushi-Adhaar") },
-                navigationIcon = {
-                    if (!isTopLevelDestination && currentRoute != null) {
-                        IconButton(onClick = { bottomNavController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(containerColor = Color.White) {
                 items.forEach { item ->
                     NavigationBarItem(
                         icon = { Icon(item.icon, contentDescription = item.label) },
-                        label = { Text(item.label) },
+                        label = {
+                            Text(
+                                text = item.label,
+                                fontSize = 11.sp,
+                                fontWeight = if (currentRoute == item.route) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        },
                         selected = currentRoute == item.route,
                         onClick = {
                             bottomNavController.navigate(item.route) {
-                                popUpTo(bottomNavController.graph.startDestinationId) {
-                                    saveState = true
-                                }
+                                popUpTo(bottomNavController.graph.startDestinationId) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = GreenPrimary,
+                            selectedTextColor = GreenPrimary,
+                            indicatorColor = GreenSurface,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        )
                     )
                 }
             }
@@ -96,36 +84,38 @@ fun MainScreen(rootNavController: NavHostController) {
             composable(BottomNavItem.Home.route) {
                 HomeScreen(
                     onNavigateToDiseaseDetection = { bottomNavController.navigate("disease") },
-                    onNavigateToManagement = { bottomNavController.navigate("management") },
-                    onNavigateToDocuments = { bottomNavController.navigate("documents") }
+                    onNavigateToManagement      = { bottomNavController.navigate("management") },
+                    onNavigateToDocuments       = { bottomNavController.navigate("documents") },
+                    onNavigateToExpense         = { bottomNavController.navigate("expense") }
                 )
             }
             composable(BottomNavItem.Market.route) {
                 MarketplaceScreen(
-                    onNavigateBack = { bottomNavController.popBackStack() },
+                    onNavigateBack  = { bottomNavController.popBackStack() },
                     onNavigateToSell = { bottomNavController.navigate("sell_crop") }
                 )
+            }
+            composable(BottomNavItem.AITool.route) {
+                DiseaseDetectionScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
-            composable(BottomNavItem.Settings.route) {
-                SettingsScreen(onNavigateBack = { bottomNavController.popBackStack() })
-            }
-            
-            // Sub-routes within the main flow
             composable("disease") {
                 DiseaseDetectionScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
             composable("management") {
                 CropManagementScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
+            composable("expense") {
+                ExpenseCalculatorScreen(onNavigateBack = { bottomNavController.popBackStack() })
+            }
             composable("documents") {
                 DocumentsScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
             composable("sell_crop") {
                 SellCropScreen(
-                    onNavigateBack = { bottomNavController.popBackStack() },
+                    onNavigateBack  = { bottomNavController.popBackStack() },
                     onSubmitSuccess = { bottomNavController.popBackStack() }
                 )
             }

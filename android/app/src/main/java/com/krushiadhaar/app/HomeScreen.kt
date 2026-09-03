@@ -1,102 +1,143 @@
-package com.krushiadhaar.app
+﻿package com.krushiadhaar.app
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.krushiadhaar.app.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToDiseaseDetection: () -> Unit,
     onNavigateToManagement: () -> Unit,
-    onNavigateToDocuments: () -> Unit
+    onNavigateToDocuments: () -> Unit,
+    onNavigateToExpense: () -> Unit = {}
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Welcome back, Farmer!",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        Text(
-            text = "What would you like to do today?",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.weight(1f)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppBackground)
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Top Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            item {
-                DashboardGridCard("Disease Detection", Icons.Default.Warning, onNavigateToDiseaseDetection)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Welcome back,", fontSize = 14.sp, color = TextSecondary)
+                Text(text = "Farmer", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = GreenPrimary)
             }
-            item {
-                DashboardGridCard("Crop Management", Icons.Default.Build, onNavigateToManagement)
+            IconButton(onClick = {}) {
+                Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextSecondary)
             }
-            item {
-                DashboardGridCard("Documents", Icons.Default.List, onNavigateToDocuments)
-            }
-            item {
-                DashboardGridCard("Weather Updates", Icons.Default.Info, { /* TODO */ })
+            IconButton(onClick = {}) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = TextSecondary)
             }
         }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Weather Card
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Brush.horizontalGradient(listOf(GreenPrimary, GreenDark)))
+                .padding(18.dp)
+        ) {
+            Column {
+                Text(text = "CURRENT WEATHER", fontSize = 10.sp, color = Color.White.copy(alpha = 0.75f), letterSpacing = 1.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "28\u00b0C", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.weight(1f))
+                    Icon(Icons.Default.Cloud, contentDescription = "Cloud", tint = Color.White, modifier = Modifier.size(40.dp))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row {
+                    WeatherChip(label = "75%", sublabel = "Humidity")
+                    Spacer(modifier = Modifier.width(12.dp))
+                    WeatherChip(label = "Light Rain", sublabel = "expected")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(text = "Quick Actions", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary, modifier = Modifier.padding(horizontal = 16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83C\uDF3E", title = "Pitch Crop", subtitle = "Market", onClick = {})
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83D\uDCF7", title = "Disease Scan", subtitle = "AI Tool", onClick = onNavigateToDiseaseDetection)
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83D\uDCE6", title = "Inventory", subtitle = "Resources", onClick = onNavigateToManagement)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83E\uDDEE", title = "Expenses", subtitle = "Calculator", onClick = onNavigateToExpense)
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "Active Listings", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+            TextButton(onClick = {}) { Text(text = "View All", fontSize = 13.sp, color = GreenPrimary, fontWeight = FontWeight.SemiBold) }
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
 @Composable
-fun DashboardGridCard(title: String, icon: ImageVector, onClick: () -> Unit) {
-    Card(
+private fun WeatherChip(label: String, sublabel: String) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White.copy(alpha = 0.2f))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
+        Column {
+            Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = sublabel, fontSize = 10.sp, color = Color.White.copy(alpha = 0.75f))
         }
     }
 }
 
-
-
-
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QuickActionCard(modifier: Modifier = Modifier, emoji: String, title: String, subtitle: String, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(GreenSurface), contentAlignment = Alignment.Center) {
+                Text(text = emoji, fontSize = 22.sp)
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+            Text(text = subtitle, fontSize = 11.sp, color = TextSecondary)
+        }
+    }
+}
