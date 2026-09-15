@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
 }
 
 android {
@@ -13,7 +14,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "BASE_URL", ""http://10.0.2.2:8080/"")
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
     }
 
     buildTypes {
@@ -29,7 +30,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    buildFeatures { buildConfig = true
+    buildFeatures {
+        buildConfig = true
         compose = true
     }
     composeOptions {
@@ -65,7 +67,7 @@ dependencies {
     val room_version = "2.6.0"
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
-    // annotationProcessor("androidx.room:room-compiler:$room_version") // ksp preferred normally but apt is okay
+    kapt("androidx.room:room-compiler:$room_version")
 }
 
 

@@ -17,6 +17,6 @@ class MarketplaceRepository(private val api: MarketplaceApi, private val dao: Ma
     }
 
     fun getAllListings(): Flow<List<MarketplaceListingEntity>> {
-        return dao.getAllListings()
+        return dao.getListings()
     }
 }
