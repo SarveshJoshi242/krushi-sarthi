@@ -37,7 +37,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    @Value("")
+    @Value("${JWT_REFRESH_EXPIRATION:604800000}")
     private long refreshExpiration;
 
     @Transactional

@@ -35,7 +35,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Value("")
+    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}")
     private String[] allowedOrigins;
 
     @Bean
