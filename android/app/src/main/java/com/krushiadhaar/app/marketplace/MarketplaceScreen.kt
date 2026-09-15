@@ -1,4 +1,4 @@
-﻿package com.krushiadhaar.app.marketplace
+package com.krushiadhaar.app.marketplace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -40,11 +40,29 @@ private val sampleListings = listOf(
 @Composable
 fun MarketplaceScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToSell: () -> Unit
+    onNavigateToSell: () -> Unit,
+    viewModel: MarketplaceViewModel? = null
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filters = listOf("Sort by Price", "High Quality", "Bulk Quantity")
     var selectedFilter by remember { mutableStateOf("Sort by Price") }
+
+    val listingsState = viewModel?.listings?.collectAsState()?.value ?: emptyList()
+    val displayListings = if (listingsState.isNotEmpty()) {
+        listingsState.map {
+            CropListing(
+                name = it.cropName,
+                farmer = "Verified Farmer",
+                location = "Local Market",
+                quantityTons = it.quantityAvailable.toInt(),
+                pricePerTon = it.pricePerUnit.toInt(),
+                emoji = "\uD83C\uDF3E",
+                emojiBg = Color(0xFFE8F5E9)
+            )
+        }
+    } else {
+        sampleListings
+    }
 
     Scaffold(
         topBar = {
@@ -121,7 +139,7 @@ fun MarketplaceScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(sampleListings.filter {
+                items(displayListings.filter {
                     searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true)
                 }) { listing ->
                     ListingCard(listing = listing, onClick = {})

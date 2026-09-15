@@ -1,4 +1,4 @@
-﻿package com.krushiadhaar.app
+package com.krushiadhaar.app
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -28,6 +28,8 @@ import com.krushiadhaar.app.documents.DocumentsScreen
 import com.krushiadhaar.app.settings.SettingsScreen
 import com.krushiadhaar.app.ui.theme.*
 
+import com.krushiadhaar.app.ViewModelFactory
+
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home   : BottomNavItem("home_tab", Icons.Default.Home, "Home")
     object Market : BottomNavItem("market_tab", Icons.Default.ShoppingCart, "Market")
@@ -36,7 +38,10 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 }
 
 @Composable
-fun MainScreen(rootNavController: NavHostController) {
+fun MainScreen(
+    rootNavController: NavHostController,
+    factory: ViewModelFactory? = null
+) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -92,7 +97,8 @@ fun MainScreen(rootNavController: NavHostController) {
             composable(BottomNavItem.Market.route) {
                 MarketplaceScreen(
                     onNavigateBack  = { bottomNavController.popBackStack() },
-                    onNavigateToSell = { bottomNavController.navigate("sell_crop") }
+                    onNavigateToSell = { bottomNavController.navigate("sell_crop") },
+                    viewModel = factory?.let { androidx.lifecycle.viewmodel.compose.viewModel(factory = it) }
                 )
             }
             composable(BottomNavItem.AITool.route) {
