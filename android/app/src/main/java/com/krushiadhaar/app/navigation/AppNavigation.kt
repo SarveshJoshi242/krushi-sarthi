@@ -4,18 +4,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.krushiadhaar.app.auth.LoginScreen
-import com.krushiadhaar.app.auth.RegisterScreen
+import com.krushiadhaar.app.auth.*
 import com.krushiadhaar.app.MainScreen
-import com.krushiadhaar.app.onboarding.OnboardingScreen
 import com.krushiadhaar.app.ViewModelFactory
 import com.krushiadhaar.app.presentation.MainViewModel
 import com.krushiadhaar.app.domain.model.AuthenticationState
 
 sealed class Screen(val route: String) {
-    object Onboarding : Screen("onboarding")
-    object Login : Screen("login")
-    object Register : Screen("register")
+    object Splash : Screen("splash")
+    object Language : Screen("language")
+    object Step1 : Screen("step1")
+    object Step2 : Screen("step2")
+    object Analysis : Screen("analysis")
     object Main : Screen("main")
 }
 
@@ -26,43 +26,56 @@ fun AppNavigation(factory: ViewModelFactory) {
     val authState by mainViewModel.authState.collectAsState()
 
     if (authState == AuthenticationState.Loading) {
-        // Show Splash/Loading
         return
     }
 
-    val startRoute = if (authState == AuthenticationState.Authenticated) Screen.Main.route else Screen.Onboarding.route
+    val startRoute = if (authState == AuthenticationState.Authenticated) Screen.Main.route else Screen.Splash.route
+
+    LaunchedEffect(authState) {
+        if (authState == AuthenticationState.Unauthenticated && navController.currentDestination?.route != Screen.Splash.route) {
+            navController.navigate(Screen.Splash.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(navController = navController, startDestination = startRoute) {
-        composable(Screen.Onboarding.route) {
-            OnboardingScreen(
-                onNavigateToLogin = { navController.navigate(Screen.Login.route) },
-                onNavigateToRegister = { navController.navigate(Screen.Register.route) }
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onGetStarted = { navController.navigate(Screen.Language.route) }
             )
         }
-        composable(Screen.Login.route) {
-            LoginScreen(
-                viewModel = viewModel(factory = factory),
-                onNavigateToRegister = { navController.navigate(Screen.Register.route) },
-                onLoginSuccess = { 
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
+        composable(Screen.Language.route) {
+            LanguageScreen(
+                onContinue = { navController.navigate(Screen.Step1.route) }
+            )
+        }
+        composable(Screen.Step1.route) {
+            Step1Screen(
+                onNext = { navController.navigate(Screen.Step2.route) },
+                onLoginAsBuyer = {
+                    navController.navigate(Screen.Main.route) { popUpTo(0) }
                 }
             )
         }
-        composable(Screen.Register.route) {
-            RegisterScreen(
-                viewModel = viewModel(factory = factory),
-                onRegisterSuccess = { 
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onNavigateBack = { navController.popBackStack() }
+        composable(Screen.Step2.route) {
+            Step2Screen(
+                onAnalyze = { navController.navigate(Screen.Analysis.route) }
+            )
+        }
+        composable(Screen.Analysis.route) {
+            AnalysisLoaderScreen(
+                onAnalysisComplete = {
+                    navController.navigate(Screen.Main.route) { popUpTo(0) }
+                }
             )
         }
         composable(Screen.Main.route) {
-            MainScreen(rootNavController = navController)
+            MainScreen(
+                rootNavController = navController, 
+                factory = factory,
+                onLogout = { mainViewModel.logout() }
+            )
         }
     }
 }

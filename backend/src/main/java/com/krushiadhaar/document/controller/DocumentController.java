@@ -1,4 +1,4 @@
-package com.krushiadhaar.notification.controller;
+package com.krushiadhaar.document.controller;
 
 import com.krushiadhaar.common.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -11,15 +11,15 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/notifications")
-public class NotificationController {
+@RequestMapping("/api/v1/documents")
+public class DocumentController {
 
     private UUID getUserId() {
         return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getNotifications() {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDocuments() {
         return ResponseEntity.ok(ApiResponse.success(Collections.emptyList()));
     }
 }

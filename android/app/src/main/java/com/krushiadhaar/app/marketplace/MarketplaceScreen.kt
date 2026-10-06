@@ -186,20 +186,66 @@ private fun ListingCard(listing: CropListing, onClick: () -> Unit) {
                     Text(text = "${listing.quantityTons} Tons", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Price", fontSize = 11.sp, color = TextSecondary)
+                    Text(text = "Asking Price", fontSize = 11.sp, color = TextSecondary)
                     Text(text = "\u20B9${listing.pricePerTon.toFormattedString()} / Ton", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = OrangeText)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Market Avg", fontSize = 11.sp, color = TextSecondary)
+                    Text(text = "\u20B9${(listing.pricePerTon * 0.95).toInt().toFormattedString()}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = GreenPrimary)
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = onClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary)
-            ) {
-                Text(text = "Place Order", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            var showChatDialog by remember { mutableStateOf(false) }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { showChatDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3F2FD), contentColor = Color(0xFF1976D2))
+                ) {
+                    Text("Negotiate", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary)
+                ) {
+                    Text("Place Order", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                }
+            }
+            
+            if (showChatDialog) {
+                var message by remember { mutableStateOf("") }
+                AlertDialog(
+                    onDismissRequest = { showChatDialog = false },
+                    title = { Text("Chat with ${listing.farmer}") },
+                    text = { 
+                        Column {
+                            Text("Send a message or propose a price:", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = message,
+                                onValueChange = { message = it },
+                                placeholder = { Text("e.g., Would you accept \u20B9${(listing.pricePerTon * 0.9).toInt()} / Ton?") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showChatDialog = false }) {
+                            Text("Send", color = OrangePrimary)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showChatDialog = false }) {
+                            Text("Cancel", color = TextSecondary)
+                        }
+                    }
+                )
             }
         }
     }

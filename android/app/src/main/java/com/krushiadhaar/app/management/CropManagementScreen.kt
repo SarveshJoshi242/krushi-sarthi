@@ -1,4 +1,4 @@
-﻿package com.krushiadhaar.app.management
+package com.krushiadhaar.app.management
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -40,6 +40,7 @@ private val machinery = listOf(
 @Composable
 fun CropManagementScreen(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showAddDialog by remember { mutableStateOf(false) }
     val tabs = listOf("Consumables", "Machinery")
 
     Scaffold(
@@ -56,7 +57,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = { showAddDialog = true },
                 containerColor = GreenPrimary,
                 contentColor = Color.White,
                 shape = CircleShape,
@@ -67,6 +68,19 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
         },
         containerColor = AppBackground
     ) { innerPadding ->
+        if (showAddDialog) {
+            AlertDialog(
+                onDismissRequest = { showAddDialog = false },
+                title = { Text("Add Item") },
+                text = { Text("Adding inventory items will be available soon.") },
+                confirmButton = {
+                    TextButton(onClick = { showAddDialog = false }) {
+                        Text("OK", color = GreenPrimary)
+                    }
+                }
+            )
+        }
+        
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             TabRow(
                 selectedTabIndex = selectedTab,

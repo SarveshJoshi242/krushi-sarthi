@@ -17,6 +17,7 @@ class KrushiAdhaarApplication : Application() {
     lateinit var farmRepository: com.krushiadhaar.app.data.repository.FarmRepository
     lateinit var diseaseRepository: com.krushiadhaar.app.data.repository.DiseaseRepository
     lateinit var marketplaceRepository: com.krushiadhaar.app.data.repository.MarketplaceRepository
+    lateinit var financeApi: com.krushiadhaar.app.data.remote.api.FinanceApi
 
     override fun onCreate() {
         super.onCreate()
@@ -36,6 +37,8 @@ class KrushiAdhaarApplication : Application() {
         val farmApi = retrofit.create(com.krushiadhaar.app.data.remote.api.FarmApi::class.java)
         val diseaseApi = retrofit.create(com.krushiadhaar.app.data.remote.api.DiseaseApi::class.java)
         val marketplaceApi = retrofit.create(com.krushiadhaar.app.data.remote.api.MarketplaceApi::class.java)
+        val financeApiLocal = retrofit.create(com.krushiadhaar.app.data.remote.api.FinanceApi::class.java)
+        this.financeApi = financeApiLocal
         
         authRepository = AuthRepository(authApi, tokenStorage, database)
         userRepository = UserRepository(userApi)

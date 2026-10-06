@@ -12,4 +12,10 @@ class MainViewModel(private val authRepository: AuthRepository) : ViewModel() {
             authRepository.checkSession()
         }
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
 }

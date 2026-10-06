@@ -13,3 +13,7 @@ local.properties
 
 android/build/
 android/app/build/
+__pycache__/
+*.pyc
+venv/
+.venv/

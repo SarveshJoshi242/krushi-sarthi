@@ -31,7 +31,7 @@ class TokenAuthenticator(
             if (currentToken != null && currentToken != originalToken) {
                 // Token already updated by another thread
                 return response.request.newBuilder()
-                    .header("Authorization", "Bearer ")
+                    .header("Authorization", "Bearer $currentToken")
                     .build()
             }
 
@@ -42,7 +42,7 @@ class TokenAuthenticator(
                 .toRequestBody("application/json".toMediaType())
 
             val refreshRequest = Request.Builder()
-                .url("api/v1/auth/refresh")
+                .url("${BuildConfig.BASE_URL}api/v1/auth/refresh")
                 .post(requestBody)
                 .build()
 
@@ -57,7 +57,7 @@ class TokenAuthenticator(
                         runBlocking { tokenStorage.saveTokens(newTokens.accessToken, newTokens.refreshToken) }
                         
                         return response.request.newBuilder()
-                            .header("Authorization", "Bearer ")
+                            .header("Authorization", "Bearer ${newTokens.accessToken}")
                             .build()
                     }
                 }

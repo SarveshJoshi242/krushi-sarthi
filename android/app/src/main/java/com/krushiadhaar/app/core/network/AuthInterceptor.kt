@@ -17,7 +17,7 @@ class AuthInterceptor(private val tokenStorage: TokenStorage) : Interceptor {
         val token = runBlocking { tokenStorage.getAccessToken() }
         if (token != null) {
             val authenticatedRequest = request.newBuilder()
-                .header("Authorization", "Bearer ")
+                .header("Authorization", "Bearer $token")
                 .build()
             return chain.proceed(authenticatedRequest)
         }

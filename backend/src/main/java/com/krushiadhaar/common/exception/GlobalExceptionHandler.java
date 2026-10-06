@@ -1,5 +1,6 @@
 package com.krushiadhaar.common.exception;
 import com.krushiadhaar.common.response.ApiResponse;
+import com.krushiadhaar.common.response.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -13,19 +14,22 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiResponse<Void>> handleDomainException(DomainException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("code", ex.getErrorCode());
-        error.put("message", ex.getMessage());
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(false, null, new ApiError("400", "Error occurred")));
+                .body(new ApiResponse<>(false, null, new ApiError(ex.getErrorCode(), ex.getMessage())));
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(org.springframework.security.core.AuthenticationException ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>(false, null, new ApiError("UNAUTHORIZED", ex.getMessage())));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("code", "INTERNAL_ERROR");
-        error.put("message", "An unexpected error occurred.");
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, null, new ApiError("400", "Error occurred")));
+                .body(new ApiResponse<>(false, null, new ApiError("INTERNAL_ERROR", ex.getMessage())));
     }
 }
