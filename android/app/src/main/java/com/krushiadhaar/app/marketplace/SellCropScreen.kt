@@ -51,7 +51,33 @@ fun SellCropScreen(
         )
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = onSubmitSuccess, modifier = Modifier.fillMaxWidth()) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        Button(
+            onClick = {
+                if (cropName.isNotBlank() && quantity.isNotBlank() && price.isNotBlank()) {
+                    val qtyInt = quantity.trim().toIntOrNull() ?: 0
+                    val priceInt = price.trim().toIntOrNull() ?: 0
+                    if (qtyInt > 0 && priceInt > 0) {
+                        com.krushiadhaar.app.GlobalMockData.marketplaceListings.add(
+                            com.krushiadhaar.app.marketplace.CropListing(
+                                name = cropName.trim(),
+                                farmer = "You (Farmer)",
+                                location = "Your Farm",
+                                quantityTons = qtyInt,
+                                pricePerTon = priceInt,
+                                emoji = "\uD83C\uDF3E",
+                                emojiBg = androidx.compose.ui.graphics.Color(0xFFE8F5E9)
+                            )
+                        )
+                        android.widget.Toast.makeText(context, "$cropName pitched successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                        onSubmitSuccess()
+                    } else {
+                        android.widget.Toast.makeText(context, "Please enter valid numbers", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }, 
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("List on Marketplace")
         }
         
@@ -61,3 +87,4 @@ fun SellCropScreen(
         }
     }
 }
+

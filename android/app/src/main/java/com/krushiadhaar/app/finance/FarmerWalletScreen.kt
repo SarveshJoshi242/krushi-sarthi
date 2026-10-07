@@ -3,6 +3,8 @@ package com.krushiadhaar.app.finance
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -59,19 +61,55 @@ fun FarmerWalletScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
         ) {
+            // New Wallet Section
+            val balance = com.krushiadhaar.app.GlobalMockData.walletBalance.value
+            val transactions = com.krushiadhaar.app.GlobalMockData.transactions
+            
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = PrimaryGreen)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("Total Balance", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                    Text("₹$balance", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 32.sp)
+                }
+            }
+            
+            if (transactions.isNotEmpty()) {
+                Text(
+                    text = "Recent Transactions",
+                    color = DarkText,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                LazyColumn(modifier = Modifier.fillMaxWidth().weight(0.5f), contentPadding = PaddingValues(horizontal = 16.dp)) {
+                    items(transactions) { tx ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(40.dp).background(if(tx.isCredit) PrimaryGreen.copy(alpha=0.1f) else RedText.copy(alpha=0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                                Text(if(tx.isCredit) "+" else "-", color = if(tx.isCredit) PrimaryGreen else RedText, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(tx.description, modifier = Modifier.weight(1f), fontSize = 14.sp, color = DarkText)
+                            Text(if(tx.isCredit) "+₹${tx.amount}" else "-₹${tx.amount}", color = if(tx.isCredit) PrimaryGreen else RedText, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             Text(
                 text = "Oilseed Market Data & Regional Intelligence",
                 color = DarkText,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 16.dp)
             ) {
                 items(marketDataList) { data ->
                     MarketDataCard(data = data)

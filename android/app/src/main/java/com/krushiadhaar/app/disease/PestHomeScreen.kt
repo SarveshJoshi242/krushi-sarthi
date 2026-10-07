@@ -40,8 +40,13 @@ fun PestHomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .background(GreenPrimary)
             ) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.pest_tab),
+                    contentDescription = "Pest Detection Background",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

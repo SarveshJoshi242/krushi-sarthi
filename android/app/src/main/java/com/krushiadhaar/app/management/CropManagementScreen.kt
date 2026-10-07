@@ -41,7 +41,7 @@ private val machinery = listOf(
 fun CropManagementScreen(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
-    val tabs = listOf("Consumables", "Machinery")
+    val tabs = listOf("Harvested Crops", "Consumables", "Machinery")
 
     Scaffold(
         topBar = {
@@ -82,10 +82,11 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
         }
         
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            TabRow(
+            ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
-                contentColor = GreenPrimary
+                contentColor = GreenPrimary,
+                edgePadding = 16.dp
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -106,14 +107,34 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val currentItems = if (selectedTab == 0) consumables else machinery
+            if (selectedTab == 0) {
+                val crops = com.krushiadhaar.app.GlobalMockData.marketplaceListings.filter { it.farmer == "You (Farmer)" }
+                if (crops.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No harvested crops in inventory.", color = TextSecondary)
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(crops) { crop ->
+                            InventoryItemCard(
+                                item = InventoryItem(crop.name, "${crop.quantityTons} Tons - Listed for ₹${crop.pricePerTon}/Ton", true, "\uD83C\uDF3E")
+                            )
+                        }
+                    }
+                }
+            } else {
+                val currentItems = if (selectedTab == 1) consumables else machinery
 
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(currentItems) { item ->
-                    InventoryItemCard(item = item)
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(currentItems) { item ->
+                        InventoryItemCard(item = item)
+                    }
                 }
             }
         }

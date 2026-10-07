@@ -17,6 +17,7 @@ sealed class Screen(val route: String) {
     object Step2 : Screen("step2")
     object Analysis : Screen("analysis")
     object Main : Screen("main")
+    object BuyerMain : Screen("buyer_main")
 }
 
 @Composable
@@ -53,8 +54,11 @@ fun AppNavigation(factory: ViewModelFactory) {
         composable(Screen.Step1.route) {
             Step1Screen(
                 onNext = { navController.navigate(Screen.Step2.route) },
-                onLoginAsBuyer = {
+                onLoginAsFarmer = {
                     navController.navigate(Screen.Main.route) { popUpTo(0) }
+                },
+                onLoginAsBuyer = {
+                    navController.navigate(Screen.BuyerMain.route) { popUpTo(0) }
                 }
             )
         }
@@ -74,7 +78,24 @@ fun AppNavigation(factory: ViewModelFactory) {
             MainScreen(
                 rootNavController = navController, 
                 factory = factory,
-                onLogout = { mainViewModel.logout() }
+                onLogout = { 
+                    mainViewModel.logout()
+                    navController.navigate(Screen.Splash.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Screen.BuyerMain.route) {
+            com.krushiadhaar.app.buyer.BuyerMainScreen(
+                rootNavController = navController,
+                factory = factory,
+                onLogout = { 
+                    mainViewModel.logout()
+                    navController.navigate(Screen.Splash.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

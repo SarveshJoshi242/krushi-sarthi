@@ -36,14 +36,22 @@ fun PestAnalysisScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.85f))
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.mock_disease_photo),
+            contentDescription = "Analyzed Photo Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.85f))
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
         Text("AI is analyzing your photo", style = MaterialTheme.typography.headlineSmall, color = AppSurface)
         
         Spacer(modifier = Modifier.height(48.dp))
@@ -72,6 +80,7 @@ fun PestAnalysisScreen(
         Button(onClick = onAnalysisComplete, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) {
             Text("Simulate Complete")
         }
+    }
     }
 }
 

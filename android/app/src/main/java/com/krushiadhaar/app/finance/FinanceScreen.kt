@@ -22,7 +22,7 @@ fun FinanceScreen(
     financeApi: FinanceApi? = null // Passed or injected
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Schemes", "Insurance", "Loans")
+    val tabs = listOf("Revenue", "Schemes", "Insurance", "Loans")
     
     // In a real app we'd use ViewModel, here we fetch directly for simplicity if no VM
     var schemes by remember { mutableStateOf<List<FinanceScheme>>(emptyList()) }
@@ -85,6 +85,20 @@ fun FinanceScreen(
 
             when (selectedTab) {
                 0 -> {
+                    val revenue = com.krushiadhaar.app.GlobalMockData.cropYieldRevenue.value
+                    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                        Card(colors = CardDefaults.cardColors(containerColor = GreenPrimary), modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Text("Total Crop Yield Revenue", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("₹$revenue", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 36.sp)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("This reflects total earnings from orders placed by buyers on the Marketplace.", color = TextSecondary, fontSize = 14.sp)
+                    }
+                }
+                1 -> {
                     val displayList = schemes.ifEmpty { listOf(FinanceScheme("1", "PM-Kisan", "Income support for farmers", "All landholding farmers")) }
                     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(displayList) { scheme ->
@@ -99,7 +113,7 @@ fun FinanceScreen(
                         }
                     }
                 }
-                1 -> {
+                2 -> {
                     val displayList = insurance.ifEmpty { listOf(FinanceInsurance("1", "AgriGuard", "Weather & Crop Failure", "2% Premium")) }
                     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(displayList) { ins ->
@@ -114,7 +128,7 @@ fun FinanceScreen(
                         }
                     }
                 }
-                2 -> {
+                3 -> {
                     val displayList = loans.ifEmpty { listOf(FinanceLoan("1", "SBI Krushi Loan", "7% p.a.", 500000.0)) }
                     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(displayList) { loan ->

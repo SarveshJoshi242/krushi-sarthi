@@ -22,6 +22,7 @@ import com.krushiadhaar.app.ui.theme.TextPrimary
 @Composable
 fun Step1Screen(
     onNext: () -> Unit = {},
+    onLoginAsFarmer: () -> Unit = {},
     onLoginAsBuyer: () -> Unit = {}
 ) {
     var isLoginMode by remember { mutableStateOf(false) }
@@ -106,13 +107,6 @@ fun Step1Screen(
             )
             Spacer(modifier = Modifier.height(24.dp))
         } else {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Login as Buyer",
-                color = GreenPrimary,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { onLoginAsBuyer() }
-            )
             Spacer(modifier = Modifier.height(24.dp))
         }
 
@@ -128,14 +122,40 @@ fun Step1Screen(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = onNext,
+            onClick = {
+                if (phone.isNotBlank() && password.isNotBlank()) {
+                    if (isLoginMode) {
+                        onLoginAsFarmer()
+                    } else {
+                        onNext()
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(if (isLoginMode) "Login ->" else "Next: Add Farm ->", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(if (isLoginMode) "Login as Farmer ->" else "Next: Add Farm ->", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+
+        if (isLoginMode) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    if (phone.isNotBlank() && password.isNotBlank()) {
+                        onLoginAsBuyer()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3F2FD), contentColor = Color(0xFF1976D2)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Login as Buyer ->", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

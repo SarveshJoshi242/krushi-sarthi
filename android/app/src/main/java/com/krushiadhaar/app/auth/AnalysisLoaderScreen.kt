@@ -39,14 +39,23 @@ fun AnalysisLoaderScreen(
         onAnalysisComplete()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(GreenDark)
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.ai_analysing_after_login),
+            contentDescription = "AI Analyzing Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+        )
+        
+        // Foreground content overlay
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)) // Dark overlay for text readability
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         Text(
             text = "AI is Analyzing Your Farm",
             color = Color.White,
@@ -79,5 +88,6 @@ fun AnalysisLoaderScreen(
             color = GreenPrimary,
             trackColor = Color.White.copy(alpha = 0.2f)
         )
+    }
     }
 }

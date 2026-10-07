@@ -167,7 +167,18 @@ fun MainScreen(
             // Legacy/Extra Modules
             composable("marketplace") {
                 MarketplaceScreen(
-                    onNavigateToSell = { bottomNavController.navigate("sell_crop") },
+                    onNavigateToChat = { farmerName -> bottomNavController.navigate("chat_screen/${android.net.Uri.encode(farmerName)}") },
+                    onNavigateBack = { bottomNavController.popBackStack() },
+                    isFarmer = true
+                )
+            }
+            composable(
+                "chat_screen/{farmerName}",
+                arguments = listOf(androidx.navigation.navArgument("farmerName") { type = androidx.navigation.NavType.StringType })
+            ) { backStackEntry ->
+                val farmerName = backStackEntry.arguments?.getString("farmerName") ?: "Farmer"
+                com.krushiadhaar.app.buyer.ChatScreen(
+                    farmerName = farmerName,
                     onNavigateBack = { bottomNavController.popBackStack() }
                 )
             }

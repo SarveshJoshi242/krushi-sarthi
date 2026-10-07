@@ -22,11 +22,12 @@ fun SplashScreen(
     onGetStarted: () -> Unit = {}
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Full background image placeholder
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Gray)
+        // Full background image
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.main_app),
+            contentDescription = "Splash Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
         )
         // Dark overlay at bottom
         Box(
