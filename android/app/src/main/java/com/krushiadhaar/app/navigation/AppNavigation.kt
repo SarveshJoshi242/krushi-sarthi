@@ -43,14 +43,10 @@ fun AppNavigation(factory: ViewModelFactory) {
     NavHost(navController = navController, startDestination = startRoute) {
         composable(Screen.Splash.route) {
             SplashScreen(
-                onGetStarted = { navController.navigate(Screen.Language.route) }
+                onGetStarted = { navController.navigate(Screen.Step1.route) }
             )
         }
-        composable(Screen.Language.route) {
-            LanguageScreen(
-                onContinue = { navController.navigate(Screen.Step1.route) }
-            )
-        }
+
         composable(Screen.Step1.route) {
             Step1Screen(
                 onNext = { navController.navigate(Screen.Step2.route) },

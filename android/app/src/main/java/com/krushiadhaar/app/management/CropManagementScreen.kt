@@ -26,21 +26,22 @@ data class InventoryItem(
     val emoji: String
 )
 
-private val consumables = listOf(
-    InventoryItem("Urea Fertilizer", "Low Stock (10kg left)", statusOk = false, emoji = "\u2697\uFE0F"),
-    InventoryItem("Wheat Seeds", "In Stock (24kg)", statusOk = true, emoji = "\uD83C\uDF3E")
-)
-
-private val machinery = listOf(
-    InventoryItem("Tractor", "Operational", statusOk = true, emoji = "\uD83D\uDE9C"),
-    InventoryItem("Sprinkler Pump", "Needs Repair", statusOk = false, emoji = "\uD83D\uDCA7")
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CropManagementScreen(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
+    
+    var consumablesList by remember { mutableStateOf(listOf(
+        InventoryItem("Urea Fertilizer", "Low Stock (10kg left)", statusOk = false, emoji = "\u2697\uFE0F"),
+        InventoryItem("Wheat Seeds", "In Stock (24kg)", statusOk = true, emoji = "\uD83C\uDF3E")
+    )) }
+
+    var machineryList by remember { mutableStateOf(listOf(
+        InventoryItem("Tractor", "Operational", statusOk = true, emoji = "\uD83D\uDE9C"),
+        InventoryItem("Sprinkler Pump", "Needs Repair", statusOk = false, emoji = "\uD83D\uDCA7")
+    )) }
+
     val tabs = listOf("Harvested Crops", "Consumables", "Machinery")
 
     Scaffold(
@@ -69,13 +70,59 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
         containerColor = AppBackground
     ) { innerPadding ->
         if (showAddDialog) {
+            var newItemName by remember { mutableStateOf("") }
+            var newItemStatus by remember { mutableStateOf("") }
+
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
-                title = { Text("Add Item") },
-                text = { Text("Adding inventory items will be available soon.") },
+                title = { Text("Add " + tabs[selectedTab]) },
+                text = { 
+                    Column {
+                        OutlinedTextField(
+                            value = newItemName,
+                            onValueChange = { newItemName = it },
+                            label = { Text("Item Name") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = newItemStatus,
+                            onValueChange = { newItemStatus = it },
+                            label = { Text(if (selectedTab == 0) "Quantity (Tons)" else "Status / Details") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
                 confirmButton = {
+                    TextButton(onClick = { 
+                        if (newItemName.isNotBlank() && newItemStatus.isNotBlank()) {
+                            if (selectedTab == 0) {
+                                val qty = newItemStatus.filter { it.isDigit() }.toIntOrNull() ?: 10
+                                com.krushiadhaar.app.GlobalMockData.marketplaceListings.add(
+                                    com.krushiadhaar.app.marketplace.CropListing(
+                                        newItemName,
+                                        "You (Farmer)",
+                                        "Your Farm",
+                                        qty,
+                                        25000,
+                                        "🌾",
+                                        androidx.compose.ui.graphics.Color(0xFFE8F5E9)
+                                    )
+                                )
+                            } else if (selectedTab == 1) {
+                                consumablesList = consumablesList + InventoryItem(newItemName, newItemStatus, statusOk = true, emoji = "\uD83D\uDCE6")
+                            } else {
+                                machineryList = machineryList + InventoryItem(newItemName, newItemStatus, statusOk = true, emoji = "\u2699\uFE0F")
+                            }
+                        }
+                        showAddDialog = false 
+                    }) {
+                        Text("Add", color = GreenPrimary)
+                    }
+                },
+                dismissButton = {
                     TextButton(onClick = { showAddDialog = false }) {
-                        Text("OK", color = GreenPrimary)
+                        Text("Cancel", color = Color.Gray)
                     }
                 }
             )
@@ -126,7 +173,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                     }
                 }
             } else {
-                val currentItems = if (selectedTab == 1) consumables else machinery
+                val currentItems = if (selectedTab == 1) consumablesList else machineryList
 
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
