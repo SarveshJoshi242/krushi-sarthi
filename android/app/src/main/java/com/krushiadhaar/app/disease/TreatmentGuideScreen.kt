@@ -15,11 +15,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.krushiadhaar.app.ui.theme.*
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TreatmentGuideScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    viewModel: DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val data = (uiState as? DiseaseUiState.Success)?.data
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -36,12 +43,22 @@ fun TreatmentGuideScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text("Immediate Steps (For Field)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            val managementSteps = data?.management?.split(";")?.filter { it.isNotBlank() } ?: listOf("Immediate action required.")
+            val treatmentSteps = data?.treatment?.split(";")?.filter { it.isNotBlank() } ?: listOf("No treatment specified.")
+
+            Text("Management Practices", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(modifier = Modifier.height(16.dp))
+            managementSteps.forEachIndexed { index, step ->
+                TreatmentStep((index + 1).toString(), step.trim())
+            }
             
-            TreatmentStep("1", "Remove and destroy heavily infected plants immediately.")
-            TreatmentStep("2", "Avoid working in the field when plants are wet to reduce spread.")
-            TreatmentStep("3", "Control aphid populations as they transmit the virus.")
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Text("Treatment Guide", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(16.dp))
+            treatmentSteps.forEachIndexed { index, step ->
+                TreatmentStep((index + 1).toString(), step.trim())
+            }
             
             Spacer(modifier = Modifier.height(32.dp))
             
@@ -76,7 +93,7 @@ fun TreatmentGuideScreen(
                 Row(modifier = Modifier.padding(16.dp)) {
                     Icon(Icons.Default.Info, contentDescription = null, tint = GreenPrimary)
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text("For future seasons, ensure you plant certified virus-free seeds and use resistant varieties if available.", color = GreenText)
+                    Text(data?.prevention ?: "For future seasons, ensure you plant certified seeds and follow proper crop rotation.", color = GreenText)
                 }
             }
             
