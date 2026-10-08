@@ -11,12 +11,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.krushiadhaar.app.ui.theme.*
 import androidx.compose.ui.draw.clip
+
+import androidx.compose.ui.graphics.asImageBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +71,7 @@ fun DiagnosisReportScreen(
             val bitmapState = com.krushiadhaar.app.GlobalMockData.capturedBitmap
             if (bitmapState != null) {
                 androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(androidx.compose.ui.graphics.asImageBitmap(bitmapState)),
+                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(bitmapState.asImageBitmap()),
                     contentDescription = "Crop Report Generation",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -99,7 +102,7 @@ fun DiagnosisReportScreen(
                 
                 if (uriBitmap != null) {
                     androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.graphics.painter.BitmapPainter(androidx.compose.ui.graphics.asImageBitmap(uriBitmap!!)),
+                        painter = androidx.compose.ui.graphics.painter.BitmapPainter(uriBitmap!!.asImageBitmap()),
                         contentDescription = "Crop Report Generation",
                         modifier = Modifier
                             .fillMaxWidth()
