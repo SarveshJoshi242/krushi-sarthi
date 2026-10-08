@@ -39,23 +39,32 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
 
     private val mlService = MLService(application)
 
+    fun resetState() {
+        _uiState.value = DiseaseUiState.Idle
+        _progress.value = 0f
+    }
+
     fun analyzeImage(bitmap: android.graphics.Bitmap?) {
         viewModelScope.launch {
             _uiState.value = DiseaseUiState.Analyzing
             
             // Simulate progress update
-            launch {
+            val progressJob = launch {
                 for (i in 1..90) {
                     _progress.value = i / 100f
-                    delay(30)
+                    delay(25)
                 }
             }
 
             try {
+                // Ensure the "Analyzing" screen is shown for at least 2.5 seconds for UX
+                delay(2500)
                 val result = mlService.analyzeImage(bitmap)
                 
+                progressJob.cancel()
                 _progress.value = 1.0f
-                delay(200) // Let UI catch up
+                delay(300) // Let UI catch up
+
                 
                 if (result != null) {
                     _uiState.value = DiseaseUiState.Success(

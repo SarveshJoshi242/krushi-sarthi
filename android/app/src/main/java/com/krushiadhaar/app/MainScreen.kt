@@ -114,10 +114,20 @@ fun MainScreen(
                 )
             }
             navigation(startDestination = "pest_home", route = BottomNavItem.Pest.route) {
-                composable("pest_home") {
+                composable("pest_home") { backStackEntry ->
+                    val parentEntry = remember(backStackEntry) {
+                        bottomNavController.getBackStackEntry(BottomNavItem.Pest.route)
+                    }
+                    val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
                     PestHomeScreen(
-                        onTakePhotoClick = { bottomNavController.navigate("pest_analysis") },
-                        onUploadClick = { bottomNavController.navigate("pest_analysis") }
+                        onTakePhotoClick = { 
+                            viewModel.resetState()
+                            bottomNavController.navigate("pest_analysis") 
+                        },
+                        onUploadClick = { 
+                            viewModel.resetState()
+                            bottomNavController.navigate("pest_analysis") 
+                        }
                     )
                 }
                 composable("pest_analysis") { backStackEntry ->
@@ -135,9 +145,9 @@ fun MainScreen(
                         bottomNavController.getBackStackEntry(BottomNavItem.Pest.route)
                     }
                     val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
-                    // We need to pass the result to DiagnosisReportScreen or let it read from ViewModel
                     DiagnosisReportScreen(
-                        onViewTreatment = { bottomNavController.navigate("pest_treatment") }
+                        onViewTreatment = { bottomNavController.navigate("pest_treatment") },
+                        viewModel = viewModel
                     )
                 }
                 composable("pest_treatment") { backStackEntry ->
@@ -146,7 +156,8 @@ fun MainScreen(
                     }
                     val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
                     TreatmentGuideScreen(
-                        onBack = { bottomNavController.popBackStack("pest_home", false) }
+                        onBack = { bottomNavController.popBackStack("pest_home", false) },
+                        viewModel = viewModel
                     )
                 }
             }

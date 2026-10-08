@@ -65,15 +65,70 @@ fun DiagnosisReportScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.mock_disease_photo),
-                contentDescription = "Crop Report Generation",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-            )
+            val bitmapState = com.krushiadhaar.app.GlobalMockData.capturedBitmap
+            if (bitmapState != null) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(androidx.compose.ui.graphics.asImageBitmap(bitmapState)),
+                    contentDescription = "Crop Report Generation",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            } else if (com.krushiadhaar.app.GlobalMockData.selectedImageUri != null) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                var uriBitmap by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<android.graphics.Bitmap?>(null) }
+                
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    val uri = android.net.Uri.parse(com.krushiadhaar.app.GlobalMockData.selectedImageUri)
+                    try {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            val source = android.graphics.ImageDecoder.createSource(context.contentResolver, uri)
+                            android.graphics.ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                                decoder.isMutableRequired = true
+                            }.let { uriBitmap = it }
+                        } else {
+                            @Suppress("DEPRECATION")
+                            android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, uri)?.let { uriBitmap = it }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                
+                if (uriBitmap != null) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.graphics.painter.BitmapPainter(androidx.compose.ui.graphics.asImageBitmap(uriBitmap!!)),
+                        contentDescription = "Crop Report Generation",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                } else {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.mock_disease_photo),
+                        contentDescription = "Crop Report Generation",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+            } else {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.mock_disease_photo),
+                    contentDescription = "Crop Report Generation",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             Card(
