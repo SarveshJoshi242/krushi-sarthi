@@ -21,6 +21,9 @@ object GlobalMockData {
     data class Notification(val message: String, val time: String)
     val farmerNotifications = androidx.compose.runtime.mutableStateListOf<Notification>()
 
+    var selectedImageUri: String? = null
+    var capturedBitmap: android.graphics.Bitmap? = null
+
     fun placeOrder(listing: CropListing) {
         // Remove from inventory/marketplace
         marketplaceListings.remove(listing)

@@ -15,7 +15,21 @@ import com.krushiadhaar.app.ui.theme.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.graphics.ImageDecoder
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 
 @Composable
 fun PestAnalysisScreen(
@@ -24,10 +38,30 @@ fun PestAnalysisScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val progress by viewModel.progress.collectAsState()
+    val context = LocalContext.current
+    var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(Unit) {
-        // Mock image bytes for now since we don't have a real camera hooked up
-        viewModel.analyzeImage(ByteArray(100))
+        val bitmap = if (com.krushiadhaar.app.GlobalMockData.capturedBitmap != null) {
+            com.krushiadhaar.app.GlobalMockData.capturedBitmap
+        } else if (com.krushiadhaar.app.GlobalMockData.selectedImageUri != null) {
+            val uri = Uri.parse(com.krushiadhaar.app.GlobalMockData.selectedImageUri)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val source = ImageDecoder.createSource(context.contentResolver, uri)
+                    ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                        decoder.isMutableRequired = true
+                    }
+                } else {
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+        
+        currentBitmap = bitmap
+        viewModel.analyzeImage(bitmap)
     }
 
     LaunchedEffect(uiState) {
@@ -37,12 +71,22 @@ fun PestAnalysisScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        androidx.compose.foundation.Image(
-            painter = androidx.compose.ui.res.painterResource(id = com.krushiadhaar.app.R.drawable.mock_disease_photo),
-            contentDescription = "Analyzed Photo Background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-        )
+        val bitmapState = currentBitmap
+        if (bitmapState != null) {
+            Image(
+                painter = BitmapPainter(bitmapState.asImageBitmap()),
+                contentDescription = "Analyzed Photo Background",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Image(
+                painter = painterResource(id = com.krushiadhaar.app.R.drawable.mock_disease_photo),
+                contentDescription = "Analyzed Photo Background",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         Column(
             modifier = Modifier

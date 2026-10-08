@@ -33,6 +33,7 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+        mlModelBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -73,5 +74,7 @@ dependencies {
 
 dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
 }
 

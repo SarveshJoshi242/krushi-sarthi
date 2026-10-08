@@ -16,12 +16,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.krushiadhaar.app.ui.theme.*
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import android.graphics.Bitmap
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PestHomeScreen(
     onTakePhotoClick: () -> Unit = {},
     onUploadClick: () -> Unit = {}
 ) {
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            com.krushiadhaar.app.GlobalMockData.selectedImageUri = uri.toString()
+            com.krushiadhaar.app.GlobalMockData.capturedBitmap = null
+            onUploadClick()
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            com.krushiadhaar.app.GlobalMockData.capturedBitmap = bitmap
+            com.krushiadhaar.app.GlobalMockData.selectedImageUri = null
+            onTakePhotoClick()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -84,7 +105,7 @@ fun PestHomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Button(
-                        onClick = onTakePhotoClick,
+                        onClick = { cameraLauncher.launch(null) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         shape = RoundedCornerShape(12.dp)
@@ -97,7 +118,7 @@ fun PestHomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     OutlinedButton(
-                        onClick = onUploadClick,
+                        onClick = { galleryLauncher.launch("image/*") },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
