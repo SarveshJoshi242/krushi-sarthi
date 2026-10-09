@@ -14,4 +14,6 @@ public class RegisterRequest {
     private String password;
     @NotBlank
     private String role;
+    
+    private String aadhaarNumber;
 }

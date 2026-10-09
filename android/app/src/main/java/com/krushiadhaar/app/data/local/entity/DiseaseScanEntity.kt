@@ -11,5 +11,7 @@ data class DiseaseScanEntity(
     val diseaseName: String?,
     val confidence: Double?,
     val severity: String?,
-    val recommendation: String?
+    val recommendation: String?,
+    val medicines: String?,
+    val estimatedCost: Double?
 )

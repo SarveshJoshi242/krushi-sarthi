@@ -61,6 +61,12 @@ public class MLServiceDiseaseDetectionProvider implements DiseaseDetectionProvid
                             "\nTreatment: " + root.path("Treatment").asText() +
                             "\nPrevention: " + root.path("Prevention").asText()
                     );
+                    if(root.has("Medicines")) {
+                        result.setMedicines(root.path("Medicines").asText());
+                    }
+                    if(root.has("Estimated_Cost")) {
+                        result.setEstimatedCost(new BigDecimal(root.path("Estimated_Cost").asText()));
+                    }
                                             
                     return result;
                 }

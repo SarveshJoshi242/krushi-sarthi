@@ -40,14 +40,50 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
     val pesticidesChecked = remember { mutableStateOf(true) }
     val laborChecked = remember { mutableStateOf(true) }
 
-    var showResult by remember { mutableStateOf(true) }
+    var showResult by remember { mutableStateOf(false) }
 
-    val breakdowns = listOf(
-        ResourceBreakdown("Fertilizer (40%)", 0.40f, 18000, GreenPrimary),
-        ResourceBreakdown("Labor (35%)", 0.35f, 15750, Color(0xFF2196F3)),
-        ResourceBreakdown("Seeds (25%)", 0.25f, 11250, OrangePrimary)
-    )
-    val totalBudget = breakdowns.sumOf { it.amount }
+    val area = farmArea.toFloatOrNull() ?: 0f
+    
+    // Base cost per acre based on crop
+    val baseCostPerAcre = when (selectedCrop) {
+        "Wheat" -> 8000
+        "Rice" -> 12000
+        "Cotton" -> 15000
+        "Sugarcane" -> 20000
+        "Maize" -> 9000
+        else -> 10000
+    }
+    
+    val totalCost = (baseCostPerAcre * area).toInt()
+    
+    val breakdowns = mutableListOf<ResourceBreakdown>()
+    var accumulatedPercent = 0f
+    
+    if (fertilizerChecked.value && totalCost > 0) {
+        breakdowns.add(ResourceBreakdown("Fertilizer", 0.40f, (totalCost * 0.40).toInt(), GreenPrimary))
+        accumulatedPercent += 0.40f
+    }
+    if (laborChecked.value && totalCost > 0) {
+        breakdowns.add(ResourceBreakdown("Labor", 0.35f, (totalCost * 0.35).toInt(), Color(0xFF2196F3)))
+        accumulatedPercent += 0.35f
+    }
+    if (seedsChecked.value && totalCost > 0) {
+        breakdowns.add(ResourceBreakdown("Seeds", 0.15f, (totalCost * 0.15).toInt(), OrangePrimary))
+        accumulatedPercent += 0.15f
+    }
+    if (pesticidesChecked.value && totalCost > 0) {
+        breakdowns.add(ResourceBreakdown("Pesticides", 0.10f, (totalCost * 0.10).toInt(), Color(0xFF9C27B0)))
+        accumulatedPercent += 0.10f
+    }
+    
+    // Normalize percentages if some are unchecked
+    val normalizedBreakdowns = breakdowns.map { 
+        val normalizedPercent = if (accumulatedPercent > 0) it.percent / accumulatedPercent else 0f
+        val calculatedAmount = (totalCost * normalizedPercent).toInt()
+        ResourceBreakdown("${it.label} (${(normalizedPercent * 100).toInt()}%)", normalizedPercent, calculatedAmount, it.color)
+    }
+
+    val totalBudget = normalizedBreakdowns.sumOf { it.amount }
 
     Scaffold(
         topBar = {
@@ -146,7 +182,7 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
                         Text(text = "Estimated Budget", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = GreenPrimary)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "₹${totalBudget.toFormattedRupee()}",
+                            text = "â‚¹${totalBudget.toFormattedRupee()}",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = TextPrimary
@@ -154,7 +190,7 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        breakdowns.forEach { item ->
+                        normalizedBreakdowns.forEach { item ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -162,7 +198,7 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
                                 Box(modifier = Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(item.color))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(text = item.label, fontSize = 12.sp, color = TextSecondary, modifier = Modifier.weight(1f))
-                                Text(text = "₹${item.amount.toFormattedRupee()}", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                                Text(text = "â‚¹${item.amount.toFormattedRupee()}", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                             }
                         }
 
@@ -172,7 +208,7 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
                         Row(
                             modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(6.dp))
                         ) {
-                            breakdowns.forEach { item ->
+                            normalizedBreakdowns.forEach { item ->
                                 Box(modifier = Modifier.weight(item.percent).fillMaxHeight().background(item.color))
                             }
                         }

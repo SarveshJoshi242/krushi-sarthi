@@ -52,10 +52,14 @@ public class AuthService {
         Role role = roleRepository.findByName(request.getRole())
                 .orElseThrow(() -> new ApiException("VALIDATION_ERROR", "Invalid role"));
 
+        String generatedRecoveryKey = UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .email(request.getEmail())
+                .aadhaarNumber(request.getAadhaarNumber())
+                .recoveryKey(passwordEncoder.encode(generatedRecoveryKey))
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .status("ACTIVE")
                 .build();
@@ -71,6 +75,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
+                .recoveryKey(generatedRecoveryKey)
                 .build();
     }
 

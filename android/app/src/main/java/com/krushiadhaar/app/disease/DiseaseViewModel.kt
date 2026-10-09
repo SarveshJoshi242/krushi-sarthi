@@ -20,7 +20,9 @@ data class DiseaseData(
     val treatment: String,
     val prevention: String,
     val severity: String,
-    val confidence: Double
+    val confidence: Double,
+    val medicines: String,
+    val estimatedCost: Double
 )
 
 sealed class DiseaseUiState {
@@ -77,7 +79,9 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                             treatment = result.treatment,
                             prevention = result.prevention,
                             severity = result.severity,
-                            confidence = 0.98
+                            confidence = 0.98,
+                            medicines = result.medicines,
+                            estimatedCost = result.estimatedCost
                         )
                     )
                 } else {

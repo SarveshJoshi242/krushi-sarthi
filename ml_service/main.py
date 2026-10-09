@@ -43,6 +43,16 @@ async def predict_disease(
     # Fill NaN values with empty strings
     predicted_row = predicted_row.fillna("")
     
+    # Generate mock data for medicines (at least 2) and estimated cost
+    mock_medicines = [
+        "Fungicide A and Neem Oil",
+        "Pesticide B and Organic Spray",
+        "Copper Sulfate and Antibiotic C",
+        "Herbicide D and Nutrient Mix"
+    ]
+    recommended_medicines = random.choice(mock_medicines)
+    estimated_cost = round(random.uniform(500, 2500), 2)
+    
     return {
         "Disease_ID": str(predicted_row.get("Disease_ID", "")),
         "Class_Name": str(predicted_row.get("Class_Name", "")),
@@ -51,5 +61,7 @@ async def predict_disease(
         "Management": str(predicted_row.get("Management", "")),
         "Treatment": str(predicted_row.get("Treatment", "")),
         "Prevention": str(predicted_row.get("Prevention", "")),
-        "Confidence_Score": confidence_score
+        "Confidence_Score": confidence_score,
+        "Medicines": recommended_medicines,
+        "Estimated_Cost": estimated_cost
     }

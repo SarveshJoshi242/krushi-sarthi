@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import com.krushiadhaar.app.presentation.auth.RegisterViewModel
 import com.krushiadhaar.app.presentation.auth.RegisterUiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel,
@@ -17,6 +18,9 @@ fun RegisterScreen(
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var aadhaarNumber by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("FARMER") }
+    var expanded by remember { mutableStateOf(false) }
     
     val uiState by viewModel.uiState.collectAsState()
 
@@ -56,6 +60,44 @@ fun RegisterScreen(
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = aadhaarNumber,
+            onValueChange = { aadhaarNumber = it },
+            label = { Text("Aadhaar Number (Optional)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+        
+        // Role Selector
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = selectedRole,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Role") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                modifier = Modifier.menuAnchor().fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Farmer") },
+                    onClick = { selectedRole = "FARMER"; expanded = false }
+                )
+                DropdownMenuItem(
+                    text = { Text("Buyer") },
+                    onClick = { selectedRole = "BUYER"; expanded = false }
+                )
+            }
+        }
+        
         Spacer(Modifier.height(16.dp))
 
         if (uiState is RegisterUiState.Error) {
@@ -64,7 +106,16 @@ fun RegisterScreen(
         }
 
         Button(
-            onClick = { viewModel.register(fullName, phone, email.ifBlank { null }, password) },
+            onClick = { 
+                viewModel.register(
+                    fullName, 
+                    phone, 
+                    email.ifBlank { null }, 
+                    password, 
+                    selectedRole, 
+                    aadhaarNumber.ifBlank { null }
+                ) 
+            },
             enabled = uiState !is RegisterUiState.Loading,
             modifier = Modifier.fillMaxWidth()
         ) {

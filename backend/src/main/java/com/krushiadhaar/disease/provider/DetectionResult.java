@@ -7,4 +7,6 @@ public class DetectionResult {
     private BigDecimal confidence;
     private String severity;
     private String recommendation;
+    private String medicines;
+    private BigDecimal estimatedCost;
 }

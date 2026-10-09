@@ -24,6 +24,10 @@ public class DiseaseResult {
     private BigDecimal confidence;
     private String severity;
     private String recommendation;
+    private String medicines;
+    
+    @Column(name = "estimated_cost")
+    private BigDecimal estimatedCost;
 
     @CreationTimestamp
     @Column(updatable = false)

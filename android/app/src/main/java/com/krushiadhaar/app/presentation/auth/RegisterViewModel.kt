@@ -19,11 +19,13 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun register(fullName: String, phone: String, email: String?, pass: String) {
+    fun register(fullName: String, phone: String, email: String?, pass: String, role: String, aadhaarNumber: String?) {
         _uiState.value = RegisterUiState.Loading
         viewModelScope.launch {
-            val result = authRepository.register(RegisterRequestDto(fullName, phone, email, pass))
+            val result = authRepository.register(RegisterRequestDto(fullName, phone, email, pass, role, aadhaarNumber))
             if (result.isSuccess) {
+                // If we want to show recovery key, we can get it from the response
+                val authResponse = result.getOrNull()
                 _uiState.value = RegisterUiState.Success
             } else {
                 _uiState.value = RegisterUiState.Error(result.exceptionOrNull()?.message ?: "Registration failed")

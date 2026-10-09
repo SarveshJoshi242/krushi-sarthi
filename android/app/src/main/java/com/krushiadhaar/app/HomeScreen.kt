@@ -184,41 +184,43 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Recommendation Card 1
-        RecommendationCard(
-            rank = "1",
-            emoji = "🌾",
-            name = "Rapeseed & Mustard",
-            suitability = "82% Suitable",
-            netReturn = "Rs. 9,450/ha",
-            waterReq = "9755 m³",
-            sowing = "October - November",
-            onClick = { showPlanCropSheet = true }
-        )
+        val recommendations by homeViewModel.recommendationsState.collectAsState()
         
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SmallRecommendationCard(
-                modifier = Modifier.weight(1f),
-                rank = "2",
-                emoji = "🌱",
-                name = "Soybean",
-                suitability = "77% Suitable",
-                netReturn = "Rs. 11,324/ha",
-                waterReq = "8239 m³",
-                sowing = "June - July"
+        if (recommendations.isNotEmpty()) {
+            val topRec = recommendations[0]
+            RecommendationCard(
+                rank = topRec.rank,
+                emoji = topRec.emoji,
+                name = topRec.cropName,
+                suitability = topRec.suitability,
+                netReturn = topRec.netReturn,
+                waterReq = topRec.waterRequirement,
+                sowing = topRec.sowingPeriod,
+                onClick = { showPlanCropSheet = true }
             )
-            SmallRecommendationCard(
-                modifier = Modifier.weight(1f),
-                rank = "3",
-                emoji = "🌻",
-                name = "Safflower",
-                suitability = "74% Suitable",
-                netReturn = "Rs. 7,300/ha",
-                waterReq = "10114 m³",
-                sowing = "Sept - Oct"
-            )
+            
+            if (recommendations.size > 1) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    for (i in 1 until minOf(recommendations.size, 3)) {
+                        val rec = recommendations[i]
+                        SmallRecommendationCard(
+                            modifier = Modifier.weight(1f),
+                            rank = rec.rank,
+                            emoji = rec.emoji,
+                            name = rec.cropName,
+                            suitability = rec.suitability,
+                            netReturn = rec.netReturn,
+                            waterReq = rec.waterRequirement,
+                            sowing = rec.sowingPeriod
+                        )
+                    }
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GreenPrimary)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -296,17 +298,28 @@ fun HomeScreen(
     
     // Bottom Sheets
     if (showPlanCropSheet) {
+        val topRec = homeViewModel.recommendationsState.collectAsState().value.firstOrNull()
         ModalBottomSheet(onDismissRequest = { showPlanCropSheet = false }) {
             Column(modifier = Modifier.padding(20.dp).fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🌾", fontSize = 24.sp)
+                    Text(topRec?.emoji ?: "🌱", fontSize = 24.sp)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Plan Rapeseed & Mustard", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text("Plan ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(GreenSurface).padding(12.dp)) {
-                    Text("📅 Recommended Sowing: October - November", color = GreenDark, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("📅 Recommended Sowing: ", color = GreenDark, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Soil Nutrients Required", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(topRec?.soilNutrientsRequired ?: "N/A", fontSize = 12.sp, color = TextSecondary)
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Farming Technique", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(topRec?.farmingTechnique ?: "N/A", fontSize = 12.sp, color = TextSecondary)
+                
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select Sowing Date", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))

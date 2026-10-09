@@ -47,6 +47,16 @@ object WeatherRetrofitClient {
     }
 }
 
+object FarmRetrofitClient {
+    val api: com.krushiadhaar.app.data.remote.api.FarmIntelligenceApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(com.krushiadhaar.app.BuildConfig.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(com.krushiadhaar.app.data.remote.api.FarmIntelligenceApi::class.java)
+    }
+}
+
 data class WeatherUiState(
     val temp: String = "23°",
     val condition: String = "Clear",
@@ -58,8 +68,27 @@ class HomeViewModel : ViewModel() {
     private val _weatherState = MutableStateFlow(WeatherUiState())
     val weatherState: StateFlow<WeatherUiState> = _weatherState.asStateFlow()
 
+    private val _recommendationsState = MutableStateFlow<List<com.krushiadhaar.app.data.remote.api.CropRecommendationDto>>(emptyList())
+    val recommendationsState: StateFlow<List<com.krushiadhaar.app.data.remote.api.CropRecommendationDto>> = _recommendationsState.asStateFlow()
+
     init {
         fetchWeather()
+        fetchRecommendations()
+    }
+
+    private fun fetchRecommendations() {
+        viewModelScope.launch {
+            try {
+                val response = FarmRetrofitClient.api.getCropRecommendations()
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        _recommendationsState.value = it
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun fetchWeather() {

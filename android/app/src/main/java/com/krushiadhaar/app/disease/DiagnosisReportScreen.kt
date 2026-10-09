@@ -160,6 +160,16 @@ fun DiagnosisReportScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
+            Text("Recommended Treatment", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Column {
+                FoundItem("Medicines: ${data?.medicines ?: ""}")
+                FoundItem("Estimated Cost: ₹${data?.estimatedCost ?: 0.0}")
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
             Text("What to do now", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(modifier = Modifier.height(16.dp))
             Text(data?.management ?: "Immediate action is required.", color = TextSecondary)

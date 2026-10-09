@@ -26,7 +26,9 @@ data class DiseaseInfo(
     val management: String,
     val treatment: String,
     val prevention: String,
-    val severity: String
+    val severity: String,
+    val medicines: String,
+    val estimatedCost: Double
 )
 
 class MLService(private val context: Context) {
@@ -78,7 +80,9 @@ class MLService(private val context: Context) {
                             management = tokens[6],
                             treatment = tokens[7],
                             prevention = tokens[8],
-                            severity = tokens[9]
+                            severity = tokens[9],
+                            medicines = "Recommended: Fungicide A, Neem Oil Spray",
+                            estimatedCost = 1200.0 + (tokens[0].hashCode() % 500)
                         )
                     )
                 }

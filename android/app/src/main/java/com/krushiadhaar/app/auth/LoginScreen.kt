@@ -59,6 +59,41 @@ fun LoginScreen(
             }
         }
         
+        var showForgotDialog by remember { mutableStateOf(false) }
+        
+        TextButton(onClick = { showForgotDialog = true }) {
+            Text("Forgot Password?")
+        }
+        
+        if (showForgotDialog) {
+            var recoveryKey by remember { mutableStateOf("") }
+            AlertDialog(
+                onDismissRequest = { showForgotDialog = false },
+                title = { Text("Recover Account") },
+                text = {
+                    Column {
+                        Text("Enter your 16-character Recovery Key to reset your password.")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = recoveryKey,
+                            onValueChange = { recoveryKey = it },
+                            label = { Text("Recovery Key") }
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showForgotDialog = false }) {
+                        Text("Recover")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showForgotDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+        
         TextButton(onClick = onNavigateToRegister) {
             Text("Don't have an account? Register")
         }

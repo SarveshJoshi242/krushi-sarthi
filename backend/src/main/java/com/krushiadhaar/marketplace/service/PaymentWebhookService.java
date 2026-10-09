@@ -22,10 +22,18 @@ public class PaymentWebhookService {
     private static final Logger logger = LoggerFactory.getLogger(PaymentWebhookService.class);
     private final OrderRepository orderRepository;
     private final WebhookEventRepository webhookEventRepository;
+    private final com.krushiadhaar.marketplace.repository.HarvestInventoryRepository inventoryRepository;
+    private final com.krushiadhaar.marketplace.repository.OrderItemRepository orderItemRepository;
 
-    public PaymentWebhookService(OrderRepository orderRepository, WebhookEventRepository webhookEventRepository) {
+    public PaymentWebhookService(
+            OrderRepository orderRepository, 
+            WebhookEventRepository webhookEventRepository,
+            com.krushiadhaar.marketplace.repository.HarvestInventoryRepository inventoryRepository,
+            com.krushiadhaar.marketplace.repository.OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.webhookEventRepository = webhookEventRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     @PostMapping("/{provider}")
@@ -72,6 +80,16 @@ public class PaymentWebhookService {
 
         order.setStatus("READY_FOR_FULFILLMENT");
         orderRepository.save(order);
-        logger.info("Order {} transitioned to READY_FOR_FULFILLMENT.", orderId);
+        
+        // Update Inventory: deduct from reserved, add to sold
+        java.util.List<com.krushiadhaar.marketplace.entity.OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        for (com.krushiadhaar.marketplace.entity.OrderItem item : items) {
+            com.krushiadhaar.marketplace.entity.HarvestInventory inventory = item.getListing().getInventory();
+            inventory.setQuantityReserved(inventory.getQuantityReserved().subtract(item.getQuantity()));
+            inventory.setQuantitySold(inventory.getQuantitySold().add(item.getQuantity()));
+            inventoryRepository.save(inventory);
+        }
+        
+        logger.info("Order {} transitioned to READY_FOR_FULFILLMENT and inventory updated.", orderId);
     }
 }

@@ -32,6 +32,12 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @Column(name = "aadhaar_number", unique = true, length = 12)
+    private String aadhaarNumber;
+
+    @Column(name = "recovery_key", unique = true)
+    private String recoveryKey;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
