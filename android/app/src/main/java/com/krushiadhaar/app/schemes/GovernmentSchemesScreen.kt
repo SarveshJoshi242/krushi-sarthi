@@ -43,53 +43,33 @@ data class Scheme(
 fun GovernmentSchemesScreen(
     onBackClick: () -> Unit = {}
 ) {
-    val schemes = listOf(
-        Scheme(
-            title = "Pradhan Mantri Fasal Bima Yojana",
-            provider = "Central Government",
-            description = "Crop insurance scheme to provide financial support to farmers in case of crop failure.",
-            isActive = true,
-            link = "https://pmfby.gov.in/",
-            requiredDocuments = listOf("Aadhaar Card", "Land Record"),
-            type = "Insurance"
-        ),
-        Scheme(
-            title = "Kisan Credit Card (KCC) Loan",
-            provider = "Banks",
-            description = "Short term agricultural loans at subsidized interest rates.",
-            isActive = true,
-            link = "https://www.rbi.org.in/",
-            requiredDocuments = listOf("Aadhaar Card", "Land Record", "Bank Passbook"),
-            type = "Loan"
-        ),
-        Scheme(
-            title = "PM-Kisan Samman Nidhi",
-            provider = "Central Government",
-            description = "Provides income support of ₹6,000 per year to all landholding farmer families.",
-            isActive = true,
-            link = "https://pmkisan.gov.in/",
-            requiredDocuments = listOf("Aadhaar Card", "Bank Passbook"),
-            type = "Scheme"
-        ),
-        Scheme(
-            title = "MahaDBT Farmer Schemes",
-            provider = "State Government",
-            description = "Maharashtra direct benefit transfer for agriculture mechanization and irrigation.",
-            isActive = true,
-            link = "https://mahadbt.maharashtra.gov.in/",
-            requiredDocuments = listOf("Aadhaar Card"),
-            type = "Scheme"
-        ),
-        Scheme(
-            title = "Soil Health Card Scheme",
-            provider = "Central Government",
-            description = "Promotes soil test based nutrient management.",
-            isActive = true,
-            link = "https://soilhealth.dac.gov.in/",
-            requiredDocuments = emptyList(),
-            type = "Scheme"
-        )
-    )
+    var schemes by remember { mutableStateOf<List<Scheme>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val lang = com.krushiadhaar.app.GlobalMockData.userLanguage.value
+        val loc = com.krushiadhaar.app.GlobalMockData.userLocation.value
+        try {
+            val response = com.krushiadhaar.app.presentation.FarmRetrofitClient.api.getGovernmentSchemes(language = lang, location = loc)
+            if (response.isSuccessful && response.body() != null) {
+                schemes = response.body()!!.map {
+                    Scheme(
+                        title = it.title,
+                        provider = it.provider,
+                        description = it.description,
+                        isActive = it.isActive,
+                        link = it.link,
+                        requiredDocuments = it.requiredDocuments ?: emptyList(),
+                        type = it.type ?: "Scheme"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            isLoading = false
+        }
+    }
 
     var selectedFilter by remember { mutableStateOf("All") }
     var showEligibilityDialog by remember { mutableStateOf(false) }
@@ -162,12 +142,18 @@ fun GovernmentSchemesScreen(
                 }
             }
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(filteredSchemes) { scheme ->
-                    SchemeCard(scheme = scheme, onLearnMoreClick = { uriHandler.openUri(scheme.link) })
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryGreen)
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(filteredSchemes) { scheme ->
+                        SchemeCard(scheme = scheme, onLearnMoreClick = { uriHandler.openUri(scheme.link) })
+                    }
                 }
             }
 

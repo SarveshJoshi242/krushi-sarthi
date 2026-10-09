@@ -20,6 +20,28 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
+                Text("Preferences", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text("Language", style = MaterialTheme.typography.labelMedium)
+                var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+                Box {
+                    TextButton(onClick = { expanded = true }) {
+                        Text(com.krushiadhaar.app.GlobalMockData.userLanguage.value)
+                    }
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        DropdownMenuItem(text = { Text("English") }, onClick = { com.krushiadhaar.app.GlobalMockData.userLanguage.value = "English"; expanded = false })
+                        DropdownMenuItem(text = { Text("Hindi") }, onClick = { com.krushiadhaar.app.GlobalMockData.userLanguage.value = "Hindi"; expanded = false })
+                        DropdownMenuItem(text = { Text("Marathi") }, onClick = { com.krushiadhaar.app.GlobalMockData.userLanguage.value = "Marathi"; expanded = false })
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Account Settings", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(onClick = { /* TODO */ }) {

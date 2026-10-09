@@ -79,7 +79,9 @@ class HomeViewModel : ViewModel() {
     private fun fetchRecommendations() {
         viewModelScope.launch {
             try {
-                val response = FarmRetrofitClient.api.getCropRecommendations()
+                val lang = com.krushiadhaar.app.GlobalMockData.userLanguage.value
+                val loc = com.krushiadhaar.app.GlobalMockData.userLocation.value
+                val response = FarmRetrofitClient.api.getCropRecommendations(language = lang, location = loc)
                 if (response.isSuccessful) {
                     response.body()?.let {
                         _recommendationsState.value = it

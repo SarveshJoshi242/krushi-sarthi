@@ -6,6 +6,9 @@ import com.krushiadhaar.app.marketplace.CropListing
 import androidx.compose.ui.graphics.Color
 
 object GlobalMockData {
+    val userLanguage = mutableStateOf("English")
+    val userLocation = mutableStateOf("Maharashtra, India")
+
     val marketplaceListings = mutableStateListOf(
         CropListing("Sugarcane", "Ramesh Patil", "Pune, Maharashtra", 10, 2500, "\uD83C\uDF3F", Color(0xFFE8F5E9)),
         CropListing("Cotton", "Suresh Kumar", "Nagpur, Maharashtra", 5, 8000, "\uD83C\uDF31", Color(0xFFE3F2FD)),

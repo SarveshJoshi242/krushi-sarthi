@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form
+﻿from fastapi import FastAPI, File, UploadFile, Form
 from typing import Optional
 import pandas as pd
 import random
@@ -65,3 +65,74 @@ async def predict_disease(
         "Medicines": recommended_medicines,
         "Estimated_Cost": estimated_cost
     }
+
+@app.get("/recommendations")
+async def get_recommendations(weatherCondition: str = "Clear", currentMonth: str = "October", location: str = "India", language: str = "English"):
+    return [
+        {
+            "rank": "1",
+            "emoji": "??",
+            "cropName": "Wheat",
+            "suitability": "92% Suitable",
+            "netReturn": "Rs. 12,500/ha",
+            "waterRequirement": "4500 m3",
+            "sowingPeriod": "October - November",
+            "soilNutrientsRequired": "Nitrogen, Phosphorus",
+            "farmingTechnique": "Line Sowing"
+        },
+        {
+            "rank": "2",
+            "emoji": "??",
+            "cropName": "Maize",
+            "suitability": "85% Suitable",
+            "netReturn": "Rs. 10,200/ha",
+            "waterRequirement": "6000 m3",
+            "sowingPeriod": "June - July",
+            "soilNutrientsRequired": "High Nitrogen",
+            "farmingTechnique": "Ridge and Furrow"
+        },
+        {
+            "rank": "3",
+            "emoji": "??",
+            "cropName": "Mustard",
+            "suitability": "80% Suitable",
+            "netReturn": "Rs. 9,400/ha",
+            "waterRequirement": "3000 m3",
+            "sowingPeriod": "October - November",
+            "soilNutrientsRequired": "Nitrogen, Sulfur",
+            "farmingTechnique": "Broadcasting"
+        }
+    ]
+
+@app.get("/schemes")
+async def get_schemes(location: str = "India", crop: str = "Wheat", language: str = "English"):
+    return [
+        {
+            "title": "PM-KISAN",
+            "provider": "Central Government",
+            "description": "Income support of Rs. 6,000 per year.",
+            "isActive": True,
+            "link": "https://pmkisan.gov.in/",
+            "requiredDocuments": ["Aadhaar Card", "Bank Account Details"],
+            "type": "Scheme"
+        },
+        {
+            "title": "Pradhan Mantri Fasal Bima Yojana",
+            "provider": "Central Government",
+            "description": "Crop insurance scheme to protect against natural calamities.",
+            "isActive": True,
+            "link": "https://pmfby.gov.in/",
+            "requiredDocuments": ["Land Records", "Aadhaar Card"],
+            "type": "Insurance"
+        }
+    ]
+
+@app.get("/expenses")
+async def get_expenses(crop: str = "Wheat", area: str = "1 acre", language: str = "English"):
+    return [
+        {"category": "Seeds", "estimatedCost": 1500},
+        {"category": "Fertilizers", "estimatedCost": 3000},
+        {"category": "Pesticides", "estimatedCost": 1200},
+        {"category": "Labor", "estimatedCost": 4000},
+        {"category": "Machinery", "estimatedCost": 2500}
+    ]
