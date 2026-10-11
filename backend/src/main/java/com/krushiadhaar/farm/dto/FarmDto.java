@@ -8,4 +8,10 @@ public class FarmDto {
     private String name;
     private BigDecimal totalArea;
     private String status;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
 }

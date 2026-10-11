@@ -21,6 +21,7 @@ class KrushiAdhaarApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        GlobalMockData.init(this)
         tokenStorage = TokenStorage(this)
         val authInterceptor = AuthInterceptor(tokenStorage)
         val tokenAuthenticator = TokenAuthenticator(tokenStorage)

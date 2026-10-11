@@ -1,4 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
 pandas
+Pillow
+numpy
+tensorflow
+google-generativeai
+httpx
+aiofiles

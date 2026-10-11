@@ -1,5 +1,9 @@
 HELP.md
 .gradle
+.env
+.env.local
+src/main/resources/application.properties
+application.properties
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/

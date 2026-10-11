@@ -5,4 +5,10 @@ import java.math.BigDecimal;
 public class CreateFarmRequest {
     private String name;
     private BigDecimal totalArea;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
 }

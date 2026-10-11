@@ -25,4 +25,10 @@ public class WeatherController {
     public ResponseEntity<WeatherResponse> getWeather(@PathVariable UUID farmId) {
         return ResponseEntity.ok(weatherService.getWeather(farmId, getUserId()));
     }
+
+    @GetMapping("/coordinates")
+    public ResponseEntity<WeatherResponse> getWeatherByCoordinates(
+            @RequestParam double lat, @RequestParam double lon) {
+        return ResponseEntity.ok(weatherService.getWeatherByCoordinates(lat, lon));
+    }
 }

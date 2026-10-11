@@ -8,4 +8,6 @@ public class WeatherData {
     private double rainProbability;
     private double windSpeed;
     private String condition;
+    private String description;
+    private String icon;
 }

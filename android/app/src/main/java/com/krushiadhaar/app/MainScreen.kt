@@ -43,6 +43,11 @@ import com.krushiadhaar.app.disease.DiagnosisReportScreen
 import com.krushiadhaar.app.disease.TreatmentGuideScreen
 import com.krushiadhaar.app.finance.FarmerWalletScreen
 import com.krushiadhaar.app.schemes.GovernmentSchemesScreen
+import com.krushiadhaar.app.assistant.VoiceAssistantScreen
+import com.krushiadhaar.app.mandi.MandiPricesScreen
+import com.krushiadhaar.app.soil.SoilHealthScreen
+import com.krushiadhaar.app.irrigation.SmartIrrigationScreen
+import com.krushiadhaar.app.report.PdfReportScreen
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home     : BottomNavItem("home_tab", Icons.Default.Home, "Home")
@@ -110,7 +115,12 @@ fun MainScreen(
                     onNavigateToExpense         = { bottomNavController.navigate("expense") },
                     onNavigateToProfile         = { bottomNavController.navigate("profile") },
                     onNavigateToMarketplace     = { bottomNavController.navigate("marketplace") },
-                    onNavigateToPitchCrop       = { bottomNavController.navigate("sell_crop") }
+                    onNavigateToPitchCrop       = { bottomNavController.navigate("sell_crop") },
+                    onNavigateToVoiceAssistant  = { bottomNavController.navigate("voice_assistant") },
+                    onNavigateToMandi           = { bottomNavController.navigate("mandi_prices") },
+                    onNavigateToSoilHealth      = { bottomNavController.navigate("soil_health") },
+                    onNavigateToIrrigation      = { bottomNavController.navigate("smart_irrigation") },
+                    onNavigateToPdfReport       = { bottomNavController.navigate("pdf_report") }
                 )
             }
             navigation(startDestination = "pest_home", route = BottomNavItem.Pest.route) {
@@ -218,6 +228,21 @@ fun MainScreen(
                     onNavigateBack  = { bottomNavController.popBackStack() },
                     onSubmitSuccess = { bottomNavController.popBackStack() }
                 )
+            }
+            composable("voice_assistant") {
+                VoiceAssistantScreen(onNavigateBack = { bottomNavController.popBackStack() })
+            }
+            composable("mandi_prices") {
+                MandiPricesScreen(onNavigateBack = { bottomNavController.popBackStack() })
+            }
+            composable("soil_health") {
+                SoilHealthScreen(onNavigateBack = { bottomNavController.popBackStack() })
+            }
+            composable("smart_irrigation") {
+                SmartIrrigationScreen(onNavigateBack = { bottomNavController.popBackStack() })
+            }
+            composable("pdf_report") {
+                PdfReportScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.krushiadhaar.farm.entity;
 import com.krushiadhaar.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Farm {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -21,6 +23,7 @@ public class Farm {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
+    @JsonIgnoreProperties({"passwordHash", "hibernateLazyInitializer", "handler"})
     private User owner;
 
     @Column(nullable = false)
@@ -29,6 +32,18 @@ public class Farm {
     private String description;
     private BigDecimal totalArea;
     private String areaUnit;
+
+    // Geolocation fields
+    @Column(precision = 10, scale = 7)
+    private BigDecimal latitude;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal longitude;
+
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
     
     @Builder.Default
     private String status = "ACTIVE";

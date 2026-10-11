@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.krushiadhaar.app.ui.theme.*
+import com.krushiadhaar.app.util.AppStrings
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,11 +34,17 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToMarketplace: () -> Unit = {},
     onNavigateToPitchCrop: () -> Unit = {},
+    onNavigateToVoiceAssistant: () -> Unit = {},
+    onNavigateToMandi: () -> Unit = {},
+    onNavigateToSoilHealth: () -> Unit = {},
+    onNavigateToIrrigation: () -> Unit = {},
+    onNavigateToPdfReport: () -> Unit = {},
     homeViewModel: com.krushiadhaar.app.presentation.HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     var showPlanCropSheet by remember { mutableStateOf(false) }
     var showSelectCropSheet by remember { mutableStateOf(false) }
     val weatherState by homeViewModel.weatherState.collectAsState()
+    var currentLang by remember { mutableStateOf(GlobalMockData.userLanguage.value) }
 
     Column(
         modifier = Modifier
@@ -62,8 +70,47 @@ fun HomeScreen(
                 Icon(Icons.Default.Eco, contentDescription = null, tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = "Kisaan Mitra", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
-            
+            Text(
+                text = AppStrings.appName,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                modifier = Modifier.weight(1f)
+            )
+
+            // Language Switcher Dropdown Pill
+            val availableLangs = listOf("English", "हिंदी", "मराठी")
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GreenSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary),
+                modifier = Modifier.clickable {
+                    val nextIdx = (availableLangs.indexOf(currentLang) + 1) % availableLangs.size
+                    val newLang = availableLangs[if (nextIdx >= 0) nextIdx else 0]
+                    currentLang = newLang
+                    GlobalMockData.updateLanguage(newLang)
+                }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🌐 $currentLang",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenDark
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Direct Mic Assistant Button
+            IconButton(onClick = onNavigateToVoiceAssistant) {
+                Icon(Icons.Default.Mic, contentDescription = "Voice Assistant", tint = GreenPrimary)
+            }
+
             IconButton(onClick = onNavigateToProfile) {
                 Icon(Icons.Outlined.Person, contentDescription = "Profile", tint = TextPrimary)
             }
@@ -77,12 +124,12 @@ fun HomeScreen(
             verticalAlignment = Alignment.Top
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Hi, Sarvesh \uD83D\uDC4B", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(text = AppStrings.greeting, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Kolhapur, KOLHAPUR \u2022 Ma...", fontSize = 12.sp, color = TextSecondary)
+                    Text(text = "Kolhapur, KOLHAPUR • Maharashtra", fontSize = 12.sp, color = TextSecondary)
                 }
             }
             Box(
@@ -274,23 +321,74 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Legacy Quick Actions
-        Text(text = "Farm Tools", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary, modifier = Modifier.padding(horizontal = 16.dp))
+        // Quick Actions & Smart Features
+        Text(
+            text = AppStrings.farmTools,
+            fontWeight = FontWeight.Bold,
+            fontSize = 17.sp,
+            color = TextPrimary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         Spacer(modifier = Modifier.height(12.dp))
 
+        // AI Voice Assistant Hero Banner
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = GreenPrimary),
+            onClick = onNavigateToVoiceAssistant
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Mic, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = AppStrings.voiceAssistant, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                    Text(text = "Ask questions in English, हिंदी, or मराठी", fontSize = 11.sp, color = Color.White.copy(alpha = 0.85f))
+                }
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Row 1: Mandi & Soil Health
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83C\uDF3E", title = "Pitch Crop", subtitle = "Sell", onClick = onNavigateToPitchCrop)
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🛒", title = "Buyer Portal", subtitle = "Marketplace", onClick = onNavigateToMarketplace)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "📈", title = AppStrings.mandiPrices, subtitle = "Live APMC Rates", onClick = onNavigateToMandi)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🧪", title = AppStrings.soilHealth, subtitle = "Fertilizer Bags", onClick = onNavigateToSoilHealth)
         }
         Spacer(modifier = Modifier.height(12.dp))
+
+        // Row 2: Irrigation & PDF Report
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83D\uDCE6", title = "Inventory", subtitle = "Resources", onClick = onNavigateToManagement)
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83E\uDDEE", title = "Expenses", subtitle = "Calculator", onClick = onNavigateToExpense)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "💧", title = AppStrings.smartIrrigation, subtitle = "Water & Activities", onClick = onNavigateToIrrigation)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "📄", title = AppStrings.pdfReport, subtitle = "Export Certificate", onClick = onNavigateToPdfReport)
         }
         Spacer(modifier = Modifier.height(12.dp))
+
+        // Row 3: Marketplace & Sell
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83D\uDCC4", title = "Documents", subtitle = "Eligibility", onClick = onNavigateToDocuments)
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "\uD83D\uDCB0", title = "Finance", subtitle = "Schemes & Loans", onClick = onNavigateToFinance)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🌾", title = "Pitch Crop", subtitle = "Direct Sale", onClick = onNavigateToPitchCrop)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🛒", title = "Buyer Portal", subtitle = "Negotiate & Buy", onClick = onNavigateToMarketplace)
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Row 4: Inventory & Expenses
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "📦", title = "Inventory", subtitle = "Resources", onClick = onNavigateToManagement)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🧮", title = "Expenses", subtitle = "Cost Calculator", onClick = onNavigateToExpense)
         }
 
         Spacer(modifier = Modifier.height(40.dp))
