@@ -18,6 +18,10 @@ object GlobalMockData {
     private const val KEY_LOCATION = "user_location"
     private const val KEY_TRANSACTIONS = "transactions_json"
     private const val KEY_NOTIFICATIONS = "notifications_json"
+    private const val KEY_PERSONAL_EXPENSES = "personal_expenses_json"
+    private const val KEY_ESTIMATED_CROP_COST = "estimated_crop_cost"
+    private const val KEY_ESTIMATED_CROP_NAME = "estimated_crop_name"
+    private const val KEY_ESTIMATED_CROP_AREA = "estimated_crop_area"
 
     // Farmer Profile Keys
     private const val KEY_FARMER_NAME = "farmer_name"
@@ -65,11 +69,26 @@ object GlobalMockData {
 
     data class Transaction(val amount: Int, val description: String, val isCredit: Boolean)
     
+    data class PersonalExpense(
+        val id: String = java.util.UUID.randomUUID().toString(),
+        val title: String,
+        val category: String,
+        val amount: Int,
+        val date: String,
+        val isExpense: Boolean = true
+    )
+
     val walletBalance = mutableStateOf(15000)
     val transactions = androidx.compose.runtime.mutableStateListOf<Transaction>()
     val cropYieldRevenue = androidx.compose.runtime.mutableStateOf(0)
     data class Notification(val message: String, val time: String)
     val farmerNotifications = androidx.compose.runtime.mutableStateListOf<Notification>()
+
+    // Personal Accounting & Farm Tally State
+    val personalExpenses = androidx.compose.runtime.mutableStateListOf<PersonalExpense>()
+    val estimatedCropCost = androidx.compose.runtime.mutableIntStateOf(40000)
+    val estimatedCropName = androidx.compose.runtime.mutableStateOf("Wheat")
+    val estimatedCropArea = androidx.compose.runtime.mutableStateOf("5")
 
     var selectedImageUri: String? = null
     var capturedBitmap: android.graphics.Bitmap? = null
@@ -122,6 +141,38 @@ object GlobalMockData {
             }
         }
 
+        // Restore personal expenses
+        val peJson = sp.getString(KEY_PERSONAL_EXPENSES, null)
+        personalExpenses.clear()
+        if (!peJson.isNullOrEmpty()) {
+            try {
+                val listType = object : TypeToken<List<PersonalExpense>>() {}.type
+                val savedPe: List<PersonalExpense> = gson.fromJson(peJson, listType)
+                personalExpenses.addAll(savedPe)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (personalExpenses.isEmpty()) {
+            personalExpenses.addAll(
+                listOf(
+                    PersonalExpense(title = "Tractor Diesel & Servicing", category = "Farm Operations", amount = 4500, date = "12 Oct 2026", isExpense = true),
+                    PersonalExpense(title = "Household Groceries & Provisions", category = "Household", amount = 5800, date = "11 Oct 2026", isExpense = true),
+                    PersonalExpense(title = "KCC Kisan Credit Card EMI", category = "Loan & EMI", amount = 3200, date = "08 Oct 2026", isExpense = true),
+                    PersonalExpense(title = "Cattle Fodder & Mineral Mix", category = "Livestock & Dairy", amount = 2400, date = "06 Oct 2026", isExpense = true),
+                    PersonalExpense(title = "Borewell Electricity Bill", category = "Utilities", amount = 1100, date = "04 Oct 2026", isExpense = true),
+                    PersonalExpense(title = "Children School Books & Fees", category = "Health & Education", amount = 2500, date = "02 Oct 2026", isExpense = true),
+                    PersonalExpense(title = "Daily Milk Dairy Collection", category = "Farm Income", amount = 8500, date = "10 Oct 2026", isExpense = false),
+                    PersonalExpense(title = "PM-KISAN DBT Installment", category = "Farm Income", amount = 2000, date = "01 Oct 2026", isExpense = false)
+                )
+            )
+        }
+
+        // Restore crop estimates
+        estimatedCropCost.intValue = sp.getInt(KEY_ESTIMATED_CROP_COST, 40000)
+        estimatedCropName.value = sp.getString(KEY_ESTIMATED_CROP_NAME, "Wheat") ?: "Wheat"
+        estimatedCropArea.value = sp.getString(KEY_ESTIMATED_CROP_AREA, "5") ?: "5"
+
         // Restore notifications
         val notifJson = sp.getString(KEY_NOTIFICATIONS, null)
         if (!notifJson.isNullOrEmpty()) {
@@ -144,6 +195,10 @@ object GlobalMockData {
             putString(KEY_LOCATION, userLocation.value)
             putString(KEY_TRANSACTIONS, gson.toJson(transactions.toList()))
             putString(KEY_NOTIFICATIONS, gson.toJson(farmerNotifications.toList()))
+            putString(KEY_PERSONAL_EXPENSES, gson.toJson(personalExpenses.toList()))
+            putInt(KEY_ESTIMATED_CROP_COST, estimatedCropCost.intValue)
+            putString(KEY_ESTIMATED_CROP_NAME, estimatedCropName.value)
+            putString(KEY_ESTIMATED_CROP_AREA, estimatedCropArea.value)
 
             putString(KEY_FARMER_NAME, farmerName.value)
             putString(KEY_FARMER_PHONE, farmerPhone.value)
@@ -160,6 +215,23 @@ object GlobalMockData {
             putString(KEY_AUTH_TOKEN, authToken.value)
             apply()
         }
+    }
+
+    fun addPersonalExpense(expense: PersonalExpense) {
+        personalExpenses.add(0, expense)
+        persist()
+    }
+
+    fun removePersonalExpense(expenseId: String) {
+        personalExpenses.removeAll { it.id == expenseId }
+        persist()
+    }
+
+    fun updateCropEstimate(cost: Int, crop: String, area: String) {
+        estimatedCropCost.intValue = cost
+        estimatedCropName.value = crop
+        estimatedCropArea.value = area
+        persist()
     }
 
     fun saveFarmerProfile(
