@@ -1,6 +1,7 @@
 package com.krushiadhaar.app.management
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -52,8 +53,106 @@ data class ResourceBreakdown(
     val percent: Float,
     val amount: Int,
     val color: Color,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val calculationFormula: String = ""
 )
+
+data class CropAgronomicModel(
+    val id: String,
+    val cropName: String,
+    val regionalName: String,
+    val emoji: String,
+    val defaultYieldQuintalsPerAcre: Double,
+    val mspPricePerQuintal: Int,
+    val seedRatePerAcre: Double,
+    val seedUnit: String,
+    val seedPricePerUnit: Int,
+    val seedVarietyExample: String,
+    val fertilizerCostPerAcre: Int,
+    val fertilizerDoseDesc: String,
+    val pesticideCostPerAcre: Int,
+    val pesticideSpraysDesc: String,
+    val laborMandaysPerAcre: Int,
+    val laborDailyWage: Int,
+    val laborDesc: String,
+    val tractorHoursPerAcre: Double,
+    val tractorHourlyRate: Int,
+    val tractorOpsDesc: String,
+    val irrigationRoundsPerAcre: Int,
+    val irrigationCostPerRound: Int,
+    val irrigationDesc: String,
+    val harvestingCostPerAcre: Int,
+    val harvestingDesc: String,
+    val transportFreightPerQuintal: Int,
+    val bagCostPerQuintal: Int
+) {
+    fun calculateResourceCost(resourceId: String, acres: Double): Pair<Int, String> {
+        val a = acres.coerceAtLeast(0.0)
+        return when (resourceId) {
+            "seeds" -> {
+                val totalQty = seedRatePerAcre * a
+                val cost = (totalQty * seedPricePerUnit).toInt()
+                val unitStr = if (seedUnit == "kg") "kg" else seedUnit
+                val qtyStr = if (totalQty % 1.0 == 0.0) "${totalQty.toInt()}" else String.format("%.1f", totalQty)
+                cost to "$qtyStr $unitStr ($seedVarietyExample @ \u20B9$seedPricePerUnit/$unitStr)"
+            }
+            "fertilizer" -> {
+                val cost = (fertilizerCostPerAcre * a).toInt()
+                val bags = (3 * a).toInt().coerceAtLeast(1)
+                cost to "$bags Bags ($fertilizerDoseDesc @ \u20B9$fertilizerCostPerAcre/Ac)"
+            }
+            "pesticides" -> {
+                val cost = (pesticideCostPerAcre * a).toInt()
+                cost to "$pesticideSpraysDesc (@ \u20B9$pesticideCostPerAcre/Ac)"
+            }
+            "labor" -> {
+                val days = (laborMandaysPerAcre * a).toInt()
+                val cost = days * laborDailyWage
+                cost to "$days Mandays ($laborDesc @ \u20B9$laborDailyWage/day)"
+            }
+            "machinery" -> {
+                val hours = tractorHoursPerAcre * a
+                val cost = (hours * tractorHourlyRate).toInt()
+                val hrsStr = if (hours % 1.0 == 0.0) "${hours.toInt()}" else String.format("%.1f", hours)
+                cost to "$hrsStr Tractor Hrs ($tractorOpsDesc @ \u20B9$tractorHourlyRate/hr)"
+            }
+            "irrigation" -> {
+                val rounds = (irrigationRoundsPerAcre * a).toInt()
+                val cost = rounds * irrigationCostPerRound
+                cost to "$rounds Watering Rounds ($irrigationDesc @ \u20B9$irrigationCostPerRound/round)"
+            }
+            "harvesting" -> {
+                val cost = (harvestingCostPerAcre * a).toInt()
+                cost to "$harvestingDesc (@ \u20B9$harvestingCostPerAcre/Ac)"
+            }
+            "transport" -> {
+                val yield = defaultYieldQuintalsPerAcre * a
+                val cost = (yield * transportFreightPerQuintal).toInt()
+                cost to "${String.format("%.1f", yield)} Qtl Freight to Mandi (@ \u20B9$transportFreightPerQuintal/Qtl)"
+            }
+            "storage" -> {
+                val yield = defaultYieldQuintalsPerAcre * a
+                val bagsNeeded = yield.toInt().coerceAtLeast(1)
+                val cost = bagsNeeded * bagCostPerQuintal
+                cost to "$bagsNeeded Gunny Bags (50kg cap @ \u20B9$bagCostPerQuintal/bag)"
+            }
+            else -> 0 to ""
+        }
+    }
+
+    fun getTotalCostPerAcre(): Int {
+        val seed = (seedRatePerAcre * seedPricePerUnit).toInt()
+        val fert = fertilizerCostPerAcre
+        val pest = pesticideCostPerAcre
+        val lab = laborMandaysPerAcre * laborDailyWage
+        val mach = (tractorHoursPerAcre * tractorHourlyRate).toInt()
+        val irr = irrigationRoundsPerAcre * irrigationCostPerRound
+        val harv = harvestingCostPerAcre
+        val trans = (defaultYieldQuintalsPerAcre * transportFreightPerQuintal).toInt()
+        val stor = (defaultYieldQuintalsPerAcre * bagCostPerQuintal).toInt()
+        return seed + fert + pest + lab + mach + irr + harv + trans + stor
+    }
+}
 
 // Clean Indian Rupee Number Formatting: 40000 -> "₹40,000", 140000 -> "₹1,40,000", 1234567 -> "₹12,34,567"
 fun formatRupees(amount: Number, includeSymbol: Boolean = true): String {
@@ -88,21 +187,256 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("🌾 Crop Cost", "📒 Personal Ledger", "📊 Financial Tally")
 
-    // --- Crop Estimator State ---
-    val cropTypes = listOf(
-        "Wheat (गहू)" to 8000,
-        "Rice / Paddy (भात)" to 12000,
-        "Cotton (कापूस)" to 16000,
-        "Sugarcane (ऊस)" to 24000,
-        "Soybean (सोयाबीन)" to 11000,
-        "Maize (मका)" to 9500,
-        "Gram / Chana (हरभरा)" to 7500,
-        "Onion (कांदा)" to 22000
-    )
+    // --- Scientific Agronomic Crop Database ---
+    val agronomicCropList = remember {
+        listOf(
+            CropAgronomicModel(
+                id = "soybean",
+                cropName = "Soybean (सोयाबीन)",
+                regionalName = "सोयाबीन",
+                emoji = "🌱",
+                defaultYieldQuintalsPerAcre = 11.0,
+                mspPricePerQuintal = 4892,
+                seedRatePerAcre = 30.0,
+                seedUnit = "kg",
+                seedPricePerUnit = 95,
+                seedVarietyExample = "JS-335 / KDS-726",
+                fertilizerCostPerAcre = 3700,
+                fertilizerDoseDesc = "1 Bag DAP + 1 Potash + 1 SSP",
+                pesticideCostPerAcre = 2200,
+                pesticideSpraysDesc = "Pre-emergence herbicide + 2 foliar sprays",
+                laborMandaysPerAcre = 20,
+                laborDailyWage = 350,
+                laborDesc = "Sowing, 2 weedings & harvest",
+                tractorHoursPerAcre = 3.5,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Ploughing, rotavator & drill",
+                irrigationRoundsPerAcre = 3,
+                irrigationCostPerRound = 450,
+                irrigationDesc = "Flowering & pod filling waterings",
+                harvestingCostPerAcre = 2600,
+                harvestingDesc = "Combine harvester cutting & threshing",
+                transportFreightPerQuintal = 75,
+                bagCostPerQuintal = 45
+            ),
+            CropAgronomicModel(
+                id = "wheat",
+                cropName = "Wheat (गहू)",
+                regionalName = "गहू",
+                emoji = "🌾",
+                defaultYieldQuintalsPerAcre = 18.0,
+                mspPricePerQuintal = 2275,
+                seedRatePerAcre = 40.0,
+                seedUnit = "kg",
+                seedPricePerUnit = 45,
+                seedVarietyExample = "Lokwan / HD-2967 certified",
+                fertilizerCostPerAcre = 3600,
+                fertilizerDoseDesc = "2 Bags Urea + 1 Bag DAP + Potash",
+                pesticideCostPerAcre = 1200,
+                pesticideSpraysDesc = "Weedicide 2,4-D + rust protection",
+                laborMandaysPerAcre = 12,
+                laborDailyWage = 350,
+                laborDesc = "Sowing & basin channels",
+                tractorHoursPerAcre = 3.0,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Ploughing, harrowing & leveling",
+                irrigationRoundsPerAcre = 5,
+                irrigationCostPerRound = 450,
+                irrigationDesc = "Crown root, tillering & milking stages",
+                harvestingCostPerAcre = 2400,
+                harvestingDesc = "Combine harvester threshing",
+                transportFreightPerQuintal = 60,
+                bagCostPerQuintal = 45
+            ),
+            CropAgronomicModel(
+                id = "cotton",
+                cropName = "Cotton (कापूस)",
+                regionalName = "कापूस",
+                emoji = "🪴",
+                defaultYieldQuintalsPerAcre = 10.0,
+                mspPricePerQuintal = 7121,
+                seedRatePerAcre = 2.0,
+                seedUnit = "packets",
+                seedPricePerUnit = 864,
+                seedVarietyExample = "Bollgard II Hybrid BG-II",
+                fertilizerCostPerAcre = 5100,
+                fertilizerDoseDesc = "3 Bags Urea + 2 Bags NPK 10:26:26",
+                pesticideCostPerAcre = 4500,
+                pesticideSpraysDesc = "Sucking pest + Pink bollworm 4 sprays",
+                laborMandaysPerAcre = 30,
+                laborDailyWage = 350,
+                laborDesc = "Sowing + 5 manual cotton pickings",
+                tractorHoursPerAcre = 3.5,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Tillage & inter-cultivation weeding",
+                irrigationRoundsPerAcre = 4,
+                irrigationCostPerRound = 450,
+                irrigationDesc = "Drip fertigation & boll watering",
+                harvestingCostPerAcre = 0,
+                harvestingDesc = "Included in picking labor",
+                transportFreightPerQuintal = 100,
+                bagCostPerQuintal = 60
+            ),
+            CropAgronomicModel(
+                id = "sugarcane",
+                cropName = "Sugarcane (ऊस)",
+                regionalName = "ऊस",
+                emoji = "🎋",
+                defaultYieldQuintalsPerAcre = 500.0,
+                mspPricePerQuintal = 315,
+                seedRatePerAcre = 25000.0,
+                seedUnit = "setts",
+                seedPricePerUnit = 1,
+                seedVarietyExample = "Co 86032 two-eye setts",
+                fertilizerCostPerAcre = 14500,
+                fertilizerDoseDesc = "Urea, DAP, Potash & 5 Tons FYM compost",
+                pesticideCostPerAcre = 3200,
+                pesticideSpraysDesc = "Trash mulching & white grub control",
+                laborMandaysPerAcre = 35,
+                laborDailyWage = 350,
+                laborDesc = "Planting, earthing-up & weeding",
+                tractorHoursPerAcre = 5.5,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Subsoiler, ridger & furrow operations",
+                irrigationRoundsPerAcre = 25,
+                irrigationCostPerRound = 300,
+                irrigationDesc = "Year-round drip fertigation & canal",
+                harvestingCostPerAcre = 22500,
+                harvestingDesc = "Sugar factory cutting & loader contract",
+                transportFreightPerQuintal = 0,
+                bagCostPerQuintal = 0
+            ),
+            CropAgronomicModel(
+                id = "rice",
+                cropName = "Rice / Paddy (भात)",
+                regionalName = "भात",
+                emoji = "🌾",
+                defaultYieldQuintalsPerAcre = 22.0,
+                mspPricePerQuintal = 2300,
+                seedRatePerAcre = 25.0,
+                seedUnit = "kg",
+                seedPricePerUnit = 65,
+                seedVarietyExample = "MTU 1010 / Indrayani certified",
+                fertilizerCostPerAcre = 4200,
+                fertilizerDoseDesc = "Urea, DAP, Zinc Sulphate & Potash",
+                pesticideCostPerAcre = 2400,
+                pesticideSpraysDesc = "Stem borer, leaf folder & blast control",
+                laborMandaysPerAcre = 25,
+                laborDailyWage = 350,
+                laborDesc = "Nursery, transplantation & hand weeding",
+                tractorHoursPerAcre = 4.0,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Puddling rotor, cage wheels & tilling",
+                irrigationRoundsPerAcre = 8,
+                irrigationCostPerRound = 450,
+                irrigationDesc = "Standing water maintenance & canal",
+                harvestingCostPerAcre = 2800,
+                harvestingDesc = "Paddy combine harvester",
+                transportFreightPerQuintal = 65,
+                bagCostPerQuintal = 45
+            ),
+            CropAgronomicModel(
+                id = "onion",
+                cropName = "Onion (कांदा)",
+                regionalName = "कांदा",
+                emoji = "🧅",
+                defaultYieldQuintalsPerAcre = 80.0,
+                mspPricePerQuintal = 1800,
+                seedRatePerAcre = 4.0,
+                seedUnit = "kg",
+                seedPricePerUnit = 1400,
+                seedVarietyExample = "Phule Samarth / F1 Hybrid seed",
+                fertilizerCostPerAcre = 6500,
+                fertilizerDoseDesc = "NPK 10:26:26 + Sulphur + Urea + FYM",
+                pesticideCostPerAcre = 3800,
+                pesticideSpraysDesc = "Thrips & purple blotch fungicide sprays",
+                laborMandaysPerAcre = 35,
+                laborDailyWage = 350,
+                laborDesc = "Transplanting seedlings & digging/curing",
+                tractorHoursPerAcre = 3.5,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Deep tillage & raised bed former",
+                irrigationRoundsPerAcre = 10,
+                irrigationCostPerRound = 400,
+                irrigationDesc = "Micro-sprinkler & drip cycles",
+                harvestingCostPerAcre = 4000,
+                harvestingDesc = "Manual harvesting, de-topping & sorting",
+                transportFreightPerQuintal = 50,
+                bagCostPerQuintal = 35
+            ),
+            CropAgronomicModel(
+                id = "maize",
+                cropName = "Maize (मका)",
+                regionalName = "मका",
+                emoji = "🌽",
+                defaultYieldQuintalsPerAcre = 25.0,
+                mspPricePerQuintal = 2225,
+                seedRatePerAcre = 8.0,
+                seedUnit = "kg",
+                seedPricePerUnit = 280,
+                seedVarietyExample = "Pioneer / Syngenta Hybrid",
+                fertilizerCostPerAcre = 3800,
+                fertilizerDoseDesc = "DAP + Urea + Zinc Sulphate",
+                pesticideCostPerAcre = 1800,
+                pesticideSpraysDesc = "Fall Armyworm (FAW) Emamectin sprays",
+                laborMandaysPerAcre = 14,
+                laborDailyWage = 350,
+                laborDesc = "Sowing, weeding & cob detasseling",
+                tractorHoursPerAcre = 3.0,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Plowing & ridging operations",
+                irrigationRoundsPerAcre = 4,
+                irrigationCostPerRound = 450,
+                irrigationDesc = "Knee-high, tasseling & silking stages",
+                harvestingCostPerAcre = 2200,
+                harvestingDesc = "Cob picker & mechanical shelling thresher",
+                transportFreightPerQuintal = 60,
+                bagCostPerQuintal = 40
+            ),
+            CropAgronomicModel(
+                id = "gram",
+                cropName = "Gram / Chana (हरभरा)",
+                regionalName = "हरभरा",
+                emoji = "🫘",
+                defaultYieldQuintalsPerAcre = 9.0,
+                mspPricePerQuintal = 5440,
+                seedRatePerAcre = 30.0,
+                seedUnit = "kg",
+                seedPricePerUnit = 85,
+                seedVarietyExample = "Digvijay / JG-11 certified",
+                fertilizerCostPerAcre = 2400,
+                fertilizerDoseDesc = "DAP 18:46 + Rhizobium culture bio-dose",
+                pesticideCostPerAcre = 1600,
+                pesticideSpraysDesc = "Helicoverpa pod borer pheromone + spray",
+                laborMandaysPerAcre = 12,
+                laborDailyWage = 350,
+                laborDesc = "Sowing & manual weeding labor",
+                tractorHoursPerAcre = 2.5,
+                tractorHourlyRate = 1200,
+                tractorOpsDesc = "Conservation tillage & seed drill",
+                irrigationRoundsPerAcre = 2,
+                irrigationCostPerRound = 450,
+                irrigationDesc = "Branching & pod development waterings",
+                harvestingCostPerAcre = 2000,
+                harvestingDesc = "Manual sickle cutting & stationary thresher",
+                transportFreightPerQuintal = 70,
+                bagCostPerQuintal = 45
+            )
+        )
+    }
 
-    var selectedCropPair by remember { mutableStateOf(cropTypes[0]) }
+    // Auto-fill from Farmer Profile
+    val initialProfileCrop = remember {
+        agronomicCropList.find {
+            it.cropName.contains(GlobalMockData.farmerCrop.value, ignoreCase = true) ||
+            it.regionalName.contains(GlobalMockData.farmerCrop.value, ignoreCase = true) ||
+            GlobalMockData.farmerCrop.value.contains(it.id, ignoreCase = true)
+        } ?: agronomicCropList[0]
+    }
+
+    var selectedCropModel by remember { mutableStateOf(initialProfileCrop) }
     var cropExpanded by remember { mutableStateOf(false) }
-    var farmAreaText by remember { mutableStateOf(GlobalMockData.estimatedCropArea.value) }
+    var farmAreaText by remember { mutableStateOf(GlobalMockData.farmerFarmArea.value) }
 
     // Expanded 9 Farming Resources
     val allResources = remember {
@@ -130,35 +464,43 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
     var addDialogIsExpense by remember { mutableStateOf(true) }
     var addDialogInitialCategory by remember { mutableStateOf<String?>(null) }
 
-    // Area and calculations
-    val area = farmAreaText.toFloatOrNull() ?: 0f
-    val basePerAcre = selectedCropPair.second
-    val totalEstimatedCost = (basePerAcre * area).toInt()
+    // Area and agronomic scientific calculations
+    val area = farmAreaText.toDoubleOrNull() ?: 0.0
+    val basePerAcre = selectedCropModel.getTotalCostPerAcre()
 
-    // Normalized breakdowns
-    val activeResources = allResources.filter { selectedResourceMap[it.id] == true }
-    val totalActiveShare = activeResources.sumOf { it.defaultShare.toDouble() }.toFloat()
+    val rawBreakdowns = allResources
+        .filter { selectedResourceMap[it.id] == true }
+        .map { res ->
+            val (cost, formula) = selectedCropModel.calculateResourceCost(res.id, area)
+            Triple(res, cost, formula)
+        }
 
-    val breakdowns = activeResources.map { res ->
-        val normalizedPercent = if (totalActiveShare > 0f) res.defaultShare / totalActiveShare else 0f
-        val amount = (totalEstimatedCost * normalizedPercent).toInt()
+    val totalCalculatedCropBudget = rawBreakdowns.sumOf { it.second }
+
+    val breakdowns = rawBreakdowns.map { (res, amt, formula) ->
+        val percent = if (totalCalculatedCropBudget > 0) amt.toFloat() / totalCalculatedCropBudget else 0f
         ResourceBreakdown(
             id = res.id,
             label = res.title,
             regionalName = res.regionalName,
-            percent = normalizedPercent,
-            amount = amount,
+            percent = percent,
+            amount = amt,
             color = res.color,
-            icon = res.icon
+            icon = res.icon,
+            calculationFormula = formula
         )
     }
 
-    val totalCalculatedCropBudget = breakdowns.sumOf { it.amount }
+    // Revenue, Yield & Net Profit Estimation
+    val expectedYieldQtl = selectedCropModel.defaultYieldQuintalsPerAcre * area
+    val expectedRevenue = (expectedYieldQtl * selectedCropModel.mspPricePerQuintal).toInt()
+    val netFarmProfit = expectedRevenue - totalCalculatedCropBudget
+    val roiPercent = if (totalCalculatedCropBudget > 0) (((netFarmProfit.toDouble() / totalCalculatedCropBudget)) * 100).toInt() else 0
 
     // Update global reference when calculated
-    LaunchedEffect(totalCalculatedCropBudget, selectedCropPair.first, farmAreaText) {
+    LaunchedEffect(totalCalculatedCropBudget, selectedCropModel.cropName, farmAreaText) {
         if (totalCalculatedCropBudget > 0) {
-            val cropSimpleName = selectedCropPair.first.substringBefore(" (")
+            val cropSimpleName = selectedCropModel.cropName.substringBefore(" (")
             GlobalMockData.updateCropEstimate(totalCalculatedCropBudget, cropSimpleName, farmAreaText)
         }
     }
@@ -251,24 +593,33 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
             Box(modifier = Modifier.weight(1f)) {
                 when (selectedTab) {
                     0 -> CropCostCalculatorTab(
-                        cropTypes = cropTypes,
-                        selectedCrop = selectedCropPair,
+                        agronomicCrops = agronomicCropList,
+                        selectedCropModel = selectedCropModel,
                         cropExpanded = cropExpanded,
                         onCropExpandedChange = { cropExpanded = it },
-                        onSelectCrop = { selectedCropPair = it },
+                        onSelectCrop = { selectedCropModel = it },
                         farmAreaText = farmAreaText,
                         onFarmAreaChange = { farmAreaText = it },
+                        onResetToProfile = {
+                            selectedCropModel = initialProfileCrop
+                            farmAreaText = GlobalMockData.farmerFarmArea.value
+                            Toast.makeText(context, "Synced with ${GlobalMockData.farmerName.value}'s profile!", Toast.LENGTH_SHORT).show()
+                        },
                         allResources = allResources,
                         selectedResourceMap = selectedResourceMap,
                         totalBudget = totalCalculatedCropBudget,
                         breakdowns = breakdowns,
                         perAcreCost = basePerAcre,
+                        expectedYieldQtl = expectedYieldQtl,
+                        expectedRevenue = expectedRevenue,
+                        netFarmProfit = netFarmProfit,
+                        roiPercent = roiPercent,
                         showResult = showResult,
                         onCalculate = {
                             showResult = true
-                            val cropSimpleName = selectedCropPair.first.substringBefore(" (")
+                            val cropSimpleName = selectedCropModel.cropName.substringBefore(" (")
                             GlobalMockData.updateCropEstimate(totalCalculatedCropBudget, cropSimpleName, farmAreaText)
-                            Toast.makeText(context, "Crop budget updated in Financial Tally!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Calculated & synced with Financial Tally!", Toast.LENGTH_SHORT).show()
                         }
                     )
                     1 -> PersonalLedgerTab(
@@ -282,7 +633,7 @@ fun ExpenseCalculatorScreen(onNavigateBack: () -> Unit) {
                     )
                     2 -> FinancialTallyTab(
                         cropBudget = totalCalculatedCropBudget,
-                        cropName = selectedCropPair.first.substringBefore(" ("),
+                        cropName = selectedCropModel.cropName.substringBefore(" ("),
                         personalOutflow = personalOutflows,
                         personalInflow = personalInflows,
                         marketplaceRevenue = cropYieldRevenue,
@@ -451,18 +802,23 @@ private fun TallyHeaderCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CropCostCalculatorTab(
-    cropTypes: List<Pair<String, Int>>,
-    selectedCrop: Pair<String, Int>,
+    agronomicCrops: List<CropAgronomicModel>,
+    selectedCropModel: CropAgronomicModel,
     cropExpanded: Boolean,
     onCropExpandedChange: (Boolean) -> Unit,
-    onSelectCrop: (Pair<String, Int>) -> Unit,
+    onSelectCrop: (CropAgronomicModel) -> Unit,
     farmAreaText: String,
     onFarmAreaChange: (String) -> Unit,
+    onResetToProfile: () -> Unit,
     allResources: List<ResourceDefinition>,
     selectedResourceMap: MutableMap<String, Boolean>,
     totalBudget: Int,
     breakdowns: List<ResourceBreakdown>,
     perAcreCost: Int,
+    expectedYieldQtl: Double,
+    expectedRevenue: Int,
+    netFarmProfit: Int,
+    roiPercent: Int,
     showResult: Boolean,
     onCalculate: () -> Unit
 ) {
@@ -473,6 +829,59 @@ private fun CropCostCalculatorTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Farmer Profile Auto-Fill Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = GreenSurface),
+            border = BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.4f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(GreenPrimary.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(selectedCropModel.emoji, fontSize = 20.sp)
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Auto-filled: ${GlobalMockData.farmerName.value}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = GreenDark
+                        )
+                        Text(
+                            text = "Registered Farm: ${GlobalMockData.farmerCrop.value} • ${GlobalMockData.farmerFarmArea.value} Acres (${GlobalMockData.farmerDistrict.value})",
+                            fontSize = 11.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+                OutlinedButton(
+                    onClick = onResetToProfile,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(30.dp),
+                    border = BorderStroke(1.dp, GreenPrimary)
+                ) {
+                    Icon(Icons.Default.Sync, contentDescription = null, tint = GreenDark, modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Sync", fontSize = 11.sp, color = GreenDark, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
         // Crop Selector Dropdown
         Column {
             Text(
@@ -487,7 +896,7 @@ private fun CropCostCalculatorTab(
                 onExpandedChange = onCropExpandedChange
             ) {
                 OutlinedTextField(
-                    value = selectedCrop.first,
+                    value = selectedCropModel.cropName,
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = {
@@ -506,16 +915,21 @@ private fun CropCostCalculatorTab(
                     expanded = cropExpanded,
                     onDismissRequest = { onCropExpandedChange(false) }
                 ) {
-                    cropTypes.forEach { crop ->
+                    agronomicCrops.forEach { crop ->
                         DropdownMenuItem(
                             text = {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(crop.first, fontWeight = FontWeight.Medium)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(crop.emoji, fontSize = 16.sp)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(crop.cropName, fontWeight = FontWeight.Medium)
+                                    }
                                     Text(
-                                        "${formatRupees(crop.second)}/Acre",
+                                        "${formatRupees(crop.getTotalCostPerAcre())}/Ac",
                                         color = GreenText,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
@@ -546,7 +960,7 @@ private fun CropCostCalculatorTab(
                     color = TextPrimary
                 )
                 Text(
-                    text = "Rate: ${formatRupees(perAcreCost)}/Acre",
+                    text = "Scientific Rate: ${formatRupees(perAcreCost)}/Acre",
                     fontSize = 12.sp,
                     color = GreenText,
                     fontWeight = FontWeight.Bold
@@ -579,7 +993,7 @@ private fun CropCostCalculatorTab(
                             .clickable { onFarmAreaChange(preset) },
                         shape = RoundedCornerShape(8.dp),
                         color = if (farmAreaText == preset) GreenSurface else Color.White,
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             1.dp,
                             if (farmAreaText == preset) GreenPrimary else AppDivider
                         )
@@ -612,7 +1026,7 @@ private fun CropCostCalculatorTab(
                         color = TextPrimary
                     )
                     Text(
-                        text = "Select all applicable production inputs",
+                        text = "Real Agronomic Model • Toggle inputs to recalculate",
                         fontSize = 11.sp,
                         color = TextSecondary
                     )
@@ -681,7 +1095,7 @@ private fun CropCostCalculatorTab(
             )
         }
 
-        // Result Card
+        // Result Card with Scientific Breakdown
         if (showResult && totalBudget > 0) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -703,7 +1117,7 @@ private fun CropCostCalculatorTab(
                                 color = GreenDark
                             )
                             Text(
-                                text = "${selectedCrop.first.substringBefore(" (")} • $farmAreaText Acres",
+                                text = "${selectedCropModel.cropName.substringBefore(" (")} • $farmAreaText Acres (Agronomic Calculated)",
                                 fontSize = 11.sp,
                                 color = TextSecondary
                             )
@@ -757,7 +1171,7 @@ private fun CropCostCalculatorTab(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "Resource-wise Cost Distribution:",
+                        text = "Resource-wise Cost Distribution & Math (सविस्तर हिशोब):",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
@@ -766,42 +1180,205 @@ private fun CropCostCalculatorTab(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     breakdowns.forEach { item ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 5.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(item.color)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.label,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = item.regionalName,
+                                        fontSize = 10.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                                Text(
+                                    text = "${(item.percent * 100).toInt()}%",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                Text(
+                                    text = formatRupees(item.amount),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                            }
+
+                            // Calculation formula / unit details
+                            if (item.calculationFormula.isNotBlank()) {
+                                Text(
+                                    text = "↳ ${item.calculationFormula}",
+                                    fontSize = 10.sp,
+                                    color = GreenDark,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(start = 18.dp, top = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Expected Yield, Gross MSP Revenue & Net Profit Estimation Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("📈", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Estimated Yield & Net Farm Profit",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "हंगाम उत्पादन व निव्वळ नफा अंदाज (आधारभूत किंमत / MSP)",
+                                fontSize = 10.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Divider(color = AppDivider)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Expected Yield", fontSize = 11.sp, color = TextSecondary)
+                            Text(
+                                text = "${String.format("%.1f", expectedYieldQtl)} Qtl",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(text = "@ ${selectedCropModel.defaultYieldQuintalsPerAcre} Qtl/Ac", fontSize = 10.sp, color = TextMuted)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Gross MSP Income", fontSize = 11.sp, color = TextSecondary)
+                            Text(
+                                text = formatRupees(expectedRevenue),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GreenDark
+                            )
+                            Text(text = "@ \u20B9${selectedCropModel.mspPricePerQuintal}/Qtl", fontSize = 10.sp, color = TextMuted)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("Cultivation Cost", fontSize = 11.sp, color = TextSecondary)
+                            Text(
+                                text = formatRupees(totalBudget),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = RedError
+                            )
+                            Text(text = "${breakdowns.size} Inputs", fontSize = 10.sp, color = TextMuted)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Net Profit Highlight Banner
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (netFarmProfit >= 0) GreenSurface else Color(0xFFFFEBEE),
+                        border = BorderStroke(1.dp, if (netFarmProfit >= 0) GreenPrimary else RedError.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(item.color)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
+                            Column {
                                 Text(
-                                    text = item.label,
+                                    text = if (netFarmProfit >= 0) "Estimated Net Profit (निव्वळ नफा)" else "Estimated Deficit (अंदाजित तोटा)",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = TextPrimary
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (netFarmProfit >= 0) GreenDark else RedError
                                 )
                                 Text(
-                                    text = item.regionalName,
-                                    fontSize = 10.sp,
-                                    color = TextSecondary
+                                    text = formatRupees(netFarmProfit),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (netFarmProfit >= 0) GreenDark else RedError
                                 )
                             }
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (netFarmProfit >= 0) GreenPrimary else RedError
+                            ) {
+                                Text(
+                                    text = "ROI: ${if (roiPercent >= 0) "+" else ""}$roiPercent%",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Smart Farm Inventory Connection Banner
+            val matchingInventory = GlobalMockData.inventoryItems.filter { item ->
+                item.category == "Fertilizers" || item.category == "Seeds"
+            }
+            if (matchingInventory.isNotEmpty()) {
+                val invWorth = matchingInventory.sumOf { (it.quantity * it.pricePerUnit).toInt() }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFDE7)),
+                    border = BorderStroke(1.dp, Color(0xFFFFF59D))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("💡", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
                             Text(
-                                text = "${(item.percent * 100).toInt()}%",
-                                fontSize = 11.sp,
-                                color = TextSecondary,
-                                modifier = Modifier.padding(horizontal = 8.dp)
+                                text = "Farm Inventory Connected (साठा उपलब्ध):",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = Color(0xFFF57F17)
                             )
                             Text(
-                                text = formatRupees(item.amount),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
+                                text = "You have ${matchingInventory.size} items in your Farm Inventory (worth ${formatRupees(invWorth)}). Using your existing stock saves upfront cash expenses!",
+                                fontSize = 11.sp,
                                 color = TextPrimary
                             )
                         }

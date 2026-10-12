@@ -19,6 +19,7 @@ object GlobalMockData {
     private const val KEY_TRANSACTIONS = "transactions_json"
     private const val KEY_NOTIFICATIONS = "notifications_json"
     private const val KEY_PERSONAL_EXPENSES = "personal_expenses_json"
+    private const val KEY_INVENTORY_ITEMS = "inventory_items_json"
     private const val KEY_ESTIMATED_CROP_COST = "estimated_crop_cost"
     private const val KEY_ESTIMATED_CROP_NAME = "estimated_crop_name"
     private const val KEY_ESTIMATED_CROP_AREA = "estimated_crop_area"
@@ -78,11 +79,29 @@ object GlobalMockData {
         val isExpense: Boolean = true
     )
 
+    data class AgriInventoryItem(
+        val id: String = java.util.UUID.randomUUID().toString(),
+        val name: String,
+        val category: String,
+        val quantity: Double,
+        val unit: String,
+        val pricePerUnit: Int = 0,
+        val storageLocation: String = "Farm Godown",
+        val status: String = "In Stock",
+        val brandOrVariety: String = "",
+        val expiryOrServiceDate: String = "",
+        val notes: String = "",
+        val emoji: String = "📦"
+    )
+
     val walletBalance = mutableStateOf(15000)
     val transactions = androidx.compose.runtime.mutableStateListOf<Transaction>()
     val cropYieldRevenue = androidx.compose.runtime.mutableStateOf(0)
     data class Notification(val message: String, val time: String)
     val farmerNotifications = androidx.compose.runtime.mutableStateListOf<Notification>()
+
+    // Farm Inventory State
+    val inventoryItems = androidx.compose.runtime.mutableStateListOf<AgriInventoryItem>()
 
     // Personal Accounting & Farm Tally State
     val personalExpenses = androidx.compose.runtime.mutableStateListOf<PersonalExpense>()
@@ -168,10 +187,146 @@ object GlobalMockData {
             )
         }
 
+        // Restore inventory items
+        val invJson = sp.getString(KEY_INVENTORY_ITEMS, null)
+        inventoryItems.clear()
+        if (!invJson.isNullOrEmpty()) {
+            try {
+                val listType = object : TypeToken<List<AgriInventoryItem>>() {}.type
+                val savedInv: List<AgriInventoryItem> = gson.fromJson(invJson, listType)
+                inventoryItems.addAll(savedInv)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (inventoryItems.isEmpty()) {
+            inventoryItems.addAll(
+                listOf(
+                    AgriInventoryItem(
+                        name = "Soyabean (JS-335)",
+                        category = "Harvested Produce",
+                        quantity = 35.0,
+                        unit = "Quintals",
+                        pricePerUnit = 4600,
+                        storageLocation = "Farm Godown",
+                        status = "In Stock",
+                        brandOrVariety = "JS-335 Certified",
+                        expiryOrServiceDate = "Harvest 2026",
+                        notes = "Cleaned and ready for APMC Mandi sale",
+                        emoji = "🌾"
+                    ),
+                    AgriInventoryItem(
+                        name = "Wheat (Lokwan)",
+                        category = "Harvested Produce",
+                        quantity = 20.0,
+                        unit = "Quintals",
+                        pricePerUnit = 2600,
+                        storageLocation = "Home Storeroom",
+                        status = "In Stock",
+                        brandOrVariety = "Lokwan Grade A",
+                        expiryOrServiceDate = "Harvest 2026",
+                        notes = "Stored with neem leaves protection",
+                        emoji = "🌾"
+                    ),
+                    AgriInventoryItem(
+                        name = "IFFCO DAP (18:46:0)",
+                        category = "Fertilizers",
+                        quantity = 8.0,
+                        unit = "Bags",
+                        pricePerUnit = 1350,
+                        storageLocation = "Farm Godown",
+                        status = "In Stock",
+                        brandOrVariety = "IFFCO Cooperative",
+                        expiryOrServiceDate = "Exp: Dec 2027",
+                        notes = "Phosphatic fertilizer for basal dose",
+                        emoji = "🧪"
+                    ),
+                    AgriInventoryItem(
+                        name = "Neem Coated Urea",
+                        category = "Fertilizers",
+                        quantity = 2.0,
+                        unit = "Bags",
+                        pricePerUnit = 266,
+                        storageLocation = "Farm Godown",
+                        status = "Low Stock",
+                        brandOrVariety = "RCF Trombay",
+                        expiryOrServiceDate = "Exp: Aug 2027",
+                        notes = "Reorder 4 bags for top dressing",
+                        emoji = "⚠️"
+                    ),
+                    AgriInventoryItem(
+                        name = "KDS-726 Phule Sangam Seed",
+                        category = "Seeds",
+                        quantity = 60.0,
+                        unit = "kg",
+                        pricePerUnit = 95,
+                        storageLocation = "Home Storeroom",
+                        status = "In Stock",
+                        brandOrVariety = "Mahabeej Certified",
+                        expiryOrServiceDate = "Sowing 2026",
+                        notes = "Treated with Trichoderma & Rhizobium",
+                        emoji = "🌱"
+                    ),
+                    AgriInventoryItem(
+                        name = "Coragen Chlorantraniliprole",
+                        category = "Pesticides",
+                        quantity = 1.5,
+                        unit = "Liters",
+                        pricePerUnit = 1900,
+                        storageLocation = "Field Shed",
+                        status = "In Stock",
+                        brandOrVariety = "FMC India",
+                        expiryOrServiceDate = "Exp: Oct 2026",
+                        notes = "Broad spectrum insect protection",
+                        emoji = "🛡️"
+                    ),
+                    AgriInventoryItem(
+                        name = "Mahindra 575 DI Tractor",
+                        category = "Machinery & Tools",
+                        quantity = 1.0,
+                        unit = "Units",
+                        pricePerUnit = 0,
+                        storageLocation = "Tractor Shed",
+                        status = "Operational",
+                        brandOrVariety = "Mahindra 45 HP",
+                        expiryOrServiceDate = "Service: Dec 2026",
+                        notes = "Engine oil changed last month",
+                        emoji = "🚜"
+                    ),
+                    AgriInventoryItem(
+                        name = "Battery Knapsack Sprayer (16L)",
+                        category = "Machinery & Tools",
+                        quantity = 2.0,
+                        unit = "Units",
+                        pricePerUnit = 0,
+                        storageLocation = "Field Shed",
+                        status = "Needs Service",
+                        brandOrVariety = "Aspee 12V",
+                        expiryOrServiceDate = "Service Due",
+                        notes = "One unit lance nozzle needs replacement",
+                        emoji = "⚙️"
+                    ),
+                    AgriInventoryItem(
+                        name = "Amul Cattle Feed Pellets (पेंडी)",
+                        category = "Animal Feed",
+                        quantity = 6.0,
+                        unit = "Bags",
+                        pricePerUnit = 1250,
+                        storageLocation = "Cattle Shed",
+                        status = "In Stock",
+                        brandOrVariety = "Amul Dan Gold",
+                        expiryOrServiceDate = "Exp: Jan 2027",
+                        notes = "High protein for milking cows",
+                        emoji = "🐄"
+                    )
+                )
+            )
+        }
+
         // Restore crop estimates
         estimatedCropCost.intValue = sp.getInt(KEY_ESTIMATED_CROP_COST, 40000)
-        estimatedCropName.value = sp.getString(KEY_ESTIMATED_CROP_NAME, "Wheat") ?: "Wheat"
-        estimatedCropArea.value = sp.getString(KEY_ESTIMATED_CROP_AREA, "5") ?: "5"
+        estimatedCropName.value = sp.getString(KEY_ESTIMATED_CROP_NAME, farmerCrop.value) ?: farmerCrop.value
+        estimatedCropArea.value = sp.getString(KEY_ESTIMATED_CROP_AREA, farmerFarmArea.value) ?: farmerFarmArea.value
 
         // Restore notifications
         val notifJson = sp.getString(KEY_NOTIFICATIONS, null)
@@ -196,6 +351,7 @@ object GlobalMockData {
             putString(KEY_TRANSACTIONS, gson.toJson(transactions.toList()))
             putString(KEY_NOTIFICATIONS, gson.toJson(farmerNotifications.toList()))
             putString(KEY_PERSONAL_EXPENSES, gson.toJson(personalExpenses.toList()))
+            putString(KEY_INVENTORY_ITEMS, gson.toJson(inventoryItems.toList()))
             putInt(KEY_ESTIMATED_CROP_COST, estimatedCropCost.intValue)
             putString(KEY_ESTIMATED_CROP_NAME, estimatedCropName.value)
             putString(KEY_ESTIMATED_CROP_AREA, estimatedCropArea.value)
@@ -225,6 +381,41 @@ object GlobalMockData {
     fun removePersonalExpense(expenseId: String) {
         personalExpenses.removeAll { it.id == expenseId }
         persist()
+    }
+
+    fun addInventoryItem(item: AgriInventoryItem) {
+        inventoryItems.add(0, item)
+        persist()
+    }
+
+    fun removeInventoryItem(id: String) {
+        inventoryItems.removeAll { it.id == id }
+        persist()
+    }
+
+    fun updateInventoryItem(item: AgriInventoryItem) {
+        val index = inventoryItems.indexOfFirst { it.id == item.id }
+        if (index != -1) {
+            inventoryItems[index] = item
+            persist()
+        }
+    }
+
+    fun adjustInventoryQuantity(id: String, delta: Double) {
+        val index = inventoryItems.indexOfFirst { it.id == id }
+        if (index != -1) {
+            val current = inventoryItems[index]
+            val newQty = ((current.quantity + delta) * 10).toInt() / 10.0
+            val validQty = newQty.coerceAtLeast(0.0)
+            val newStatus = when {
+                validQty <= 0 -> "Out of Stock"
+                validQty <= 3 && current.unit.contains("Bag", ignoreCase = true) -> "Low Stock"
+                validQty <= 5 && current.unit.contains("kg", ignoreCase = true) -> "Low Stock"
+                else -> if (current.status == "Out of Stock" || current.status == "Low Stock") "In Stock" else current.status
+            }
+            inventoryItems[index] = current.copy(quantity = validQty, status = newStatus)
+            persist()
+        }
     }
 
     fun updateCropEstimate(cost: Int, crop: String, area: String) {
