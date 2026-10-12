@@ -176,17 +176,18 @@ public class FarmIntelligenceController {
 
     private List<CropRecommendationDto> getDefaultRecommendations(String currentMonth) {
         List<CropRecommendationDto> recommendations = new ArrayList<>();
-        if (currentMonth.equalsIgnoreCase("October") || currentMonth.equalsIgnoreCase("November")) {
-            recommendations.add(CropRecommendationDto.builder()
-                .rank("1").emoji("🌱").cropName("Rapeseed & Mustard").suitability("82% Suitable").netReturn("Rs. 9,450/ha")
-                .waterRequirement("9755 m³").sowingPeriod("October - November").soilNutrientsRequired("Nitrogen (N): High").farmingTechnique("Line sowing.")
-                .build());
-        } else {
-             recommendations.add(CropRecommendationDto.builder()
-                .rank("1").emoji("🌽").cropName("Maize").suitability("88% Suitable").netReturn("Rs. 8,500/ha")
-                .waterRequirement("7000 m³").sowingPeriod("June - July").soilNutrientsRequired("Nitrogen (N): High").farmingTechnique("Ridge and furrow.")
-                .build());
-        }
+        recommendations.add(CropRecommendationDto.builder()
+            .rank("1").emoji("🌾").cropName("Wheat (HD-2967)").suitability("94% Suitable").netReturn("Rs. 48,500/ha")
+            .waterRequirement("4200 m³").sowingPeriod("October - November").soilNutrientsRequired("Nitrogen: 120, Phosphorus: 60, Potash: 40 kg/ha").farmingTechnique("Zero tillage line sowing with seed-cum-fertilizer drill.")
+            .build());
+        recommendations.add(CropRecommendationDto.builder()
+            .rank("2").emoji("🌱").cropName("Mustard (Pusa 25)").suitability("89% Suitable").netReturn("Rs. 42,000/ha")
+            .waterRequirement("2800 m³").sowingPeriod("October - November").soilNutrientsRequired("Nitrogen: 80, Phosphorus: 40, Sulfur: 25 kg/ha").farmingTechnique("Broad bed & furrow (BBF) method at 45cm spacing.")
+            .build());
+        recommendations.add(CropRecommendationDto.builder()
+            .rank("3").emoji("🫘").cropName("Chickpea (JG-11)").suitability("85% Suitable").netReturn("Rs. 38,500/ha")
+            .waterRequirement("2400 m³").sowingPeriod("October - December").soilNutrientsRequired("Rhizobium culture, Phosphorus: 50 kg/ha").farmingTechnique("Ridge and furrow conservation furrow method.")
+            .build());
         return recommendations;
     }
 }

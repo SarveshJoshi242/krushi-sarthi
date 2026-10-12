@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.krushiadhaar.app.ui.theme.*
 import com.krushiadhaar.app.util.AppStrings
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextOverflow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,6 +90,7 @@ fun HomeScreen(
                     val newLang = availableLangs[if (nextIdx >= 0) nextIdx else 0]
                     currentLang = newLang
                     GlobalMockData.updateLanguage(newLang)
+                    homeViewModel.refreshRecommendations(newLang, GlobalMockData.userLocation.value)
                 }
             ) {
                 Row(
@@ -121,27 +123,53 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            val rawName = GlobalMockData.farmerName.value.trim()
+            val hasName = rawName.isNotBlank()
+            val displayName = if (hasName) rawName else AppStrings.farmerGreeting
+            val greetingTitle = "${AppStrings.hello}, $displayName 👋"
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${AppStrings.greeting} ${GlobalMockData.farmerName.value}",
-                    fontSize = 20.sp,
+                    text = greetingTitle,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    // Role Badge - keeps "Farmer" neatly
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = GreenSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.4f)),
+                        modifier = Modifier.padding(end = 6.dp)
+                    ) {
+                        Text(
+                            text = "👨‍🌾 ${AppStrings.farmerRole}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = GreenDark,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = GlobalMockData.userLocation.value,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = TextSecondary
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
+            Spacer(modifier = Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -203,7 +231,7 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // No Crop Sown Yet Banner
+        // Crop Status & Rotation Advisory Banner
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -213,16 +241,27 @@ fun HomeScreen(
             border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.5f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
+                val hasCrop = GlobalMockData.farmerCrop.value.isNotBlank()
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "NO CROP SOWN YET", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = GreenDark)
+                    Text(
+                        text = if (hasCrop) "CURRENT CROP: ${GlobalMockData.farmerCrop.value.uppercase()}" else "NO CROP SOWN YET",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenDark
+                    )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(text = "Choose a crop to plan your next season.", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "We'll compare crops using your farm's soil, weather, water requirement and local market demand.",
+                    text = if (hasCrop) "Active cycle: ${GlobalMockData.farmerCrop.value} (${GlobalMockData.farmerFarmArea.value} ${GlobalMockData.farmerAreaUnit.value})" else "Choose a crop to plan your next season.",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = if (hasCrop) "Personalized crop recommendations below compare water requirement, soil nutrients, and market yield for your next rotation." else "We'll compare crops using your farm's soil, weather, water requirement and local market demand.",
                     fontSize = 12.sp,
                     color = TextSecondary,
                     lineHeight = 18.sp
@@ -241,7 +280,7 @@ fun HomeScreen(
         ) {
             Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107), modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Top Crop Recommendations", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = AppStrings.topCropRecommendations, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -417,11 +456,11 @@ fun HomeScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(topRec?.emoji ?: "🌱", fontSize = 24.sp)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Plan ", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text("Plan ${topRec?.cropName ?: "Crop"}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(GreenSurface).padding(12.dp)) {
-                    Text("📅 Recommended Sowing: ", color = GreenDark, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("📅 Recommended Sowing: ${topRec?.sowingPeriod ?: "Optimal Window"}", color = GreenDark, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text("Soil Nutrients Required", fontWeight = FontWeight.Bold, fontSize = 14.sp)

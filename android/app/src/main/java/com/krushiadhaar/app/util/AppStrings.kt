@@ -3,11 +3,11 @@ package com.krushiadhaar.app.util
 import com.krushiadhaar.app.GlobalMockData
 
 object AppStrings {
-    private fun isHindi(): Boolean =
+    fun isHindi(): Boolean =
         GlobalMockData.userLanguage.value.contains("Hindi", true) ||
         GlobalMockData.userLanguage.value.contains("हिंदी", true)
 
-    private fun isMarathi(): Boolean =
+    fun isMarathi(): Boolean =
         GlobalMockData.userLanguage.value.contains("Marathi", true) ||
         GlobalMockData.userLanguage.value.contains("मराठी", true)
 
@@ -18,11 +18,39 @@ object AppStrings {
             else -> "Kisaan Mitra"
         }
 
+    val hello: String
+        get() = when {
+            isHindi() -> "नमस्ते"
+            isMarathi() -> "नमस्कार"
+            else -> "Hi"
+        }
+
+    val farmerRole: String
+        get() = when {
+            isHindi() -> "किसान"
+            isMarathi() -> "शेतकरी"
+            else -> "Farmer"
+        }
+
+    val farmerGreeting: String
+        get() = when {
+            isHindi() -> "किसान भाई"
+            isMarathi() -> "शेतकरी मित्र"
+            else -> "Farmer"
+        }
+
     val greeting: String
         get() = when {
             isHindi() -> "नमस्ते, किसान भाई 👋"
             isMarathi() -> "नमस्कार, शेतकरी मित्र 👋"
             else -> "Hi, Farmer 👋"
+        }
+
+    val topCropRecommendations: String
+        get() = when {
+            isHindi() -> "शीर्ष फसल सिफारिशें"
+            isMarathi() -> "अव्वल पीक शिफारसी"
+            else -> "Top Crop Recommendations"
         }
 
     val farmTools: String
