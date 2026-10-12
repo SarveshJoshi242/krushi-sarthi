@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
@@ -43,15 +44,17 @@ data class Scheme(
 fun GovernmentSchemesScreen(
     onBackClick: () -> Unit = {}
 ) {
-    var schemes by remember { mutableStateOf<List<Scheme>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
+    val isHindi = com.krushiadhaar.app.util.AppStrings.isHindi()
+    val isMarathi = com.krushiadhaar.app.util.AppStrings.isMarathi()
+    var schemes by remember { mutableStateOf<List<Scheme>>(getDefaultSchemes(isHindi, isMarathi)) }
+    var isLoading by remember { mutableStateOf(false) }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         val lang = com.krushiadhaar.app.GlobalMockData.userLanguage.value
         val loc = com.krushiadhaar.app.GlobalMockData.userLocation.value
         try {
             val response = com.krushiadhaar.app.presentation.FarmRetrofitClient.api.getGovernmentSchemes(language = lang, location = loc)
-            if (response.isSuccessful && response.body() != null) {
+            if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                 schemes = response.body()!!.map {
                     Scheme(
                         title = it.title,
@@ -59,15 +62,13 @@ fun GovernmentSchemesScreen(
                         description = it.description,
                         isActive = it.isActive,
                         link = it.link,
-                        requiredDocuments = it.requiredDocuments ?: emptyList(),
-                        type = it.type ?: "Scheme"
+                        requiredDocuments = it.requiredDocuments,
+                        type = it.type
                     )
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        } finally {
-            isLoading = false
         }
     }
 
@@ -96,6 +97,11 @@ fun GovernmentSchemesScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Schemes & Benefits", color = DarkText, fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = DarkText)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundColor),
                 actions = {
                     TextButton(onClick = { showHistoryDialog = true }) {
@@ -297,4 +303,54 @@ fun SchemeCard(scheme: Scheme, onLearnMoreClick: () -> Unit) {
             }
         }
     }
+}
+
+fun getDefaultSchemes(isHindi: Boolean = false, isMarathi: Boolean = false): List<Scheme> {
+    return listOf(
+        Scheme(
+            title = if (isHindi) "प्रधानमंत्री किसान सम्मान निधि (PM-KISAN)" else if (isMarathi) "पंतप्रधान किसान सन्मान निधी (PM-KISAN)" else "PM-KISAN Samman Nidhi",
+            provider = "Central Government",
+            description = if (isHindi) "सभी भूमिधारक किसान परिवारों को ₹6,000 प्रति वर्ष तीन समान किस्तों में प्रत्यक्ष आय सहायता।" else if (isMarathi) "सर्व शेतकरी कुटुंबांना दरवर्षी ₹६,००० तीन हप्त्यांमध्ये थेट खात्यात मदत." else "Financial benefit of Rs. 6,000 per year in three equal 4-monthly installments into Aadhaar seeded bank accounts.",
+            isActive = true,
+            link = "https://pmkisan.gov.in/",
+            requiredDocuments = listOf("Aadhaar Card", "Land Record", "Bank Passbook"),
+            type = "Scheme"
+        ),
+        Scheme(
+            title = if (isHindi) "प्रधानमंत्री फसल बीमा योजना (PMFBY)" else if (isMarathi) "पंतप्रधान पीक विमा योजना (PMFBY)" else "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            provider = "Ministry of Agriculture",
+            description = if (isHindi) "प्राकृतिक आपदाओं, कीटों और बीमारियों के कारण फसल नुकसान से वित्तीय सुरक्षा प्रदान करने वाली व्यापक बीमा योजना।" else if (isMarathi) "नैसर्गिक आपत्ती, रोग व किडीमुळे होणाऱ्या पीक नुकसानीसाठी सर्वसमावेशक पीक विमा संरक्षण." else "Comprehensive crop insurance cover against non-preventable natural risks, drought, floods, pests and diseases.",
+            isActive = true,
+            link = "https://pmfby.gov.in/",
+            requiredDocuments = listOf("Aadhaar Card", "Land Record", "Bank Passbook"),
+            type = "Insurance"
+        ),
+        Scheme(
+            title = if (isHindi) "पीएम-कुसुम सौर पंप योजना (PM-KUSUM)" else if (isMarathi) "पीएम-कुसुम सौर ऊर्जा पंप योजना (PM-KUSUM)" else "PM-KUSUM Solar Irrigation Scheme",
+            provider = "MNRE & State Ag",
+            description = if (isHindi) "खेतों में 3HP से 7.5HP सौर ऊर्जा वाटर पंप लगाने के लिए 60% से 90% तक सरकारी अनुदान/सब्सिडी।" else if (isMarathi) "शेतात सौर कृषी पंप बसवण्यासाठी ६०% ते ९०% पर्यंत सरकारी अनुदान." else "Subsidies up to 60-90% to set up standalone off-grid solar agricultural water pumps for uninterrupted daytime irrigation.",
+            isActive = true,
+            link = "https://pmkusum.mnre.gov.in/",
+            requiredDocuments = listOf("Aadhaar Card", "Land Record"),
+            type = "Scheme"
+        ),
+        Scheme(
+            title = if (isHindi) "किसान क्रेडिट कार्ड (KCC Loan)" else if (isMarathi) "किसान क्रेडिट कार्ड (KCC कर्ज योजना)" else "Kisan Credit Card (KCC Loan)",
+            provider = "NABARD & Public Banks",
+            description = if (isHindi) "कृषि निवेशों (बीज, उर्वरक, कीटनाशक) के लिए 4% रियायती ब्याज दर पर ₹3 लाख तक का आसान ऋण।" else if (isMarathi) "बियाणे, खते आणि शेती खर्चासाठी ४% सवलतीच्या व्याजदरात ₹३ लाखांपर्यंत अल्पमुदत कर्ज." else "Timely credit for cultivation, seed/fertilizer inputs, and post-harvest expenses at 4% subvention interest rate up to Rs 3 Lakh.",
+            isActive = true,
+            link = "https://www.pmkisan.gov.in/KCC.aspx",
+            requiredDocuments = listOf("Aadhaar Card", "Land Record", "Bank Passbook"),
+            type = "Loan"
+        ),
+        Scheme(
+            title = if (isHindi) "मृदा स्वास्थ्य कार्ड योजना (Soil Health Card)" else if (isMarathi) "मृदा आरोग्य पत्रिका योजना (Soil Health Card)" else "Soil Health Card Scheme",
+            provider = "Dept of Agriculture & Farmers Welfare",
+            description = if (isHindi) "मिट्टी की 12 रासायनिक व जैविक जांच के आधार पर फसलवार संतुलित उर्वरक सिफारिशें।" else if (isMarathi) "माती परीक्षणावर आधारित १२ घटकांची तपासणी आणि पिकांनुसार खतांचे संतुलित नियोजन." else "Assessment of 12 soil nutrient parameters with tailored fertilizer and micronutrient advisory to reduce input cost.",
+            isActive = true,
+            link = "https://soilhealth.dac.gov.in/",
+            requiredDocuments = listOf("Aadhaar Card"),
+            type = "Scheme"
+        )
+    )
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 fun DiagnosisReportScreen(
     onViewTreatment: () -> Unit = {},
     onDownload: () -> Unit = {},
+    onBack: () -> Unit = {},
     viewModel: DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -34,6 +36,11 @@ fun DiagnosisReportScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Diagnosis Report", color = TextPrimary) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBackground)
             )
         },

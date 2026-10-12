@@ -157,6 +157,8 @@ fun MainScreen(
                     val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
                     DiagnosisReportScreen(
                         onViewTreatment = { bottomNavController.navigate("pest_treatment") },
+                        onDownload = { bottomNavController.navigate("pdf_report") },
+                        onBack = { bottomNavController.popBackStack() },
                         viewModel = viewModel
                     )
                 }

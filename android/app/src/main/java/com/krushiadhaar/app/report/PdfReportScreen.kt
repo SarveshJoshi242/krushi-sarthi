@@ -123,15 +123,21 @@ fun PdfReportScreen(
                 }
             }
 
+            val farmerName = GlobalMockData.farmerName.value.ifBlank { "Sarvesh Patil" }
+            val location = GlobalMockData.userLocation.value
+            val area = "${GlobalMockData.farmerFarmArea.value} ${GlobalMockData.farmerAreaUnit.value}"
+            val coords = "${String.format(java.util.Locale.US, "%.4f", GlobalMockData.farmerLatitude.value)}° N, ${String.format(java.util.Locale.US, "%.4f", GlobalMockData.farmerLongitude.value)}° E"
+            val crop = GlobalMockData.farmerCrop.value.ifBlank { "Wheat (Sharbati)" }
+
             // Summary Items Preview
             ReportSectionCard(
                 icon = Icons.Default.Person,
                 title = "1. Farmer & Land Profile",
                 details = listOf(
-                    "Farmer Name: Sarvesh Patil",
-                    "Location: Kolhapur, Maharashtra",
-                    "Total Land: 5.0 Acres (Plot A & B)",
-                    "GPS Coordinates: 16.7050° N, 74.2433° E"
+                    "Farmer Name: $farmerName",
+                    "Location: $location",
+                    "Total Land: $area",
+                    "GPS Coordinates: $coords"
                 )
             )
 
@@ -139,8 +145,8 @@ fun PdfReportScreen(
                 icon = Icons.Default.Eco,
                 title = "2. Production & Crop Yield",
                 details = listOf(
-                    "Active Crop: Wheat (Sharbati)",
-                    "Cycle Progress: Day 28 of 120 (Vegetative)",
+                    "Active Crop: $crop",
+                    "Cycle Progress: Active Vegetative Season",
                     "Expected Yield: 18.5 Tons",
                     "Irrigation Status: Drip System Active"
                 )

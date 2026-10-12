@@ -203,12 +203,35 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Delete Account Card
+        var showDeleteDialog by remember { mutableStateOf(false) }
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Account", fontWeight = FontWeight.Bold) },
+                text = { Text("Are you sure you want to delete your account? All your local farm data, preferences, and session tokens will be permanently removed.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDeleteDialog = false
+                        onLogout()
+                    }) {
+                        Text("Delete", color = RedError, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel", color = TextSecondary)
+                    }
+                }
+            )
+        }
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            onClick = { showDeleteDialog = true }
         ) {
             Row(
                 modifier = Modifier
