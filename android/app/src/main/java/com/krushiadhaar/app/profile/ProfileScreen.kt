@@ -79,13 +79,13 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Sarvesh",
+                    text = com.krushiadhaar.app.GlobalMockData.farmerName.value,
                     color = Color.White,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Farmer",
+                    text = com.krushiadhaar.app.GlobalMockData.userRole.value.capitalize(),
                     color = Color.White.copy(alpha = 0.8f),
                     fontSize = 14.sp
                 )
@@ -94,7 +94,7 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "KOLHAPUR, Maharashtra",
+                        text = com.krushiadhaar.app.GlobalMockData.userLocation.value,
                         color = Color.White.copy(alpha = 0.8f),
                         fontSize = 12.sp
                     )
@@ -109,9 +109,9 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
             title = "Farmer Details",
             icon = Icons.Default.PersonOutline
         ) {
-            ProfileRow(label = "Name", value = "Sarvesh")
-            ProfileRow(label = "Phone Number", value = "1234568899")
-            ProfileRow(label = "Village", value = "Kolhapur", showDivider = false)
+            ProfileRow(label = "Name", value = com.krushiadhaar.app.GlobalMockData.farmerName.value)
+            ProfileRow(label = "Phone Number", value = com.krushiadhaar.app.GlobalMockData.farmerPhone.value)
+            ProfileRow(label = "Village", value = com.krushiadhaar.app.GlobalMockData.farmerVillage.value, showDivider = false)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -121,19 +121,19 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
             title = "Farm Information",
             icon = Icons.Default.Agriculture
         ) {
-            ProfileRow(label = "State", value = "Maharashtra")
-            ProfileRow(label = "District", value = "KOLHAPUR")
-            ProfileRow(label = "Crop Type", value = "-")
-            ProfileRow(label = "Farm Area", value = "5.0 Acres")
-            ProfileRow(label = "Sowing Date", value = "-", showDivider = false)
+            ProfileRow(label = "State", value = com.krushiadhaar.app.GlobalMockData.farmerState.value)
+            ProfileRow(label = "District", value = com.krushiadhaar.app.GlobalMockData.farmerDistrict.value)
+            ProfileRow(label = "Crop Type", value = com.krushiadhaar.app.GlobalMockData.farmerCrop.value)
+            ProfileRow(label = "Farm Area", value = "${com.krushiadhaar.app.GlobalMockData.farmerFarmArea.value} ${com.krushiadhaar.app.GlobalMockData.farmerAreaUnit.value}")
+            ProfileRow(label = "Soil Type", value = "Optimal Fertile Loam", showDivider = false)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Preferred Language Card
         var expanded by remember { mutableStateOf(false) }
-        var selectedLanguage by remember { mutableStateOf("English (English)") }
-        val languages = listOf("English (English)", "Hindi (हिंदी)", "Marathi (मराठी)")
+        var selectedLanguage by remember { mutableStateOf(com.krushiadhaar.app.GlobalMockData.userLanguage.value) }
+        val languages = listOf("English", "हिंदी", "मराठी")
         
         Card(
             modifier = Modifier
@@ -167,6 +167,7 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
                             text = { Text(language) },
                             onClick = {
                                 selectedLanguage = language
+                                com.krushiadhaar.app.GlobalMockData.updateLanguage(language)
                                 expanded = false
                             }
                         )

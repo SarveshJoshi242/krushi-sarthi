@@ -389,7 +389,9 @@ Respond ONLY with valid JSON array, no markdown."""
 @app.post("/voice-assistant")
 async def voice_assistant(
     query: str = Form(...),
-    language: str = Form("English")
+    language: str = Form("English"),
+    crop: Optional[str] = Form(None),
+    location: Optional[str] = Form(None)
 ):
     """Multilingual AI Voice Assistant for Farmers in Hindi, Marathi, or English."""
     lang_clean = language.strip().lower()
@@ -403,11 +405,19 @@ async def voice_assistant(
         if target_lang == "Hindi":
             return {"response": "कृषि मित्र में आपका स्वागत है। आपकी फसल में किसी भी समस्या के समाधान के लिए स्थानीय कृषि अधिकारी से संपर्क करें।", "language": "Hindi"}
         elif target_lang == "Marathi":
-            return {"response": "कृषी मित्र मध्ये आपले स्वागत आहे. आपल्या पिकाच्या संरक्षणासाठी वेळेवर खते आणि पाणी नियोजन करा.", "language": "Marathi"}
+            return {"response": "कृषी मित्र मध्ये आपले स्वागत आहे। आपल्या पिकाच्या संरक्षणासाठी वेळेवर खते आणि पाणी नियोजन करा.", "language": "Marathi"}
         return {"response": "Welcome to Krushi Assistant. For optimal crop yield, monitor weather and apply balanced NPK fertilizers.", "language": "English"}
 
     try:
+        context_parts = []
+        if crop:
+            context_parts.append(f"Crop: {crop}")
+        if location:
+            context_parts.append(f"Location: {location}")
+        ctx_desc = " | ".join(context_parts) if context_parts else "India"
+
         prompt = f"""You are 'Krushi Sahayak', an empathetic and expert agricultural voice assistant for Indian farmers.
+Farmer Context: {ctx_desc}
 Farmer's Question: "{query}"
 Language requested: {target_lang} (strictly reply in {target_lang} script).
 

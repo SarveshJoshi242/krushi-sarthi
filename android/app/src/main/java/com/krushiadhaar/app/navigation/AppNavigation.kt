@@ -30,10 +30,14 @@ fun AppNavigation(factory: ViewModelFactory) {
         return
     }
 
-    val startRoute = if (authState == AuthenticationState.Authenticated) Screen.Main.route else Screen.Splash.route
+    val startRoute = if (authState == AuthenticationState.Authenticated || com.krushiadhaar.app.GlobalMockData.isLoggedIn.value) {
+        if (com.krushiadhaar.app.GlobalMockData.userRole.value == "BUYER") Screen.BuyerMain.route else Screen.Main.route
+    } else {
+        Screen.Splash.route
+    }
 
     LaunchedEffect(authState) {
-        if (authState == AuthenticationState.Unauthenticated && navController.currentDestination?.route != Screen.Splash.route) {
+        if (authState == AuthenticationState.Unauthenticated && !com.krushiadhaar.app.GlobalMockData.isLoggedIn.value && navController.currentDestination?.route != Screen.Splash.route) {
             navController.navigate(Screen.Splash.route) {
                 popUpTo(0) { inclusive = true }
             }
@@ -51,10 +55,10 @@ fun AppNavigation(factory: ViewModelFactory) {
             Step1Screen(
                 onNext = { navController.navigate(Screen.Step2.route) },
                 onLoginAsFarmer = {
-                    navController.navigate(Screen.Main.route) { popUpTo(0) }
+                    navController.navigate(Screen.Main.route) { popUpTo(0) { inclusive = true } }
                 },
                 onLoginAsBuyer = {
-                    navController.navigate(Screen.BuyerMain.route) { popUpTo(0) }
+                    navController.navigate(Screen.BuyerMain.route) { popUpTo(0) { inclusive = true } }
                 }
             )
         }
@@ -66,7 +70,7 @@ fun AppNavigation(factory: ViewModelFactory) {
         composable(Screen.Analysis.route) {
             AnalysisLoaderScreen(
                 onAnalysisComplete = {
-                    navController.navigate(Screen.Main.route) { popUpTo(0) }
+                    navController.navigate(Screen.Main.route) { popUpTo(0) { inclusive = true } }
                 }
             )
         }
@@ -76,6 +80,7 @@ fun AppNavigation(factory: ViewModelFactory) {
                 factory = factory,
                 onLogout = { 
                     mainViewModel.logout()
+                    com.krushiadhaar.app.GlobalMockData.logout()
                     navController.navigate(Screen.Splash.route) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -88,6 +93,7 @@ fun AppNavigation(factory: ViewModelFactory) {
                 factory = factory,
                 onLogout = { 
                     mainViewModel.logout()
+                    com.krushiadhaar.app.GlobalMockData.logout()
                     navController.navigate(Screen.Splash.route) {
                         popUpTo(0) { inclusive = true }
                     }

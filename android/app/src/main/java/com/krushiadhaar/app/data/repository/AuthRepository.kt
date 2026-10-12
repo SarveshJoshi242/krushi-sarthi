@@ -17,8 +17,8 @@ class AuthRepository(
     val authState: StateFlow<AuthenticationState> = _authState.asStateFlow()
 
     suspend fun checkSession() {
-        val token = tokenStorage.getAccessToken()
-        if (token != null) {
+        val token = tokenStorage.getAccessToken() ?: com.krushiadhaar.app.GlobalMockData.authToken.value
+        if (token != null || com.krushiadhaar.app.GlobalMockData.isLoggedIn.value) {
             _authState.value = AuthenticationState.Authenticated
         } else {
             _authState.value = AuthenticationState.Unauthenticated
@@ -28,6 +28,7 @@ class AuthRepository(
     suspend fun login(request: LoginRequestDto): Result<AuthResponseDto> {
         return safeApiCall { authApi.login(request) }.onSuccess { 
             tokenStorage.saveTokens(it.accessToken, it.refreshToken)
+            com.krushiadhaar.app.GlobalMockData.setSession(true, it.accessToken)
             _authState.value = AuthenticationState.Authenticated
         }
     }
@@ -35,6 +36,7 @@ class AuthRepository(
     suspend fun register(request: RegisterRequestDto): Result<AuthResponseDto> {
         return safeApiCall { authApi.register(request) }.onSuccess {
             tokenStorage.saveTokens(it.accessToken, it.refreshToken)
+            com.krushiadhaar.app.GlobalMockData.setSession(true, it.accessToken)
             _authState.value = AuthenticationState.Authenticated
         }
     }
@@ -52,6 +54,7 @@ class AuthRepository(
         val userId = token?.let { extractUserId(it) }
 
         tokenStorage.clearTokens()
+        com.krushiadhaar.app.GlobalMockData.logout()
         
         if (userId != null) {
             database.farmDao().deleteUserFarms(userId)

@@ -26,7 +26,7 @@ import com.krushiadhaar.app.util.AppStrings
 fun SmartIrrigationScreen(
     onNavigateBack: () -> Unit
 ) {
-    var selectedCrop by remember { mutableStateOf("Wheat") }
+    var selectedCrop by remember { mutableStateOf(com.krushiadhaar.app.GlobalMockData.farmerCrop.value.ifBlank { "Wheat" }) }
     var sowingDays by remember { mutableIntStateOf(28) }
 
     val crops = listOf("Wheat", "Sugarcane", "Cotton", "Soybean")

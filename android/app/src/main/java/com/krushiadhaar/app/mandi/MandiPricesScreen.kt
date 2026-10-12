@@ -110,7 +110,7 @@ fun MandiPricesScreen(
                 title = {
                     Column {
                         Text(AppStrings.mandiPrices, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
-                        Text("Live APMC Mandi Rates & MSP Comparison", fontSize = 11.sp, color = GreenPrimary)
+                        Text("📍 ${com.krushiadhaar.app.GlobalMockData.userLocation.value}", fontSize = 11.sp, color = GreenPrimary)
                     }
                 },
                 navigationIcon = {

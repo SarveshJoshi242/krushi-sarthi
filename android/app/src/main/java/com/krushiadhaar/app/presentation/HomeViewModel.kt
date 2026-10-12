@@ -96,7 +96,9 @@ class HomeViewModel : ViewModel() {
     private fun fetchWeather() {
         viewModelScope.launch {
             try {
-                val response = WeatherRetrofitClient.api.getCurrentWeather()
+                val lat = com.krushiadhaar.app.GlobalMockData.farmerLatitude.value
+                val lon = com.krushiadhaar.app.GlobalMockData.farmerLongitude.value
+                val response = WeatherRetrofitClient.api.getCurrentWeather(lat = lat, lon = lon)
                 _weatherState.value = WeatherUiState(
                     temp = "${response.main.temp.toInt()}°",
                     condition = response.weather.firstOrNull()?.main ?: "Clear",

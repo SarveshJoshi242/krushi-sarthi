@@ -25,8 +25,8 @@ import kotlin.math.roundToInt
 fun SoilHealthScreen(
     onNavigateBack: () -> Unit
 ) {
-    var selectedCrop by remember { mutableStateOf("Wheat") }
-    var acreage by remember { mutableStateOf("1.0") }
+    var selectedCrop by remember { mutableStateOf(com.krushiadhaar.app.GlobalMockData.farmerCrop.value.ifBlank { "Wheat" }) }
+    var acreage by remember { mutableStateOf(com.krushiadhaar.app.GlobalMockData.farmerFarmArea.value.ifBlank { "5.0" }) }
 
     var nitrogen by remember { mutableFloatStateOf(210f) }      // kg/ha
     var phosphorus by remember { mutableFloatStateOf(18f) }     // kg/ha

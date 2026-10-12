@@ -131,7 +131,9 @@ fun VoiceAssistantScreen(
                     conn.connectTimeout = 5000
                     conn.readTimeout = 7000
 
-                    val postData = "query=$encodedQuery&language=$encodedLang"
+                    val encodedCrop = URLEncoder.encode(com.krushiadhaar.app.GlobalMockData.farmerCrop.value, "UTF-8")
+                    val encodedLoc = URLEncoder.encode(com.krushiadhaar.app.GlobalMockData.userLocation.value, "UTF-8")
+                    val postData = "query=$encodedQuery&language=$encodedLang&crop=$encodedCrop&location=$encodedLoc"
                     conn.outputStream.use { os ->
                         os.write(postData.toByteArray())
                         os.flush()

@@ -67,27 +67,34 @@ object PdfReportGenerator {
         canvas.drawLine(25f, y, 570f, y, linePaint)
         y += 18f
 
-        canvas.drawText("Farmer Name: Sarvesh Patil", 35f, y, textPaint)
-        canvas.drawText("Location: Kolhapur, Maharashtra, India", 300f, y, textPaint)
+        val farmerName = com.krushiadhaar.app.GlobalMockData.farmerName.value
+        val farmerLoc = com.krushiadhaar.app.GlobalMockData.userLocation.value
+        val farmArea = "${com.krushiadhaar.app.GlobalMockData.farmerFarmArea.value} ${com.krushiadhaar.app.GlobalMockData.farmerAreaUnit.value}"
+        val lat = com.krushiadhaar.app.GlobalMockData.farmerLatitude.value
+        val lon = com.krushiadhaar.app.GlobalMockData.farmerLongitude.value
+        val primaryCrop = com.krushiadhaar.app.GlobalMockData.farmerCrop.value
+
+        canvas.drawText("Farmer Name: $farmerName", 35f, y, textPaint)
+        canvas.drawText("Location: $farmerLoc", 300f, y, textPaint)
         y += 16f
-        canvas.drawText("Farm Area: 5.0 Acres (Plot A & B)", 35f, y, textPaint)
-        canvas.drawText("Coordinates: 16.7050° N, 74.2433° E", 300f, y, textPaint)
+        canvas.drawText("Farm Area: $farmArea (Cultivated)", 35f, y, textPaint)
+        canvas.drawText("Coordinates: ${"%.4f".format(lat)}° N, ${"%.4f".format(lon)}° E", 300f, y, textPaint)
         y += 16f
-        canvas.drawText("Soil Type: Black Cotton Loam", 35f, y, textPaint)
+        canvas.drawText("Soil Type: Optimal Fertile Loam", 35f, y, textPaint)
         canvas.drawText("Irrigation Source: Drip & Borewell", 300f, y, textPaint)
 
         y += 30f
 
-        // 3. Seasonal Production & Crop Yield
+        // 2. Seasonal Production & Crop Yield
         canvas.drawText("2. CURRENT SEASON CROP PRODUCTION", 25f, y, boldPaint)
         y += 6f
         canvas.drawLine(25f, y, 570f, y, linePaint)
         y += 18f
 
-        canvas.drawText("Primary Crop: Wheat (Sharbati)", 35f, y, textPaint)
+        canvas.drawText("Primary Crop: $primaryCrop", 35f, y, textPaint)
         canvas.drawText("Sowing Date: 06 October 2026", 300f, y, textPaint)
         y += 16f
-        canvas.drawText("Growth Stage: Vegetative (Day 28 of 120)", 35f, y, textPaint)
+        canvas.drawText("Growth Stage: Vegetative Stage", 35f, y, textPaint)
         canvas.drawText("Expected Yield: 18.5 Tons", 300f, y, textPaint)
 
         y += 30f

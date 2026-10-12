@@ -124,24 +124,39 @@ fun HomeScreen(
             verticalAlignment = Alignment.Top
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = AppStrings.greeting, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(
+                    text = "${AppStrings.greeting} ${GlobalMockData.farmerName.value}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Kolhapur, KOLHAPUR • Maharashtra", fontSize = 12.sp, color = TextSecondary)
+                    Text(
+                        text = GlobalMockData.userLocation.value,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
                 }
             }
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF5F5F5))
+                    .background(GreenSurface)
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Eco, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "NO CROP SOWN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary)
+                    Text(
+                        text = "${GlobalMockData.farmerCrop.value.uppercase()} • ${GlobalMockData.farmerFarmArea.value} ${GlobalMockData.farmerAreaUnit.value}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenDark
+                    )
                 }
             }
         }
