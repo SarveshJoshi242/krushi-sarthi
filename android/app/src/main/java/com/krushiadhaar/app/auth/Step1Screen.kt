@@ -47,10 +47,10 @@ fun Step1Screen(
     val context = LocalContext.current
     var isLoginMode by remember { mutableStateOf(false) }
 
-    var name by remember { mutableStateOf(GlobalMockData.farmerName.value) }
-    var phone by remember { mutableStateOf(GlobalMockData.farmerPhone.value) }
+    var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var customVillage by remember { mutableStateOf(GlobalMockData.farmerVillage.value) }
+    var customVillage by remember { mutableStateOf("") }
 
     var selectedLocation by remember {
         mutableStateOf(
@@ -360,6 +360,17 @@ fun Step1Screen(
                     // Authenticate Farmer
                     val token = "jwt_farmer_${phone}_${System.currentTimeMillis()}"
                     GlobalMockData.farmerPhone.value = phone
+                    val loc = IndianLocationsCatalog.locations.find { 
+                        it.district.equals(GlobalMockData.farmerDistrict.value, true) 
+                    } ?: selectedLocation
+                    GlobalMockData.farmerDistrict.value = loc.district
+                    if (GlobalMockData.farmerVillage.value.isBlank()) {
+                        GlobalMockData.farmerVillage.value = loc.villageOrTaluka
+                    }
+                    GlobalMockData.farmerState.value = loc.state
+                    GlobalMockData.farmerLatitude.value = loc.latitude
+                    GlobalMockData.farmerLongitude.value = loc.longitude
+                    GlobalMockData.userLocation.value = "${GlobalMockData.farmerVillage.value}, ${loc.district} • ${loc.state}"
                     GlobalMockData.setSession(true, token, "FARMER")
                     onLoginAsFarmer()
                 } else {

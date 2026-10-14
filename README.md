@@ -1,4 +1,4 @@
-# 🌾 Krushi-Adhaar — Smart Agricultural Management & Marketplace Platform
+# 🌾 Krishi-Aadhar (कृषी आधार / शेतकरी आधार) — Smart Agricultural Management & Marketplace Platform
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Android](https://img.shields.io/badge/Android-Jetpack%20Compose-green.svg)](https://developer.android.com/jetpack/compose)
@@ -10,7 +10,7 @@
 ---
 
 ## 📌 Project Overview
-**Krushi-Adhaar** is an end-to-end smart agriculture ecosystem designed to empower farmers and agricultural buyers with real-time intelligence, decentralized commerce, and automated farm operations. The platform integrates:
+**Krishi-Aadhar** (in Hindi: **कृषी आधार**, in Marathi: **शेतकरी आधार**) is an end-to-end smart agriculture ecosystem designed to empower farmers and agricultural buyers with real-time intelligence, decentralized commerce, and automated farm operations. The platform integrates:
 1. **Real Cloud Database (Neon PostgreSQL)** with 17 automated Flyway migrations ensuring data persistence and integrity.
 2. **AI-Powered Disease Diagnosis** using Deep Learning (TensorFlow) combined with generative crop health advisory (Google Gemini 2.0 Flash) to deliver instant medicine recommendations, cost estimates, and organic remedies.
 3. **Live Geolocation & Distance Calculation** utilizing the mathematical Haversine formula to compute exact field-to-buyer distances for logistics and radius filtering.
@@ -18,9 +18,9 @@
 5. **Live Weather & Government Schemes Integration** pulling live forecasts via OpenWeatherMap with smart 30-minute caching and localized agricultural risk advisories.
 6. **Multilingual Voice Assistant (Hindi, Marathi, English)** featuring animated voice input, quick prompt chips, and localized Text-To-Speech (TTS) with full UI language toggling.
 7. **Live APMC Mandi Price Tracker & Trends** providing real-time mandi prices, MSP benchmark comparisons, 7-day trend indicators, and distance tracking.
-8. **Soil Health Card & NPK Fertilizer Calculator** calculating exact 50kg bags of Urea, DAP, and MOP per acre based on soil NPK/pH tests, along with lime/gypsum soil amendments and a 3-step application schedule.
-9. **Smart Irrigation & Crop Activity Calendar** offering stage-by-stage crop tracking, weather-delay warnings for rain, water volume guidance, and an interactive task checklist.
-10. **One-Click PDF Farm Health & Revenue Report** compiling a professional printable A4 report generated natively on Android with secure sharing via Android FileProvider.
+8. **Merged Soil & Water Management Hub** combining Soil Health NPK diagnostics, pH amendments (Lime/Gypsum), 50kg fertilizer bag calculator (Urea, DAP, MOP), 3-step application schedule, with crop phenology water scheduling, weather-delay rain alerts, and an interactive cultivation checklist.
+9. **Merged Expenses & Wallet Hub** bringing together a digital Farmer Wallet with deposit/withdrawal passbook, interactive crop cost budgeting, daily personal cashbook, and financial profit & loss tally.
+10. **Dedicated 5-Tab Navigation & One-Click PDF Reporting** featuring a streamlined bottom navbar (Home, Pest Doctor, Pitch Crop, Expenses, Schemes) and professional printable A4 PDF report generation natively on Android.
 
 ---
 

@@ -1,13 +1,15 @@
 package com.krushiadhaar.app
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -45,15 +49,17 @@ import com.krushiadhaar.app.finance.FarmerWalletScreen
 import com.krushiadhaar.app.schemes.GovernmentSchemesScreen
 import com.krushiadhaar.app.assistant.VoiceAssistantScreen
 import com.krushiadhaar.app.mandi.MandiPricesScreen
+import com.krushiadhaar.app.soil.SoilWaterManagementScreen
 import com.krushiadhaar.app.soil.SoilHealthScreen
 import com.krushiadhaar.app.irrigation.SmartIrrigationScreen
 import com.krushiadhaar.app.report.PdfReportScreen
 
-sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
-    object Home     : BottomNavItem("home_tab", Icons.Default.Home, "Home")
-    object Pest     : BottomNavItem("pest_tab", Icons.Default.Warning, "Pest")
-    object Wallet   : BottomNavItem("wallet_tab", Icons.Default.AccountBalanceWallet, "Wallet")
-    object Schemes  : BottomNavItem("schemes_tab", Icons.Default.Description, "Schemes")
+sealed class BottomNavItem(val route: String, val icon: ImageVector, val labelKey: String) {
+    object Home      : BottomNavItem("home_tab", Icons.Default.Home, "home")
+    object Pest      : BottomNavItem("pest_tab", Icons.Default.Warning, "pest")
+    object PitchCrop : BottomNavItem("pitch_crop_tab", Icons.Default.AddCircle, "pitch_crop")
+    object Expenses  : BottomNavItem("expenses_tab", Icons.Default.AccountBalanceWallet, "expenses")
+    object Schemes   : BottomNavItem("schemes_tab", Icons.Default.Description, "schemes")
 }
 
 @Composable
@@ -66,18 +72,39 @@ fun MainScreen(
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val items = listOf(BottomNavItem.Home, BottomNavItem.Pest, BottomNavItem.Wallet, BottomNavItem.Schemes)
+    val currentLang = GlobalMockData.userLanguage.value
+    val isMr = currentLang.contains("Marathi", true) || currentLang.contains("मराठी", true)
+    val isHi = currentLang.contains("Hindi", true) || currentLang.contains("हिंदी", true)
+
+    fun getNavLabel(item: BottomNavItem): String = when (item) {
+        BottomNavItem.Home -> if (isMr) "मुख्य" else if (isHi) "होम" else "Home"
+        BottomNavItem.Pest -> if (isMr) "कीड रोग" else if (isHi) "कीट रोग" else "Pest"
+        BottomNavItem.PitchCrop -> if (isMr) "पीक विक्री" else if (isHi) "फसल बेचें" else "Pitch Crop"
+        BottomNavItem.Expenses -> if (isMr) "खर्च व पाकीट" else if (isHi) "खर्च व बटुआ" else "Expenses"
+        BottomNavItem.Schemes -> if (isMr) "योजना" else if (isHi) "योजनाएं" else "Schemes"
+    }
+
+    val items = listOf(
+        BottomNavItem.Home,
+        BottomNavItem.Pest,
+        BottomNavItem.PitchCrop,
+        BottomNavItem.Expenses,
+        BottomNavItem.Schemes
+    )
 
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
                 items.forEach { item ->
+                    val label = getNavLabel(item)
                     NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        icon = { Icon(item.icon, contentDescription = label) },
                         label = {
                             Text(
-                                text = item.label,
-                                fontSize = 11.sp,
+                                text = label,
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                                 fontWeight = if (currentRoute == item.route) FontWeight.SemiBold else FontWeight.Normal
                             )
                         },
@@ -104,7 +131,11 @@ fun MainScreen(
         NavHost(
             navController = bottomNavController,
             startDestination = BottomNavItem.Home.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = { fadeIn(animationSpec = tween(280)) },
+            exitTransition = { fadeOut(animationSpec = tween(240)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(280)) },
+            popExitTransition = { fadeOut(animationSpec = tween(240)) }
         ) {
             composable(BottomNavItem.Home.route) {
                 HomeScreen(
@@ -112,14 +143,14 @@ fun MainScreen(
                     onNavigateToManagement      = { bottomNavController.navigate("management") },
                     onNavigateToDocuments       = { bottomNavController.navigate("documents") },
                     onNavigateToFinance         = { bottomNavController.navigate("finance") },
-                    onNavigateToExpense         = { bottomNavController.navigate("expense") },
+                    onNavigateToExpense         = { bottomNavController.navigate(BottomNavItem.Expenses.route) },
                     onNavigateToProfile         = { bottomNavController.navigate("profile") },
                     onNavigateToMarketplace     = { bottomNavController.navigate("marketplace") },
-                    onNavigateToPitchCrop       = { bottomNavController.navigate("sell_crop") },
+                    onNavigateToPitchCrop       = { bottomNavController.navigate(BottomNavItem.PitchCrop.route) },
                     onNavigateToVoiceAssistant  = { bottomNavController.navigate("voice_assistant") },
                     onNavigateToMandi           = { bottomNavController.navigate("mandi_prices") },
-                    onNavigateToSoilHealth      = { bottomNavController.navigate("soil_health") },
-                    onNavigateToIrrigation      = { bottomNavController.navigate("smart_irrigation") },
+                    onNavigateToSoilHealth      = { bottomNavController.navigate("soil_water") },
+                    onNavigateToIrrigation      = { bottomNavController.navigate("soil_water") },
                     onNavigateToPdfReport       = { bottomNavController.navigate("pdf_report") }
                 )
             }
@@ -137,6 +168,10 @@ fun MainScreen(
                         onUploadClick = { 
                             viewModel.resetState()
                             bottomNavController.navigate("pest_analysis") 
+                        },
+                        onViewRecentScan = { scan ->
+                            viewModel.loadHistoricalReport(scan)
+                            bottomNavController.navigate("pest_report")
                         }
                     )
                 }
@@ -173,11 +208,20 @@ fun MainScreen(
                     )
                 }
             }
-            composable(BottomNavItem.Wallet.route) {
-                FarmerWalletScreen(onBackClick = { bottomNavController.popBackStack() })
+            composable(BottomNavItem.PitchCrop.route) {
+                SellCropScreen(
+                    onNavigateBack = { bottomNavController.navigate(BottomNavItem.Home.route) },
+                    onSubmitSuccess = { bottomNavController.navigate(BottomNavItem.Home.route) }
+                )
+            }
+            composable(BottomNavItem.Expenses.route) {
+                ExpenseCalculatorScreen(
+                    onNavigateBack = { bottomNavController.navigate(BottomNavItem.Home.route) },
+                    initialTab = 0
+                )
             }
             composable(BottomNavItem.Schemes.route) {
-                GovernmentSchemesScreen(onBackClick = { bottomNavController.popBackStack() })
+                GovernmentSchemesScreen(onBackClick = { bottomNavController.navigate(BottomNavItem.Home.route) })
             }
             
             composable("profile") {
@@ -187,7 +231,13 @@ fun MainScreen(
                 )
             }
             
-            // Legacy/Extra Modules
+            // Legacy & Direct Routes
+            composable("wallet_tab") {
+                ExpenseCalculatorScreen(
+                    onNavigateBack = { bottomNavController.popBackStack() },
+                    initialTab = 0
+                )
+            }
             composable("marketplace") {
                 MarketplaceScreen(
                     onNavigateToChat = { farmerName -> bottomNavController.navigate("chat_screen/${android.net.Uri.encode(farmerName)}") },
@@ -212,7 +262,10 @@ fun MainScreen(
                 CropManagementScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
             composable("expense") {
-                ExpenseCalculatorScreen(onNavigateBack = { bottomNavController.popBackStack() })
+                ExpenseCalculatorScreen(
+                    onNavigateBack = { bottomNavController.popBackStack() },
+                    initialTab = 1
+                )
             }
             composable("documents") {
                 DocumentsScreen(onNavigateBack = { bottomNavController.popBackStack() })
@@ -237,11 +290,14 @@ fun MainScreen(
             composable("mandi_prices") {
                 MandiPricesScreen(onNavigateBack = { bottomNavController.popBackStack() })
             }
+            composable("soil_water") {
+                SoilWaterManagementScreen(onNavigateBack = { bottomNavController.popBackStack() }, initialTab = 0)
+            }
             composable("soil_health") {
-                SoilHealthScreen(onNavigateBack = { bottomNavController.popBackStack() })
+                SoilWaterManagementScreen(onNavigateBack = { bottomNavController.popBackStack() }, initialTab = 0)
             }
             composable("smart_irrigation") {
-                SmartIrrigationScreen(onNavigateBack = { bottomNavController.popBackStack() })
+                SoilWaterManagementScreen(onNavigateBack = { bottomNavController.popBackStack() }, initialTab = 1)
             }
             composable("pdf_report") {
                 PdfReportScreen(onNavigateBack = { bottomNavController.popBackStack() })

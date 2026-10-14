@@ -47,6 +47,14 @@ fun HomeScreen(
     val weatherState by homeViewModel.weatherState.collectAsState()
     var currentLang by remember { mutableStateOf(GlobalMockData.userLanguage.value) }
 
+    val currentLat = GlobalMockData.farmerLatitude.value
+    val currentLon = GlobalMockData.farmerLongitude.value
+    val currentDistrict = GlobalMockData.farmerDistrict.value
+
+    LaunchedEffect(currentLat, currentLon, currentDistrict) {
+        homeViewModel.refreshWeather(currentLat, currentLon, currentDistrict)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -418,31 +426,23 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Row 1: Mandi & Soil Health
+        // Row 1: Soil & Water Management + Mandi Rates
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🌱", title = AppStrings.soilAndWater, subtitle = "NPK & Irrigation", onClick = onNavigateToSoilHealth)
             QuickActionCard(modifier = Modifier.weight(1f), emoji = "📈", title = AppStrings.mandiPrices, subtitle = "Live APMC Rates", onClick = onNavigateToMandi)
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🧪", title = AppStrings.soilHealth, subtitle = "Fertilizer Bags", onClick = onNavigateToSoilHealth)
         }
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Row 2: Irrigation & PDF Report
+        // Row 2: Buyer Portal + Inventory
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "💧", title = AppStrings.smartIrrigation, subtitle = "Water & Activities", onClick = onNavigateToIrrigation)
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "📄", title = AppStrings.pdfReport, subtitle = "Export Certificate", onClick = onNavigateToPdfReport)
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Row 3: Marketplace & Sell
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🌾", title = "Pitch Crop", subtitle = "Direct Sale", onClick = onNavigateToPitchCrop)
             QuickActionCard(modifier = Modifier.weight(1f), emoji = "🛒", title = "Buyer Portal", subtitle = "Negotiate & Buy", onClick = onNavigateToMarketplace)
+            QuickActionCard(modifier = Modifier.weight(1f), emoji = "📦", title = "Inventory", subtitle = "Stock & Tools", onClick = onNavigateToManagement)
         }
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Row 4: Inventory & Expenses
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "📦", title = "Inventory", subtitle = "Resources", onClick = onNavigateToManagement)
-            QuickActionCard(modifier = Modifier.weight(1f), emoji = "🧮", title = "Expenses", subtitle = "Cost Calculator", onClick = onNavigateToExpense)
+        // Row 3: Farm PDF Certificate & Report
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            QuickActionCard(modifier = Modifier.fillMaxWidth(), emoji = "📄", title = AppStrings.pdfReport, subtitle = "Export Official Farm Health Certificate & Ledger", onClick = onNavigateToPdfReport)
         }
 
         Spacer(modifier = Modifier.height(40.dp))

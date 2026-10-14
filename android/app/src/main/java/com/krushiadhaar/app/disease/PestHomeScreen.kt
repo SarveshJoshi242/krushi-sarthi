@@ -1,6 +1,7 @@
 package com.krushiadhaar.app.disease
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,7 +26,8 @@ import android.graphics.Bitmap
 @Composable
 fun PestHomeScreen(
     onTakePhotoClick: () -> Unit = {},
-    onUploadClick: () -> Unit = {}
+    onUploadClick: () -> Unit = {},
+    onViewRecentScan: (com.krushiadhaar.app.GlobalMockData.PestScanHistory) -> Unit = {}
 ) {
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
@@ -101,12 +103,83 @@ fun PestHomeScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    val supportedCrops = listOf(
+                        "Auto-Detect" to "🔍",
+                        "Pumpkin" to "🎃",
+                        "Tomato" to "🍅",
+                        "Cotton" to "🌿",
+                        "Chilli" to "🌶️",
+                        "Rice" to "🌾",
+                        "Onion" to "🧅",
+                        "Sugarcane" to "🎋",
+                        "Potato" to "🥔",
+                        "Maize" to "🌽",
+                        "Groundnut" to "🥜",
+                        "Brinjal" to "🍆",
+                        "Bitter Gourd" to "🥒",
+                        "Ridge Gourd" to "🥬"
+                    )
+                    val selectedCrop = com.krushiadhaar.app.GlobalMockData.pestSelectedCrop.value
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Crop: $selectedCrop",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Choose crop below",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = GreenPrimary
+                        )
+                    }
+
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    ) {
+                        items(supportedCrops.size) { index ->
+                            val (cropName, emoji) = supportedCrops[index]
+                            val isSelected = selectedCrop == cropName
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = if (isSelected) GreenPrimary else Color(0xFFF1F8E9),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    if (isSelected) GreenPrimary else Color(0xFFC8E6C9)
+                                ),
+                                modifier = Modifier.clickable {
+                                    com.krushiadhaar.app.GlobalMockData.pestSelectedCrop.value = cropName
+                                }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(emoji, fontSize = 14.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = cropName,
+                                        color = if (isSelected) Color.White else TextPrimary,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Button(
                         onClick = { cameraLauncher.launch(null) },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -115,11 +188,11 @@ fun PestHomeScreen(
                         Text("Take Photo", color = AppSurface, fontWeight = FontWeight.Bold)
                     }
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     OutlinedButton(
                         onClick = { galleryLauncher.launch("image/*") },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = GreenPrimary)
@@ -137,46 +210,48 @@ fun PestHomeScreen(
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Text("Recent Scans", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 
-                // History Item 1
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(48.dp).background(Color(0xFFE8F5E9), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                            Text("🌱", fontSize = 24.sp)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Cotton Leaf Spot", fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                            Text("2 days ago • Moderate", fontSize = 12.sp, color = TextSecondary)
-                        }
-                        TextButton(onClick = { /* View Report */ }) {
-                            Text("View", color = GreenPrimary)
+                val recentScans = com.krushiadhaar.app.GlobalMockData.pestScanHistoryList
+                if (recentScans.isEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Box(modifier = Modifier.padding(20.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("No recent scans yet. Take a photo to diagnose crop pests.", color = TextSecondary, fontSize = 13.sp)
                         }
                     }
-                }
-                
-                // History Item 2
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(48.dp).background(Color(0xFFE8F5E9), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                            Text("🌾", fontSize = 24.sp)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Wheat Rust", fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                            Text("1 week ago • Severe", fontSize = 12.sp, color = TextSecondary)
-                        }
-                        TextButton(onClick = { /* View Report */ }) {
-                            Text("View", color = GreenPrimary)
+                } else {
+                    recentScans.take(6).forEach { scan ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                                .clickable { onViewRecentScan(scan) },
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(Color(0xFFE8F5E9), RoundedCornerShape(8.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(scan.emoji, fontSize = 24.sp)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("${scan.crop} • ${scan.diseaseName}", fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                                    Text("${scan.dateText} • ${scan.severity}", fontSize = 12.sp, color = TextSecondary)
+                                }
+                                TextButton(onClick = { onViewRecentScan(scan) }) {
+                                    Text("View", color = GreenPrimary, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }

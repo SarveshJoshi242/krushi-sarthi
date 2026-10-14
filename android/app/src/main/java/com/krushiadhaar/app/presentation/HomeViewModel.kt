@@ -24,12 +24,18 @@ data class MainData(val temp: Double, val feels_like: Double)
 data class WindData(val speed: Double)
 data class RainData(val `1h`: Double?)
 
-// API Interface
 interface WeatherApi {
     @GET("weather")
     suspend fun getCurrentWeather(
-        @Query("lat") lat: Double = 16.7050,
-        @Query("lon") lon: Double = 74.2433,
+        @Query("lat") lat: Double,
+        @Query("lon") lon: Double,
+        @Query("appid") appId: String = "20fe0a561f9832b040c30f5c1aaf8d6c",
+        @Query("units") units: String = "metric"
+    ): WeatherResponse
+
+    @GET("weather")
+    suspend fun getWeatherByCity(
+        @Query("q") query: String,
         @Query("appid") appId: String = "20fe0a561f9832b040c30f5c1aaf8d6c",
         @Query("units") units: String = "metric"
     ): WeatherResponse
@@ -218,12 +224,27 @@ class HomeViewModel : ViewModel() {
         refreshRecommendations()
     }
 
-    private fun fetchWeather() {
+    fun refreshWeather(
+        lat: Double = com.krushiadhaar.app.GlobalMockData.farmerLatitude.value,
+        lon: Double = com.krushiadhaar.app.GlobalMockData.farmerLongitude.value,
+        district: String = com.krushiadhaar.app.GlobalMockData.farmerDistrict.value
+    ) {
         viewModelScope.launch {
             try {
-                val lat = com.krushiadhaar.app.GlobalMockData.farmerLatitude.value
-                val lon = com.krushiadhaar.app.GlobalMockData.farmerLongitude.value
-                val response = WeatherRetrofitClient.api.getCurrentWeather(lat = lat, lon = lon)
+                val response = if (lat != 0.0 && lon != 0.0) {
+                    try {
+                        WeatherRetrofitClient.api.getCurrentWeather(lat = lat, lon = lon)
+                    } catch (e: Exception) {
+                        if (district.isNotBlank()) {
+                            WeatherRetrofitClient.api.getWeatherByCity(query = "$district,IN")
+                        } else throw e
+                    }
+                } else if (district.isNotBlank()) {
+                    WeatherRetrofitClient.api.getWeatherByCity(query = "$district,IN")
+                } else {
+                    WeatherRetrofitClient.api.getCurrentWeather(lat = 18.1517, lon = 74.5774)
+                }
+
                 _weatherState.value = WeatherUiState(
                     temp = "${response.main.temp.toInt()}°",
                     condition = response.weather.firstOrNull()?.main ?: "Clear",
@@ -235,5 +256,9 @@ class HomeViewModel : ViewModel() {
                 // Keep default if fails
             }
         }
+    }
+
+    private fun fetchWeather() {
+        refreshWeather()
     }
 }

@@ -8,6 +8,7 @@ import com.krushiadhaar.app.data.remote.api.AuthApi
 import com.krushiadhaar.app.data.remote.api.UserApi
 import com.krushiadhaar.app.data.repository.AuthRepository
 import com.krushiadhaar.app.data.repository.UserRepository
+import kotlinx.coroutines.launch
 
 class KrushiAdhaarApplication : Application() {
     lateinit var database: com.krushiadhaar.app.data.local.database.KrushiAdhaarDatabase
@@ -18,6 +19,7 @@ class KrushiAdhaarApplication : Application() {
     lateinit var diseaseRepository: com.krushiadhaar.app.data.repository.DiseaseRepository
     lateinit var marketplaceRepository: com.krushiadhaar.app.data.repository.MarketplaceRepository
     lateinit var financeApi: com.krushiadhaar.app.data.remote.api.FinanceApi
+    lateinit var chatRepository: com.krushiadhaar.app.data.repository.ChatRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -31,7 +33,12 @@ class KrushiAdhaarApplication : Application() {
             applicationContext,
             com.krushiadhaar.app.data.local.database.KrushiAdhaarDatabase::class.java,
             "krushi_adhaar_db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
+
+        chatRepository = com.krushiadhaar.app.data.repository.ChatRepository(database.chatMessageDao())
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            chatRepository.seedInitialConversationsIfEmpty()
+        }
 
         val authApi = retrofit.create(AuthApi::class.java)
         val userApi = retrofit.create(UserApi::class.java)

@@ -1,7 +1,7 @@
 @echo off
-title Krushi-Adhaar FastAPI ML Service
+title Krishi-Aadhar FastAPI ML Service
 echo ========================================================
-echo       Starting Krushi-Adhaar ML Service
+echo       Starting Krishi-Aadhar ML Service
 echo ========================================================
 cd /d "%~dp0ml_service"
 

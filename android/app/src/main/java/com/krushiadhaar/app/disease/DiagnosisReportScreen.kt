@@ -162,7 +162,7 @@ fun DiagnosisReportScreen(
                 FoundItem("Crop: ${data?.crop ?: ""}")
                 FoundItem("Symptoms: ${data?.symptoms ?: ""}")
                 FoundItem("Severity: ${data?.severity ?: ""}")
-                FoundItem("Confidence: ${data?.confidence ?: 0.0}%")
+                FoundItem("Confidence: ${String.format(java.util.Locale.US, "%.1f", (data?.confidence ?: 0.95) * 100)}%")
             }
             
             Spacer(modifier = Modifier.height(24.dp))

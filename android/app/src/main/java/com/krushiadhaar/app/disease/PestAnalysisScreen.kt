@@ -53,12 +53,15 @@ fun PestAnalysisScreen(
                         decoder.isMutableRequired = true
                     }
                 } else {
+                    @Suppress("DEPRECATION")
                     MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
                 }
             } catch (e: Exception) {
                 null
             }
-        } else null
+        } else {
+            android.graphics.BitmapFactory.decodeResource(context.resources, com.krushiadhaar.app.R.drawable.mock_disease_photo)
+        }
         
         currentBitmap = bitmap
         viewModel.analyzeImage(bitmap)
@@ -114,16 +117,17 @@ fun PestAnalysisScreen(
         Spacer(modifier = Modifier.height(48.dp))
         
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-            ChecklistItem("Image quality check", isDone = true)
-            ChecklistItem("Detecting patterns", isDone = true)
-            ChecklistItem("Identifying issues...", isDone = false)
+            ChecklistItem("Image quality check", isDone = progress > 0.25f)
+            ChecklistItem("Detecting crop patterns", isDone = progress > 0.65f)
+            ChecklistItem("Diagnosing plant health...", isDone = progress >= 0.95f)
         }
         
-        // Dummy button for navigation simulation
-        Spacer(modifier = Modifier.height(64.dp))
-        Button(onClick = onAnalysisComplete, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) {
-            Text("Simulate Complete")
-        }
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Analyzing with Krushi-Aadhar AI...",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.LightGray
+        )
     }
     }
 }

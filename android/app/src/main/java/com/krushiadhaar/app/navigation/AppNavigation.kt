@@ -1,4 +1,7 @@
 package com.krushiadhaar.app.navigation
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -44,7 +47,14 @@ fun AppNavigation(factory: ViewModelFactory) {
         }
     }
 
-    NavHost(navController = navController, startDestination = startRoute) {
+    NavHost(
+        navController = navController,
+        startDestination = startRoute,
+        enterTransition = { fadeIn(animationSpec = tween(350)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(350)) },
+        exitTransition = { fadeOut(animationSpec = tween(300)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(300)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(350)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(350)) },
+        popExitTransition = { fadeOut(animationSpec = tween(300)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(300)) }
+    ) {
         composable(Screen.Splash.route) {
             SplashScreen(
                 onGetStarted = { navController.navigate(Screen.Step1.route) }

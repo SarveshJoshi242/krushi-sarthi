@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.krushiadhaar.app.ui.theme.*
 
 import androidx.compose.runtime.collectAsState
@@ -80,8 +81,13 @@ fun TreatmentGuideScreen(
                     Icon(Icons.Default.Medication, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(40.dp))
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text("Imidacloprid 17.8% SL", fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Text("Dosage: 0.5 ml / Litre of water", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                        val medText = data?.medicines ?: "Saaf (Carbendazim 12% + Mancozeb 63% WP) @ 2g/L"
+                        val parts = medText.split("@", limit = 2)
+                        Text(parts[0].trim(), fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(if (parts.size > 1) "Dosage: ${parts[1].trim()}" else "Apply as per ICAR label instructions", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                        if ((data?.estimatedCost ?: 0.0) > 0.0) {
+                            Text("Estimated Cost: ₹${data?.estimatedCost?.toInt() ?: 0}/acre", color = GreenText, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        }
                     }
                 }
             }

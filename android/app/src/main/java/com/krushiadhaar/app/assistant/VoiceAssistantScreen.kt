@@ -5,10 +5,12 @@ import android.speech.tts.TextToSpeech
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -70,11 +72,11 @@ fun VoiceAssistantScreen(
 
     val initialGreeting = when {
         currentLanguage.contains("Hindi", true) || currentLanguage.contains("हिंदी", true) ->
-            "नमस्ते किसान भाई! मैं कृषि सहायक हूँ। आप बोलकर या लिखकर अपनी फसल, खाद, कीटनाशक या मंडी भाव के बारे में पूछ सकते हैं।"
+            "नमस्ते किसान भाई! मैं कृषि आधार सहायक हूँ। आप बोलकर या लिखकर अपनी फसल, खाद, कीटनाशक या मंडी भाव के बारे में पूछ सकते हैं।"
         currentLanguage.contains("Marathi", true) || currentLanguage.contains("मराठी", true) ->
-            "नमस्कार शेतकरी मित्र! मी कृषी सहाय्यक आहे. आपण बोलून किंवा लिहून आपल्या पिकाची माहिती, खते, कीटकनाशके किंवा बाजार भाव विचारू शकता."
+            "नमस्कार शेतकरी मित्र! मी शेतकरी आधार सहायक आहे. आपण बोलून किंवा लिहून आपल्या पिकाची माहिती, खते, कीटकनाशके किंवा बाजार भाव विचारू शकता."
         else ->
-            "Hello Farmer! I am Krushi Assistant. Ask me anything about crop diseases, fertilizers, irrigation, or market prices in English, Hindi, or Marathi."
+            "Hello Farmer! I am Krishi-Aadhar Assistant. Ask me anything about crop diseases, fertilizers, irrigation, or market prices in English, Hindi, or Marathi."
     }
 
     val messages = remember {
@@ -161,18 +163,27 @@ fun VoiceAssistantScreen(
     val quickChips = when {
         currentLanguage.contains("Hindi", true) || currentLanguage.contains("हिंदी", true) -> listOf(
             "गेहूं में 30 दिन बाद कौन सी खाद डालें?",
-            "सोयाबीन का आज का मंडी भाव क्या है?",
-            "पत्तियों पर पीले धब्बे का क्या इलाज है?"
+            "सोयाबीन और कपास का आज का मंडी भाव क्या है?",
+            "पत्तियों पर पीले धब्बे और कीड़े का क्या इलाज है?",
+            "ड्रिप सिंचाई में पानी देने का सही समय क्या है?",
+            "ड्रिप और सोलर पंप पर सरकारी सब्सिडी कैसे मिलेगी?",
+            "फसल सीधे व्यापारियों को बिना दलाल के कैसे बेचें?"
         )
         currentLanguage.contains("Marathi", true) || currentLanguage.contains("मराठी", true) -> listOf(
             "गव्हाला ३० दिवसांनंतर कोणते खत द्यावे?",
-            "आजचा सोयाबीन बाजार भाव काय आहे?",
-            "पानांवर पिवळे डाग पडले आहेत, काय उपाय?"
+            "सोयाबीन आणि कापसाचा आजचा बाजार भाव काय आहे?",
+            "पानांवरील करपा आणि कीड नियंत्रणासाठी काय उपाय?",
+            "ठिबक सिंचनाने पाणी देण्याची योग्य वेळ कोणती?",
+            "ठिबक आणि सौर पंपावर सरकारी अनुदान कसे मिळेल?",
+            "माझा शेतमाल थेट खरेदीदारांना कसा विकावा?"
         )
         else -> listOf(
             "What fertilizer for wheat at 30 days?",
-            "What is today's soybean mandi rate?",
-            "How to treat yellow leaf spots?"
+            "What is today's soybean and cotton mandi rate?",
+            "How to treat yellow leaf spots and blight?",
+            "What is the best timing for drip irrigation?",
+            "How to get government subsidy for drip & solar pump?",
+            "How to pitch crop to direct buyers without middlemen?"
         )
     }
 
@@ -245,24 +256,22 @@ fun VoiceAssistantScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(bottom = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    quickChips.take(2).forEach { chip ->
+                    quickChips.forEach { chip ->
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = GreenSurface,
                             border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.5f)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { sendQuery(chip) }
+                            modifier = Modifier.clickable { sendQuery(chip) }
                         ) {
                             Text(
                                 text = chip,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 color = GreenDark,
-                                maxLines = 1,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
                     }
@@ -361,11 +370,11 @@ fun VoiceAssistantScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = if (currentLanguage.contains("Hindi", true) || currentLanguage.contains("हिंदी", true))
-                                "कृषि सहायक सोच रहा है..."
+                                "कृषी आधार सहायक सोच रहा है..."
                             else if (currentLanguage.contains("Marathi", true) || currentLanguage.contains("मराठी", true))
-                                "कृषी सहाय्यक विचार करत आहे..."
+                                "शेतकरी आधार सहायक विचार करत आहे..."
                             else
-                                "Krushi Assistant is analyzing...",
+                                "Krishi-Aadhar Assistant is analyzing...",
                             fontSize = 12.sp,
                             color = TextSecondary
                         )
@@ -436,22 +445,67 @@ private fun ChatBubble(message: VoiceMessage, onSpeak: () -> Unit) {
 private fun getFallbackAnswer(query: String, language: String): String {
     val isHi = language.contains("Hindi", true) || language.contains("हिंदी", true)
     val isMr = language.contains("Marathi", true) || language.contains("मराठी", true)
+    val q = query.lowercase()
 
     return when {
-        query.contains("fertilizer", true) || query.contains("खाद", true) || query.contains("खत", true) -> {
-            if (isHi) "गेहूं में बुवाई के 30 दिनों बाद पहली सिंचाई के साथ 45 किग्रा यूरिया प्रति एकड़ दें। इससे कल्ले अच्छे फूटते हैं।"
-            else if (isMr) "गव्हामध्ये पेरणीनंतर ३० दिवसांनी पहिल्या पाण्यासोबत ४५ किलो युरिया प्रति एकरी द्यावा. यामुळे फुटवे जोमदार येतात."
-            else "For wheat at 30 days, apply 45 kg Urea per acre with first irrigation to promote vigorous tillering."
+        // 1. Disease / Pest / Medicine
+        q.contains("disease") || q.contains("pest") || q.contains("leaf") || q.contains("spray") || 
+        q.contains("cure") || q.contains("medicine") || q.contains("yellow") || q.contains("blight") || 
+        q.contains("कीट") || q.contains("रोग") || q.contains("दवाई") || q.contains("स्प्रे") || 
+        q.contains("धब्बे") || q.contains("पीले") || q.contains("कीड") || q.contains("बुरशी") || 
+        q.contains("करपा") || q.contains("फवारणी") -> {
+            if (isHi) "फसल में कीट व फफूंद (धब्बे या झुलसा) के नियंत्रण के लिए प्रति एकड़ 500 ग्राम मैंकोज़ेब या 400 मिली क्लोरपायरीफॉस 200 लीटर पानी में मिलाकर छिड़कें। जैविक रोकथाम हेतु 5 मिली नीम तेल प्रति लीटर पानी में मिलाकर स्प्रे करें।"
+            else if (isMr) "पिकावरील कीड व करपा रोगाच्या नियंत्रणासाठी २०० लिटर पाण्यात ५०० ग्रॅम मॅन्कोझेब किंवा ४०० मिली क्लोरपायरीफॉस मिसळून फवारणी करा. सेंद्रिय नियंत्रणासाठी ५ मिली निंबोळी अर्क प्रति लिटर पाण्यात फवारावा."
+            else "For leaf spots or pest blight, spray Mancozeb 75% WP @ 2.5g/L or Chlorpyrifos 20% EC @ 2ml/L water. For organic treatment, spray cold-pressed Neem oil @ 5ml/L."
         }
-        query.contains("mandi", true) || query.contains("मंडी", true) || query.contains("बाजार", true) -> {
-            if (isHi) "आज कोल्हापुर और नागपुर मंडी में सोयाबीन का औसत भाव ₹4,850/क्विंटल है, जो कि सरकारी MSP ₹4,600 से अधिक है।"
-            else if (isMr) "आज कोल्हापूर व नागपूर बाजार समितीत सोयाबीनचा सरासरी दर ₹४,८५०/क्विंटल असून तो हमीभावापेक्षा जास्त आहे."
-            else "Today's average Mandi price for Soybean in Maharashtra is ₹4,850/Qtl, which is above the government MSP of ₹4,600."
+
+        // 2. Soil / Fertilizer / NPK / Bags
+        q.contains("fertilizer") || q.contains("urea") || q.contains("dap") || q.contains("mop") || 
+        q.contains("npk") || q.contains("soil") || q.contains("bag") || q.contains("खाद") || 
+        q.contains("खत") || q.contains("यूरिया") || q.contains("डीएपी") || q.contains("माती") -> {
+            if (isHi) "संतुलित पैदावार के लिए बुवाई के समय प्रति एकड़ 1 बोरी DAP और आधा बोरी MOP दें। 30 दिन बाद पहली सिंचाई के समय 1 बोरी यूरिया का टॉप-ड्रेसिंग करें।"
+            else if (isMr) "चांगल्या उत्पादनासाठी पेरणीवेळी एकरी १ गोणी DAP आणि अर्धी गोणी MOP द्यावे. ३० दिवसांनी पहिल्या सिंचनासोबत १ गोणी युरिया टाकावा."
+            else "Apply 1 bag (50kg) DAP + 0.5 bag (25kg) MOP as basal application at sowing. Follow with 1 bag Urea top-dressing at 30 days along with first irrigation."
         }
+
+        // 3. Smart Irrigation / Water
+        q.contains("irrigation") || q.contains("water") || q.contains("drip") || q.contains("timing") || 
+        q.contains("सिंचाई") || q.contains("पानी") || q.contains("ड्रिप") || q.contains("सिंचन") || q.contains("पाणी") -> {
+            if (isHi) "सिंचाई हमेशा सुबह 6 से 9 बजे के बीच या शाम को करें। ड्रिप से 1.5 से 2 घंटे पानी देना सर्वोत्तम है। दोपहर की तेज धूप में पानी देने से 40% वाष्पीकरण का नुकसान होता है।"
+            else if (isMr) "पाणी नेहमी सकाळी ६ ते ९ दरम्यान किंवा संध्याकाळी द्यावे. ठिबक सिंचनाने १.५ ते २ तास पाणी दिल्यास पाण्याची बचत होते. दुपारच्या उन्हात पाणी देणे टाळावे."
+            else "Irrigate via drip for 1.5 to 2 hours between 6:00 AM - 9:00 AM or after 5:00 PM. Avoid afternoon watering to prevent up to 40% evaporation losses."
+        }
+
+        // 4. Mandi Prices / Market / MSP
+        q.contains("mandi") || q.contains("market") || q.contains("price") || q.contains("rate") || 
+        q.contains("msp") || q.contains("मंडी") || q.contains("भाव") || q.contains("बाजार") || 
+        q.contains("दर") || q.contains("किंमत") -> {
+            if (isHi) "आज प्रमुख मंडियों में सोयाबीन का औसत भाव ₹4,850/क्विंटल (MSP ₹4,600), कपास ₹7,250/क्विंटल (MSP ₹6,620) और गेहूं ₹2,350/क्विंटल चल रहा है।"
+            else if (isMr) "आजच्या बाजार समितीत सोयाबीन सरासरी ₹४,८५०/क्विंटल (हमीभाव ₹४,६००), कापूस ₹७,२५०/क्विंटल आणि गहू ₹२,३५०/क्विंटल दराने विकला जात आहे."
+            else "Today's APMC modal mandi rates: Soybean ₹4,850/Qtl (above MSP ₹4,600), Cotton ₹7,250/Qtl (MSP ₹6,620), and Wheat ₹2,350/Qtl."
+        }
+
+        // 5. Government Schemes & Subsidies
+        q.contains("scheme") || q.contains("subsidy") || q.contains("pmkisan") || q.contains("pm-kisan") || 
+        q.contains("insurance") || q.contains("fasal bima") || q.contains("योजना") || q.contains("सब्सिडी") || 
+        q.contains("अनुदान") || q.contains("विमा") || q.contains("बीमा") -> {
+            if (isHi) "प्रधानमंत्री किसान सम्मान निधि (PM-KISAN) से प्रति वर्ष ₹6,000 की सहायता और फसल बीमा योजना (PMFBY) से सूखा व बाढ़ से सुरक्षा मिलती है। ड्रिप सिंचाई पर 55% से 80% सरकारी सब्सिडी उपलब्ध है।"
+            else if (isMr) "पीएम-किसान योजनेतून दरवर्षी ₹६,००० चा लाभ मिळतो. ठिबक सिंचनासाठी महाडीबीटीवर ५५% ते ८०% सरकारी अनुदान आणि १ रुपयात पीक विमा उपलब्ध आहे."
+            else "PM-KISAN provides ₹6,000 yearly financial support. PMFBY offers crop insurance against natural calamities, and PMKSY offers 55% to 80% government subsidy on drip irrigation sets."
+        }
+
+        // 6. Selling Crop / Pitch Crop / Buyers
+        q.contains("pitch") || q.contains("sell") || q.contains("buyer") || q.contains("marketplace") || 
+        q.contains("व्यापारी") || q.contains("बेचें") || q.contains("विक्री") || q.contains("खरेदीदार") -> {
+            if (isHi) "कृषी आधार के 'फसल बेचें' (Pitch Crop) विकल्प से आप अपनी फसल का ग्रेड और मात्रा डालकर बिना किसी दलाल के सीधे सत्यापित व्यापारियों को 15% अधिक मूल्य पर बेच सकते हैं।"
+            else if (isMr) "शेतकरी आधार च्या 'पीक विक्री' (Pitch Crop) पर्यायावर जाऊन पिकाची प्रत व प्रमाण नोंदवा. दलालांशिवाय थेट प्रमाणित खरेदीदारांकडून चांगला दर मिळवा."
+            else "List your harvest grade and tonnage in the Krishi-Aadhar 'Pitch Crop' tab to connect directly with verified institutional buyers without middlemen commission."
+        }
+
         else -> {
-            if (isHi) "आपकी फसल के अच्छे उत्पादन के लिए मौसम के अनुसार संतुलित NPK खाद और समय पर सिंचाई करें।"
-            else if (isMr) "चांगल्या उत्पादनासाठी हवामानाचा अंदाज घेऊन संतुलित NPK खतांचा वापर आणि वेळेवर पाणी द्या."
-            else "For optimal yield, ensure balanced NPK fertilizer application and schedule irrigation according to local weather forecasts."
+            if (isHi) "कृषी आधार सहायक: अपनी फसल के बेहतर उत्पादन के लिए मौसम आधारित सिंचाई, संतुलित NPK खाद और समय पर जैविक कीटनाशक का प्रयोग करें।"
+            else if (isMr) "शेतकरी आधार सहायक: भरघोस उत्पादनासाठी वेळेवर पाणी, संतुलित खते आणि रोग कीड संरक्षणासाठी शिफारशीत फवारणी करा."
+            else "Krishi-Aadhar Assistant: Ensure balanced NPK fertilizer application, morning drip irrigation, and timely plant protection for maximum yield."
         }
     }
 }

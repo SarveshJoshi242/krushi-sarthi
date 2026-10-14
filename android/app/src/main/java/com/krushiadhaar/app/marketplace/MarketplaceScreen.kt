@@ -24,12 +24,15 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,8 +46,54 @@ data class CropListing(
     val quantityTons: Int,
     val pricePerTon: Int,
     val emoji: String,
-    val emojiBg: Color
+    val emojiBg: Color,
+    val imageUri: String? = null,
+    val originalQuantity: Double? = null,
+    val originalUnit: String? = null,
+    val originalPrice: Int? = null,
+    val grade: String? = null
 )
+
+@Composable
+fun CropImageThumbnail(imageUri: String?, emoji: String, emojiBg: Color, size: androidx.compose.ui.unit.Dp = 48.dp) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bitmap = remember(imageUri) {
+        if (!imageUri.isNullOrBlank()) {
+            try {
+                if (imageUri.startsWith("content://") || imageUri.startsWith("file://")) {
+                    val uri = android.net.Uri.parse(imageUri)
+                    val input = context.contentResolver.openInputStream(uri)
+                    android.graphics.BitmapFactory.decodeStream(input)
+                } else {
+                    android.graphics.BitmapFactory.decodeFile(imageUri)
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
+    if (bitmap != null) {
+        androidx.compose.foundation.Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = "Crop Photo",
+            modifier = Modifier
+                .size(size)
+                .clip(RoundedCornerShape(10.dp)),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .clip(RoundedCornerShape(10.dp))
+                .background(emojiBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = emoji, fontSize = 22.sp)
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +117,7 @@ fun MarketplaceScreen(
     // Apply filters
     displayListings = displayListings.filter { listing ->
         val matchesSearch = searchQuery.isBlank() || listing.name.contains(searchQuery, ignoreCase = true)
-        val matchesCrop = selectedCrop == "All" || listing.name.equals(selectedCrop, ignoreCase = true)
+        val matchesCrop = selectedCrop == "All" || listing.name.contains(selectedCrop, ignoreCase = true)
         val matchesLoc = selectedLocation == "All" || listing.location.contains(selectedLocation, ignoreCase = true)
         val matchesQty = when (selectedQty) {
             "> 1 Ton" -> listing.quantityTons > 1
@@ -185,10 +234,63 @@ fun MarketplaceScreen(
                         }
                     }
                 } else if (selectedTab == 1) {
-                    val notifications = com.krushiadhaar.app.GlobalMockData.farmerNotifications
-                    if (notifications.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize().weight(1f), contentAlignment = Alignment.Center) {
-                            Text("No messages or negotiations yet.", color = TextSecondary)
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    val app = context.applicationContext as com.krushiadhaar.app.KrushiAdhaarApplication
+                    val allMessages by app.chatRepository.getAllMessages().collectAsState(initial = emptyList())
+
+                    val conversations = remember(allMessages) {
+                        allMessages.groupBy { it.conversationId }.map { (convId, msgs) ->
+                            val latest = msgs.maxByOrNull { it.timestamp }
+                            val peer = latest?.peerName ?: convId
+                            val peerRole = latest?.peerRole ?: "Buyer"
+                            val crop = latest?.cropName ?: ""
+                            val lastMsg = latest?.text ?: ""
+                            val timeStr = latest?.timeFormatted ?: ""
+                            Triple(
+                                convId,
+                                Triple(peer, peerRole, crop),
+                                Pair(lastMsg, timeStr)
+                            )
+                        }
+                    }
+
+                    if (conversations.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f)
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .background(GreenSurface, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.ChatBubbleOutline,
+                                        contentDescription = null,
+                                        tint = GreenPrimary,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    "No messages or negotiations yet",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = TextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    "When buyers or traders reach out regarding your pitched crops, direct negotiation conversations will be safely stored and displayed here.",
+                                    color = TextSecondary,
+                                    fontSize = 13.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
                         }
                     } else {
                         LazyColumn(
@@ -196,25 +298,89 @@ fun MarketplaceScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            items(notifications) { notif ->
+                            items(conversations) { conv ->
+                                val convId = conv.first
+                                val peerName = conv.second.first
+                                val peerRole = conv.second.second
+                                val cropName = conv.second.third
+                                val lastMsg = conv.third.first
+                                val timeStr = conv.third.second
+
                                 Card(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onNavigateToChat(peerName) },
                                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(14.dp),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                 ) {
-                                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Box(
-                                            modifier = Modifier.size(40.dp).background(Color(0xFFE3F2FD), CircleShape),
+                                            modifier = Modifier
+                                                .size(46.dp)
+                                                .background(Color(0xFFE8F5E9), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(Icons.Default.Notifications, contentDescription = null, tint = GreenPrimary)
+                                            Text(
+                                                text = peerName.firstOrNull()?.toString()?.uppercase() ?: "B",
+                                                color = GreenPrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp
+                                            )
                                         }
                                         Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
-                                            Text(notif.message, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = TextPrimary)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = peerName,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp,
+                                                    color = TextPrimary
+                                                )
+                                                Text(
+                                                    text = timeStr,
+                                                    color = TextSecondary,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = GreenSurface
+                                                ) {
+                                                    Text(
+                                                        text = peerRole,
+                                                        fontSize = 10.sp,
+                                                        color = GreenDark,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    )
+                                                }
+                                                if (cropName.isNotBlank()) {
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        text = "• $cropName",
+                                                        fontSize = 11.sp,
+                                                        color = TextSecondary
+                                                    )
+                                                }
+                                            }
                                             Spacer(modifier = Modifier.height(4.dp))
-                                            Text(notif.time, color = TextSecondary, fontSize = 12.sp)
+                                            Text(
+                                                text = lastMsg,
+                                                color = TextSecondary,
+                                                fontSize = 13.sp,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }
@@ -325,15 +491,32 @@ private fun ListingCard(listing: CropListing, onPlaceOrder: () -> Unit, onNaviga
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(listing.emojiBg),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = listing.emoji, fontSize = 22.sp)
-                }
+                CropImageThumbnail(
+                    imageUri = listing.imageUri,
+                    emoji = listing.emoji,
+                    emojiBg = listing.emojiBg,
+                    size = 46.dp
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = listing.name, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextPrimary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = listing.name, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextPrimary)
+                        if (!listing.grade.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                color = GreenSurface,
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = listing.grade,
+                                    color = GreenDark,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
                     Text(text = listing.farmer, fontSize = 12.sp, color = TextSecondary)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.LocationOn, contentDescription = null, tint = TextMuted, modifier = Modifier.size(12.dp))
@@ -346,14 +529,27 @@ private fun ListingCard(listing: CropListing, onPlaceOrder: () -> Unit, onNaviga
             Divider(color = AppDivider)
             Spacer(modifier = Modifier.height(10.dp))
 
+            val displayQty = if (listing.originalQuantity != null && !listing.originalUnit.isNullOrBlank()) {
+                val qStr = if (listing.originalQuantity % 1.0 == 0.0) listing.originalQuantity.toInt().toString() else listing.originalQuantity.toString()
+                "$qStr ${listing.originalUnit}"
+            } else {
+                "${listing.quantityTons} Tons"
+            }
+
+            val displayPrice = if (listing.originalPrice != null && !listing.originalUnit.isNullOrBlank()) {
+                "\u20B9${listing.originalPrice.toFormattedString()} / ${listing.originalUnit.removeSuffix("s")}"
+            } else {
+                "\u20B9${listing.pricePerTon.toFormattedString()} / Ton"
+            }
+
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Quantity", fontSize = 11.sp, color = TextSecondary)
-                    Text(text = "${listing.quantityTons} Tons", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                    Text(text = displayQty, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                 }
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1.2f)) {
                     Text(text = "Asking Price", fontSize = 11.sp, color = TextSecondary)
-                    Text(text = "\u20B9${listing.pricePerTon.toFormattedString()} / Ton", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = OrangeText)
+                    Text(text = displayPrice, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = OrangeText)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Market Avg", fontSize = 11.sp, color = TextSecondary)

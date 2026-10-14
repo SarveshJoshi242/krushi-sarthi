@@ -55,7 +55,7 @@ object PdfReportGenerator {
 
         // 1. Header Banner
         canvas.drawRoundRect(20f, y, 575f, y + 60f, 12f, 12f, cardPaint)
-        canvas.drawText("KRUSHI-ADHAAR — FARM HEALTH & REVENUE REPORT", 35f, y + 26f, titlePaint)
+        canvas.drawText("KRISHI-AADHAR — FARM HEALTH & REVENUE REPORT", 35f, y + 26f, titlePaint)
         val dateStr = SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.getDefault()).format(Date())
         canvas.drawText("Generated on: $dateStr  |  Govt ID / Aadhaar Verified: YES", 35f, y + 46f, subPaint)
 
@@ -152,7 +152,7 @@ object PdfReportGenerator {
         // Footer / Stamp
         canvas.drawLine(25f, y, 570f, y, linePaint)
         y += 20f
-        canvas.drawText("Certified by Krushi-Adhaar Intelligence System • Powered by Google Gemini & Neon DB", 100f, y, subPaint)
+        canvas.drawText("Certified by Krishi-Aadhar Intelligence System • Powered by Google Gemini & Neon DB", 100f, y, subPaint)
 
         pdfDocument.finishPage(page)
 
@@ -160,7 +160,7 @@ object PdfReportGenerator {
         return try {
             val fileDir = File(context.getExternalFilesDir(null), "reports")
             if (!fileDir.exists()) fileDir.mkdirs()
-            val file = File(fileDir, "Krushi_Adhaar_Farm_Report_${System.currentTimeMillis()}.pdf")
+            val file = File(fileDir, "Krishi_Aadhar_Farm_Report_${System.currentTimeMillis()}.pdf")
             val outputStream = FileOutputStream(file)
             pdfDocument.writeTo(outputStream)
             pdfDocument.close()
@@ -172,7 +172,7 @@ object PdfReportGenerator {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "Krushi-Adhaar Farm Health & Revenue Report")
+                putExtra(Intent.EXTRA_SUBJECT, "Krishi-Aadhar Farm Health & Revenue Report")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             context.startActivity(Intent.createChooser(intent, "Share Farm Report PDF"))

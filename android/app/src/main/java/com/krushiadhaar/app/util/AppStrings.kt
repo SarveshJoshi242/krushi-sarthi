@@ -13,9 +13,9 @@ object AppStrings {
 
     val appName: String
         get() = when {
-            isHindi() -> "किसान मित्र"
-            isMarathi() -> "कृषी मित्र"
-            else -> "Kisaan Mitra"
+            isHindi() -> "कृषी आधार"
+            isMarathi() -> "शेतकरी आधार"
+            else -> "Krishi-Aadhar"
         }
 
     val hello: String
@@ -128,6 +128,62 @@ object AppStrings {
             isHindi() -> "सरकारी योजनाएं"
             isMarathi() -> "सरकारी योजना"
             else -> "Government Schemes"
+        }
+
+    val soilAndWater: String
+        get() = when {
+            isHindi() -> "मृदा व जल प्रबंधन"
+            isMarathi() -> "माती व पाणी व्यवस्थापन"
+            else -> "Soil & Water Management"
+        }
+
+    val pitchCrop: String
+        get() = when {
+            isHindi() -> "फसल बेचें"
+            isMarathi() -> "पीक विक्री"
+            else -> "Pitch Crop"
+        }
+
+    val expenses: String
+        get() = when {
+            isHindi() -> "खर्च व बटुआ"
+            isMarathi() -> "खर्च व पाकीट"
+            else -> "Expenses & Wallet"
+        }
+
+    val homeTab: String
+        get() = when {
+            isHindi() -> "होम"
+            isMarathi() -> "मुख्य"
+            else -> "Home"
+        }
+
+    val pestTab: String
+        get() = when {
+            isHindi() -> "कीट रोग"
+            isMarathi() -> "कीड रोग"
+            else -> "Pest Doctor"
+        }
+
+    val pitchCropTab: String
+        get() = when {
+            isHindi() -> "फसल बेचें"
+            isMarathi() -> "पीक विक्री"
+            else -> "Pitch Crop"
+        }
+
+    val expensesTab: String
+        get() = when {
+            isHindi() -> "खर्च व बटुआ"
+            isMarathi() -> "खर्च व पाकीट"
+            else -> "Expenses"
+        }
+
+    val schemesTab: String
+        get() = when {
+            isHindi() -> "योजनाएं"
+            isMarathi() -> "योजना"
+            else -> "Schemes"
         }
 
     // Auth & Onboarding Strings

@@ -1,0 +1,40 @@
+Label,Crop,Class_Name
+Brinjal/Healthy_Leaves,Brinjal,Healthy_Leaves
+Brinjal/Little_Leaf,Brinjal,Little_Leaf
+Brinjal/Phomopsis_Blight,Brinjal,Phomopsis_Blight
+Cotton/Alternaria Leaf Spot,Cotton,Alternaria Leaf Spot
+Cotton/Bacterial Blight,Cotton,Bacterial Blight
+Cotton/Fusarium Wilt,Cotton,Fusarium Wilt
+Cotton/Healthy Leaf,Cotton,Healthy Leaf
+Cotton/Verticillium Wilt,Cotton,Verticillium Wilt
+Groundnut/early_leaf_spot,Groundnut,early_leaf_spot
+Groundnut/early_rust,Groundnut,early_rust
+Groundnut/healthy_leaf,Groundnut,healthy_leaf
+Groundnut/late_leaf_spot,Groundnut,late_leaf_spot
+Groundnut/nutrition_deficiency,Groundnut,nutrition_deficiency
+Groundnut/rust,Groundnut,rust
+Maize/Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot,Maize,Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot
+Maize/Corn_(maize)___Common_rust_,Maize,Corn_(maize)___Common_rust_
+Maize/Corn_(maize)___Northern_Leaf_Blight,Maize,Corn_(maize)___Northern_Leaf_Blight
+Maize/Corn_(maize)___healthy,Maize,Corn_(maize)___healthy
+Potato/Potato___Early_blight,Potato,Potato___Early_blight
+Potato/Potato___Late_blight,Potato,Potato___Late_blight
+Potato/Potato___healthy,Potato,Potato___healthy
+Rice/Bacterialblight,Rice,Bacterialblight
+Rice/Blast,Rice,Blast
+Rice/Brownspot,Rice,Brownspot
+Rice/Tungro,Rice,Tungro
+Sugarcane/Healthy,Sugarcane,Healthy
+Sugarcane/Mosaic,Sugarcane,Mosaic
+Sugarcane/RedRot,Sugarcane,RedRot
+Sugarcane/Rust,Sugarcane,Rust
+Sugarcane/Yellow,Sugarcane,Yellow
+Tomato/Tomato___Bacterial_spot,Tomato,Tomato___Bacterial_spot
+Tomato/Tomato___Early_blight,Tomato,Tomato___Early_blight
+Tomato/Tomato___Late_blight,Tomato,Tomato___Late_blight
+Tomato/Tomato___Leaf_Mold,Tomato,Tomato___Leaf_Mold
+Tomato/Tomato___Septoria_leaf_spot,Tomato,Tomato___Septoria_leaf_spot
+Tomato/Tomato___Target_Spot,Tomato,Tomato___Target_Spot
+Tomato/Tomato___Tomato_Yellow_Leaf_Curl_Virus,Tomato,Tomato___Tomato_Yellow_Leaf_Curl_Virus
+Tomato/Tomato___Tomato_mosaic_virus,Tomato,Tomato___Tomato_mosaic_virus
+Tomato/Tomato___healthy,Tomato,Tomato___healthy

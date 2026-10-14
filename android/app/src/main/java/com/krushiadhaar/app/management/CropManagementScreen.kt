@@ -1,9 +1,11 @@
 package com.krushiadhaar.app.management
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,9 +14,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,63 +35,91 @@ import com.krushiadhaar.app.GlobalMockData.AgriInventoryItem
 import com.krushiadhaar.app.marketplace.CropListing
 import com.krushiadhaar.app.ui.theme.*
 
-// Backward-compatibility class
-data class InventoryItem(
-    val name: String,
-    val status: String,
-    val statusOk: Boolean,
-    val emoji: String
-)
-
-private fun formatRupee(amount: Int): String {
-    val isNegative = amount < 0
-    val absVal = kotlin.math.abs(amount)
-    val s = absVal.toString()
+private fun formatCurrency(amount: Number): String {
+    val num = amount.toLong()
+    val isNeg = num < 0
+    val absNum = kotlin.math.abs(num)
+    val s = absNum.toString()
     val formatted = if (s.length <= 3) {
         s
     } else {
-        val last3 = s.substring(s.length - 3)
-        val rest = s.substring(0, s.length - 3)
-        val groups = mutableListOf<String>()
-        var i = rest.length
-        while (i > 0) {
-            val start = kotlin.math.max(0, i - 2)
-            groups.add(0, rest.substring(start, i))
-            i -= 2
+        val last3 = s.takeLast(3)
+        val rest = s.dropLast(3)
+        val sb = StringBuilder()
+        for (i in rest.indices) {
+            sb.append(rest[i])
+            val rem = rest.length - 1 - i
+            if (rem > 0 && rem % 2 == 0) sb.append(",")
         }
-        groups.joinToString(",") + "," + last3
+        sb.append(",").append(last3).toString()
     }
-    val sign = if (isNegative) "-" else ""
-    return "$sign\u20B9$formatted"
+    val sign = if (isNeg) "-" else ""
+    return "$sign₹$formatted"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CropManagementScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
+    val currentLang = GlobalMockData.userLanguage.value
+
+    val isMr = currentLang.contains("Marathi", true) || currentLang.contains("मराठी", true)
+    val isHi = currentLang.contains("Hindi", true) || currentLang.contains("हिंदी", true)
+
+    // Localized clean single-language strings
+    val screenTitle = if (isMr) "कृषी भांडार" else if (isHi) "कृषि भंडार" else "Farm Inventory"
+    val screenSubtitle = if (isMr) "साठा व अवजारे व्यवस्थापन" else if (isHi) "भंडारण एवं उपकरण प्रबंधन" else "Stock & Equipment Management"
+    val totalItemsLabel = if (isMr) "एकूण वस्तू" else if (isHi) "कुल वस्तुएं" else "Total Items"
+    val stockWorthLabel = if (isMr) "साठा मूल्य" else if (isHi) "कुल मूल्य" else "Stock Worth"
+    val stockAlertsLabel = if (isMr) "इशारे" else if (isHi) "अलर्ट" else "Stock Alerts"
+    val needActionText = if (isMr) "लक्ष द्या" else if (isHi) "कार्रवाई आवश्यक" else "Need Action"
+    val searchPlaceholder = if (isMr) "नाव किंवा स्थानानुसार शोधा..." else if (isHi) "नाम या स्थान से खोजें..." else "Search by name, brand, location..."
+    val addItemText = if (isMr) "साहित्य जोडा" else if (isHi) "सामग्री जोड़ें" else "Add Item"
+    val sellMarketplaceText = if (isMr) "मार्केटमध्ये विका" else if (isHi) "मार्केट में बेचें" else "Sell on Mandi"
+
+    val categories = remember(currentLang) {
+        if (isMr) {
+            listOf(
+                "All" to "सर्व साहित्य",
+                "Harvested Produce" to "🌾 धान्य",
+                "Fertilizers" to "🧪 खते",
+                "Seeds" to "🌱 बियाणे",
+                "Pesticides" to "🛡️ कीटकनाशके",
+                "Machinery & Tools" to "🚜 यंत्रे",
+                "Animal Feed" to "🐄 पशुखाद्य"
+            )
+        } else if (isHi) {
+            listOf(
+                "All" to "सभी वस्तुएं",
+                "Harvested Produce" to "🌾 उपज",
+                "Fertilizers" to "🧪 उर्वरक",
+                "Seeds" to "🌱 बीज",
+                "Pesticides" to "🛡️ कीटनाशक",
+                "Machinery & Tools" to "🚜 कृषि यंत्र",
+                "Animal Feed" to "🐄 पशु आहार"
+            )
+        } else {
+            listOf(
+                "All" to "All Items",
+                "Harvested Produce" to "🌾 Produce",
+                "Fertilizers" to "🧪 Fertilizers",
+                "Seeds" to "🌱 Seeds",
+                "Pesticides" to "🛡️ Pesticides",
+                "Machinery & Tools" to "🚜 Machinery",
+                "Animal Feed" to "🐄 Animal Feed"
+            )
+        }
+    }
+
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember { mutableStateOf("All") }
     var showAddDialog by remember { mutableStateOf(false) }
 
-    val categories = listOf(
-        "All" to "सर्व साहित्य",
-        "Harvested Produce" to "🌾 धान्य/उत्पन्न",
-        "Fertilizers" to "🧪 खते",
-        "Seeds" to "🌱 बियाणे",
-        "Pesticides" to "🛡️ कीटकनाशके",
-        "Machinery & Tools" to "🚜 यंत्रे व अवजारे",
-        "Animal Feed" to "🐄 चारा व पशुखाद्य"
-    )
-
     val inventoryList = GlobalMockData.inventoryItems
 
-    // Filter items
     val filteredItems = remember(inventoryList.size, searchQuery, selectedCategoryFilter) {
         inventoryList.filter { item ->
-            val matchesCategory = when (selectedCategoryFilter) {
-                "All" -> true
-                else -> item.category.equals(selectedCategoryFilter, ignoreCase = true)
-            }
+            val matchesCategory = if (selectedCategoryFilter == "All") true else item.category.equals(selectedCategoryFilter, ignoreCase = true)
             val matchesSearch = if (searchQuery.isBlank()) true else {
                 item.name.contains(searchQuery, ignoreCase = true) ||
                 item.brandOrVariety.contains(searchQuery, ignoreCase = true) ||
@@ -100,7 +130,6 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
         }
     }
 
-    // High level stats
     val totalItemsCount = inventoryList.size
     val totalStockValue = inventoryList.sumOf { (it.quantity * it.pricePerUnit).toInt() }
     val alertItemsCount = inventoryList.count { it.status == "Low Stock" || it.status == "Out of Stock" || it.status == "Needs Service" }
@@ -111,15 +140,15 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                 title = {
                     Column {
                         Text(
-                            text = "My Farm Inventory",
+                            text = screenTitle,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 17.sp,
+                            fontSize = 18.sp,
                             color = TextPrimary
                         )
                         Text(
-                            text = "कृषी भांडार व साठा व्यवस्थापन",
+                            text = screenSubtitle,
                             fontSize = 11.sp,
-                            color = TextSecondary
+                            color = GreenDark
                         )
                     }
                 },
@@ -130,7 +159,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.AddCircleOutline, contentDescription = "Add Item", tint = GreenText)
+                        Icon(Icons.Default.AddCircle, contentDescription = addItemText, tint = GreenPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -143,7 +172,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp),
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Add Item (नवीन नोंद)", fontWeight = FontWeight.Bold) }
+                text = { Text(addItemText, fontWeight = FontWeight.Bold) }
             )
         },
         containerColor = AppBackground
@@ -153,12 +182,60 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // KPI Overview Banner
-            InventorySummaryCards(
-                totalCount = totalItemsCount,
-                totalWorth = totalStockValue,
-                alertCount = alertItemsCount
-            )
+            // Simplified KPI Overview Banner (3 Clean KPIs)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(text = totalItemsLabel, fontSize = 11.sp, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "$totalItemsCount",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    }
+
+                    Divider(modifier = Modifier.height(32.dp).width(1.dp), color = AppDivider)
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = stockWorthLabel, fontSize = 11.sp, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = formatCurrency(totalStockValue),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = GreenDark
+                        )
+                    }
+
+                    Divider(modifier = Modifier.height(32.dp).width(1.dp), color = AppDivider)
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(text = stockAlertsLabel, fontSize = 11.sp, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (alertItemsCount > 0) "$alertItemsCount $needActionText" else "0",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (alertItemsCount > 0) RedError else GreenDark
+                        )
+                    }
+                }
+            }
 
             // Search Bar & Filter Row
             Column(
@@ -170,7 +247,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search by name, brand, or location...", fontSize = 13.sp) },
+                    placeholder = { Text(searchPlaceholder, fontSize = 13.sp, color = TextMuted) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp)) },
                     trailingIcon = {
                         if (searchQuery.isNotBlank()) {
@@ -192,7 +269,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Category Chips
+                // Clean Category Filter Chips
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 4.dp)
@@ -218,53 +295,45 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            Divider(color = AppDivider)
-
-            // Items List
+            // Inventory Item Cards List
             if (filteredItems.isEmpty()) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "📦", fontSize = 48.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(text = "📦", fontSize = 44.sp)
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "No inventory items found",
+                            text = if (isMr) "साठा उपलब्ध नाही" else if (isHi) "कोई सामग्री नहीं मिली" else "No items found",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Tap the button below to add stock or produce.",
+                            text = if (isMr) "नवीन नोंद करण्यासाठी खालील बटण दाबा" else if (isHi) "नई सामग्री जोड़ने के लिए नीचे टैप करें" else "Tap below to add items to your inventory",
                             fontSize = 12.sp,
                             color = TextSecondary,
                             textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { showAddDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Add First Item")
-                        }
                     }
                 }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.weight(1f)
                 ) {
                     items(filteredItems, key = { it.id }) { item ->
-                        AgriInventoryCard(
+                        SimplifiedInventoryCard(
                             item = item,
+                            isMr = isMr,
+                            isHi = isHi,
+                            sellMarketplaceText = sellMarketplaceText,
                             onIncrement = {
                                 val delta = if (item.unit.contains("kg", ignoreCase = true) || item.unit.contains("Liters", ignoreCase = true)) 5.0 else 1.0
                                 GlobalMockData.adjustInventoryQuantity(item.id, delta)
@@ -275,10 +344,9 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                             },
                             onDelete = {
                                 GlobalMockData.removeInventoryItem(item.id)
-                                Toast.makeText(context, "${item.name} removed from inventory", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "${item.name} removed", Toast.LENGTH_SHORT).show()
                             },
                             onSellOnMandi = {
-                                // Add listing to marketplace
                                 val qtyInt = item.quantity.toInt().coerceAtLeast(1)
                                 GlobalMockData.marketplaceListings.add(
                                     0,
@@ -287,7 +355,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                                         farmer = "${GlobalMockData.farmerName.value} (You)",
                                         location = GlobalMockData.userLocation.value,
                                         quantityTons = qtyInt,
-                                        pricePerTon = item.pricePerUnit * 10, // approximate ton conversion
+                                        pricePerTon = item.pricePerUnit * 10,
                                         emoji = item.emoji,
                                         emojiBg = Color(0xFFE8F5E9)
                                     )
@@ -302,7 +370,7 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(64.dp)) // padding for FAB
+                        Spacer(modifier = Modifier.height(70.dp))
                     }
                 }
             }
@@ -310,103 +378,25 @@ fun CropManagementScreen(onNavigateBack: () -> Unit) {
     }
 
     if (showAddDialog) {
-        AddAgriInventoryDialog(
+        SimplifiedAddInventoryDialog(
+            isMr = isMr,
+            isHi = isHi,
             onDismiss = { showAddDialog = false },
             onSave = { newItem ->
                 GlobalMockData.addInventoryItem(newItem)
                 showAddDialog = false
-                Toast.makeText(context, "Added ${newItem.name} to inventory!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Added ${newItem.name}!", Toast.LENGTH_SHORT).show()
             }
         )
     }
 }
 
-// ==========================================
-// 1. TOP SUMMARY CARDS
-// ==========================================
-
 @Composable
-private fun InventorySummaryCards(
-    totalCount: Int,
-    totalWorth: Int,
-    alertCount: Int
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Stat 1: Total Items
-            Column(horizontalAlignment = Alignment.Start) {
-                Text(text = "Total Items", fontSize = 11.sp, color = TextSecondary)
-                Text(
-                    text = "$totalCount Items",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(text = "एकूण साहित्य", fontSize = 10.sp, color = TextMuted)
-            }
-
-            Divider(modifier = Modifier.height(36.dp).width(1.dp), color = AppDivider)
-
-            // Stat 2: Total Stock Value
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Stock Worth", fontSize = 11.sp, color = TextSecondary)
-                Text(
-                    text = formatRupee(totalWorth),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = GreenDark
-                )
-                Text(text = "एकूण साठा मूल्य", fontSize = 10.sp, color = TextMuted)
-            }
-
-            Divider(modifier = Modifier.height(36.dp).width(1.dp), color = AppDivider)
-
-            // Stat 3: Alerts
-            Column(horizontalAlignment = Alignment.End) {
-                Text(text = "Stock Alerts", fontSize = 11.sp, color = TextSecondary)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (alertCount > 0) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(if (alertCount > 0) RedError else GreenPrimary)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-                    Text(
-                        text = if (alertCount == 0) "All Good" else "$alertCount Need Action",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (alertCount > 0) RedError else GreenDark
-                    )
-                }
-                Text(text = "कमी साठा / दुरुस्ती", fontSize = 10.sp, color = TextMuted)
-            }
-        }
-    }
-}
-
-// ==========================================
-// 2. INVENTORY ITEM CARD
-// ==========================================
-
-@Composable
-private fun AgriInventoryCard(
+private fun SimplifiedInventoryCard(
     item: AgriInventoryItem,
+    isMr: Boolean,
+    isHi: Boolean,
+    sellMarketplaceText: String,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onDelete: () -> Unit,
@@ -415,12 +405,20 @@ private fun AgriInventoryCard(
     val totalValue = (item.quantity * item.pricePerUnit).toInt()
     val isProduce = item.category.contains("Harvested", ignoreCase = true) || item.category.contains("Produce", ignoreCase = true)
 
-    val (badgeBg, badgeText, statusColor) = when (item.status) {
-        "In Stock", "Operational" -> Triple(GreenSurface, item.status, GreenDark)
-        "Low Stock" -> Triple(Color(0xFFFFF8E1), "Low Stock (कमी)", Color(0xFFF57F17))
-        "Needs Service" -> Triple(Color(0xFFFFEBEE), "Needs Service (दुरुस्ती)", RedError)
-        "Out of Stock" -> Triple(Color(0xFFFFEBEE), "Out of Stock (संपले)", RedError)
-        else -> Triple(GreenSurface, item.status, GreenDark)
+    // Localized status string
+    val localizedStatus = when (item.status) {
+        "In Stock", "Operational" -> if (isMr) "उपलब्ध" else if (isHi) "उपलब्ध" else "In Stock"
+        "Low Stock" -> if (isMr) "कमी साठा" else if (isHi) "कम स्टॉक" else "Low Stock"
+        "Needs Service" -> if (isMr) "दुरुस्ती आवश्यक" else if (isHi) "सर्विस आवश्यक" else "Needs Service"
+        "Out of Stock" -> if (isMr) "संपले" else if (isHi) "समाप्त" else "Out of Stock"
+        else -> item.status
+    }
+
+    val (badgeBg, statusColor) = when (item.status) {
+        "In Stock", "Operational" -> Pair(GreenSurface, GreenDark)
+        "Low Stock" -> Pair(Color(0xFFFFF8E1), Color(0xFFE65100))
+        "Needs Service", "Out of Stock" -> Pair(Color(0xFFFFEBEE), RedError)
+        else -> Pair(GreenSurface, GreenDark)
     }
 
     Card(
@@ -430,19 +428,19 @@ private fun AgriInventoryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            // Row 1: Header (Emoji + Name + Status Badge + Delete)
+            // Header Row: Emoji, Name, Status Pill, Delete
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(badgeBg),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = item.emoji, fontSize = 24.sp)
+                    Text(text = item.emoji, fontSize = 22.sp)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -456,45 +454,37 @@ private fun AgriInventoryCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (item.brandOrVariety.isNotBlank()) {
-                        Text(
-                            text = "${item.brandOrVariety} • ${item.category}",
-                            fontSize = 11.sp,
-                            color = TextSecondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    } else {
-                        Text(
-                            text = item.category,
-                            fontSize = 11.sp,
-                            color = TextSecondary
-                        )
-                    }
+                    Text(
+                        text = if (item.brandOrVariety.isNotBlank()) "${item.brandOrVariety} • ${item.category}" else item.category,
+                        fontSize = 11.sp,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(6.dp),
                     color = badgeBg
                 ) {
                     Text(
-                        text = badgeText,
-                        fontSize = 11.sp,
+                        text = localizedStatus,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = statusColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                     )
                 }
 
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(28.dp).padding(start = 4.dp)
                 ) {
                     Icon(
                         Icons.Default.DeleteOutline,
                         contentDescription = "Delete",
-                        tint = TextSecondary.copy(alpha = 0.6f),
-                        modifier = Modifier.size(18.dp)
+                        tint = TextSecondary.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -503,129 +493,102 @@ private fun AgriInventoryCard(
             Divider(color = AppDivider)
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Row 2: Metrics Grid (Quantity, Total Value, Location, Expiry)
+            // Clean 3-Metric Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Quantity Block
+                // Quantity
                 Column {
-                    Text(text = "Quantity (साठा)", fontSize = 11.sp, color = TextSecondary)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val qtyStr = if (item.quantity % 1.0 == 0.0) "${item.quantity.toInt()}" else "${item.quantity}"
-                        Text(
-                            text = "$qtyStr ${item.unit}",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = TextPrimary
-                        )
-                    }
+                    Text(
+                        text = if (isMr) "साठा" else if (isHi) "मात्रा" else "Quantity",
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
+                    val qtyStr = if (item.quantity % 1.0 == 0.0) "${item.quantity.toInt()}" else "${item.quantity}"
+                    Text(
+                        text = "$qtyStr ${item.unit}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
                 }
 
-                // Value Block
+                // Total Worth
                 if (item.pricePerUnit > 0) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "Total Worth", fontSize = 11.sp, color = TextSecondary)
                         Text(
-                            text = formatRupee(totalValue),
-                            fontSize = 15.sp,
+                            text = if (isMr) "एकूण मूल्य" else if (isHi) "कुल मूल्य" else "Total Worth",
+                            fontSize = 11.sp,
+                            color = TextSecondary
+                        )
+                        Text(
+                            text = formatCurrency(totalValue),
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = GreenDark
                         )
-                        Text(
-                            text = "@ \u20B9${item.pricePerUnit}/${item.unit.singular()}",
-                            fontSize = 10.sp,
-                            color = TextSecondary
-                        )
                     }
                 }
 
-                // Location Block
+                // Storage Location
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "Location (ठिकाण)", fontSize = 11.sp, color = TextSecondary)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Place, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = item.storageLocation,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextPrimary
-                        )
-                    }
-                    if (item.expiryOrServiceDate.isNotBlank()) {
-                        Text(
-                            text = item.expiryOrServiceDate,
-                            fontSize = 10.sp,
-                            color = TextSecondary
-                        )
-                    }
-                }
-            }
-
-            // Notes if any
-            if (item.notes.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFF8F9FA))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Info, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(13.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = item.notes,
+                        text = if (isMr) "स्थान" else if (isHi) "स्थान" else "Location",
                         fontSize = 11.sp,
-                        color = TextSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = item.storageLocation,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextPrimary
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Row 3: Action Buttons (Quick adjust quantity + Optional Mandi sell)
+            // Action Row: Quick Adjust & Optional Marketplace Pitch
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Stock stepper controls
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "Quick Adjust: ", fontSize = 11.sp, color = TextSecondary)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    FilledTonalIconButton(
-                        onClick = onDecrement,
-                        modifier = Modifier.size(30.dp),
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0xFFEEEEEE))
-                    ) {
-                        Icon(Icons.Default.Remove, contentDescription = "Decrease", modifier = Modifier.size(16.dp))
-                    }
+                // Quick Adjust
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = if (isMr) "बदल:" else if (isHi) "बदलें:" else "Adjust:",
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
-                    FilledTonalIconButton(
-                        onClick = onIncrement,
-                        modifier = Modifier.size(30.dp),
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = GreenSurface)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Increase", tint = GreenDark, modifier = Modifier.size(16.dp))
+                    IconButton(onClick = onDecrement, modifier = Modifier.size(26.dp)) {
+                        Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = TextPrimary, modifier = Modifier.size(14.dp))
+                    }
+                    IconButton(onClick = onIncrement, modifier = Modifier.size(26.dp)) {
+                        Icon(Icons.Default.Add, contentDescription = "Increase", tint = GreenPrimary, modifier = Modifier.size(14.dp))
                     }
                 }
 
-                // If harvested produce, show "Sell on Mandi"
-                if (isProduce) {
+                // If Harvested produce, option to list on marketplace
+                if (isProduce && item.quantity > 0) {
                     Button(
                         onClick = onSellOnMandi,
                         shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                        modifier = Modifier.height(32.dp)
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(30.dp)
                     ) {
-                        Text("🌾 List on Mandi", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Storefront, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(sellMarketplaceText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -633,39 +596,22 @@ private fun AgriInventoryCard(
     }
 }
 
-private fun String.singular(): String {
-    return when {
-        endsWith("Quintals", ignoreCase = true) -> "Qtl"
-        endsWith("Bags", ignoreCase = true) -> "Bag"
-        endsWith("Liters", ignoreCase = true) -> "L"
-        endsWith("Units", ignoreCase = true) -> "Unit"
-        endsWith("Tons", ignoreCase = true) -> "Ton"
-        else -> this
-    }
-}
-
-// ==========================================
-// 3. ADD INVENTORY ITEM DIALOG
-// ==========================================
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddAgriInventoryDialog(
+private fun SimplifiedAddInventoryDialog(
+    isMr: Boolean,
+    isHi: Boolean,
     onDismiss: () -> Unit,
     onSave: (AgriInventoryItem) -> Unit
 ) {
-    var category by remember { mutableStateOf("Harvested Produce") }
     var name by remember { mutableStateOf("") }
-    var brandOrVariety by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Harvested Produce") }
     var quantityText by remember { mutableStateOf("") }
-    var unit by remember { mutableStateOf("Quintals") }
+    var selectedUnit by remember { mutableStateOf("Quintals") }
     var priceText by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("Farm Godown") }
-    var status by remember { mutableStateOf("In Stock") }
-    var dateInfo by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
 
-    val categoryList = listOf(
+    val categoryOptions = listOf(
         "Harvested Produce" to "🌾",
         "Fertilizers" to "🧪",
         "Seeds" to "🌱",
@@ -674,45 +620,14 @@ private fun AddAgriInventoryDialog(
         "Animal Feed" to "🐄"
     )
 
-    val unitsForProduce = listOf("Quintals", "Bags", "kg", "Tons")
-    val unitsForFertilizers = listOf("Bags", "kg", "Liters")
-    val unitsForSeeds = listOf("kg", "Bags", "Packets")
-    val unitsForMachinery = listOf("Units", "Sets")
-    val unitsForFeed = listOf("Bags", "Quintals", "kg")
-
-    val activeUnits = when (category) {
-        "Harvested Produce" -> unitsForProduce
-        "Fertilizers" -> unitsForFertilizers
-        "Seeds" -> unitsForSeeds
-        "Machinery & Tools" -> unitsForMachinery
-        "Animal Feed" -> unitsForFeed
-        else -> listOf("Bags", "kg", "Liters", "Units")
-    }
-
-    // Preset quick suggestions
-    val quickPresets = listOf(
-        Triple("DAP 18:46:0", "Fertilizers", "1350"),
-        Triple("Urea (Neem Coated)", "Fertilizers", "266"),
-        Triple("Soyabean (JS-335)", "Harvested Produce", "4600"),
-        Triple("Wheat (Lokwan)", "Harvested Produce", "2600"),
-        Triple("MOP Potash", "Fertilizers", "1700"),
-        Triple("Cotton Bales", "Harvested Produce", "7200"),
-        Triple("Chana / Gram Seed", "Seeds", "95"),
-        Triple("Sprayer Pump", "Machinery & Tools", "0"),
-        Triple("Cattle Feed Fodder", "Animal Feed", "1250")
-    )
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Inventory2, contentDescription = null, tint = GreenDark)
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
-                    Text(text = "Add Stock Item (नवीन साठा नोंद)", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text(text = "Fill inventory details & current stock", fontSize = 11.sp, color = TextSecondary)
-                }
-            }
+            Text(
+                text = if (isMr) "नवीन साहित्य जोडा" else if (isHi) "नई सामग्री जोड़ें" else "Add New Item",
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp
+            )
         },
         text = {
             Column(
@@ -721,93 +636,46 @@ private fun AddAgriInventoryDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Quick Suggestion Chips
-                Text("Quick Suggestions (द्रुत पर्याय):", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(quickPresets) { (presetName, presetCat, presetPrice) ->
-                        Surface(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    name = presetName
-                                    category = presetCat
-                                    priceText = presetPrice
-                                    unit = when (presetCat) {
-                                        "Fertilizers" -> "Bags"
-                                        "Seeds" -> "kg"
-                                        "Machinery & Tools" -> "Units"
-                                        else -> "Quintals"
-                                    }
-                                    if (presetCat == "Machinery & Tools") {
-                                        status = "Operational"
-                                    }
-                                },
-                            color = GreenSurface,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.4f))
-                        ) {
-                            Text(
-                                text = presetName,
-                                fontSize = 11.sp,
-                                color = GreenDark,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(if (isMr) "साहित्याचे नाव" else if (isHi) "सामग्री का नाम" else "Item Name") },
+                    placeholder = { Text("e.g. Wheat (Lokwan)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 // Category selector
-                Text("Category (वर्गवारी):", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(categoryList) { (cat, emoji) ->
-                        val isSelected = category == cat
-                        Surface(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable {
-                                    category = cat
-                                    if (unit !in activeUnits) unit = activeUnits.first()
-                                },
-                            color = if (isSelected) GreenDark else Color(0xFFEEEEEE)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                Column {
+                    Text(
+                        text = if (isMr) "प्रवर्ग" else if (isHi) "श्रेणी" else "Category",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        categoryOptions.forEach { (cat, emoji) ->
+                            val isSel = selectedCategory == cat
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSel) GreenPrimary else Color(0xFFF1F3F4),
+                                modifier = Modifier.clickable { selectedCategory = cat }
                             ) {
-                                Text(emoji, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = cat,
+                                    text = "$emoji $cat",
                                     fontSize = 11.sp,
-                                    color = if (isSelected) Color.White else TextPrimary,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    color = if (isSel) Color.White else TextPrimary,
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
                                 )
                             }
                         }
                     }
                 }
 
-                // Item Name
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Item Name (वस्तू / उत्पादनाचे नाव)") },
-                    placeholder = { Text("e.g. IFFCO DAP / Soyabean") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Brand / Variety
-                OutlinedTextField(
-                    value = brandOrVariety,
-                    onValueChange = { brandOrVariety = it },
-                    label = { Text("Brand / Variety (कंपनी किंवा वाण)") },
-                    placeholder = { Text("e.g. Mahyco JS 335 / Bayer / IFFCO") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Quantity & Unit Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -815,126 +683,35 @@ private fun AddAgriInventoryDialog(
                     OutlinedTextField(
                         value = quantityText,
                         onValueChange = { quantityText = it },
-                        label = { Text("Quantity (प्रमाण)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f)
+                        label = { Text(if (isMr) "प्रमाण" else if (isHi) "मात्रा" else "Quantity") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
                     )
-
-                    // Unit selector chips
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Unit (एकक):", fontSize = 11.sp, color = TextSecondary)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            activeUnits.take(3).forEach { u ->
-                                Surface(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable { unit = u },
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (unit == u) GreenSurface else Color.White,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, if (unit == u) GreenPrimary else AppDivider)
-                                ) {
-                                    Text(
-                                        text = u,
-                                        fontSize = 10.sp,
-                                        fontWeight = if (unit == u) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (unit == u) GreenDark else TextPrimary,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(vertical = 8.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    OutlinedTextField(
+                        value = selectedUnit,
+                        onValueChange = { selectedUnit = it },
+                        label = { Text(if (isMr) "एकक" else if (isHi) "इकाई" else "Unit") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
                 }
 
-                // Price Per Unit
                 OutlinedTextField(
                     value = priceText,
                     onValueChange = { priceText = it },
-                    label = { Text("Rate per Unit in \u20B9 (दर प्रति एकक)") },
-                    leadingIcon = { Text("\u20B9", fontWeight = FontWeight.Bold, color = GreenDark) },
+                    label = { Text(if (isMr) "दर (प्रति एकक ₹)" else if (isHi) "मूल्य (प्रति इकाई ₹)" else "Price per Unit (₹)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
 
-                // Live total worth preview
-                val q = quantityText.toDoubleOrNull() ?: 0.0
-                val p = priceText.toIntOrNull() ?: 0
-                if (q > 0 && p > 0) {
-                    val calcTotal = (q * p).toInt()
-                    Surface(
-                        color = GreenSurface,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "💰 Total Stock Value: ${formatRupee(calcTotal)}",
-                            color = GreenDark,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
-                }
-
-                // Storage Location picker
-                Text("Storage Location (साठवण ठिकाण):", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    listOf("Farm Godown", "Home Storeroom", "Field Shed", "Open Yard").forEach { loc ->
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { location = loc },
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (location == loc) GreenDark else Color(0xFFEEEEEE)
-                        ) {
-                            Text(
-                                text = loc.replace(" ", "\n"),
-                                fontSize = 10.sp,
-                                textAlign = TextAlign.Center,
-                                color = if (location == loc) Color.White else TextPrimary,
-                                fontWeight = if (location == loc) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.padding(vertical = 6.dp)
-                            )
-                        }
-                    }
-                }
-
-                // Status & Expiry Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = dateInfo,
-                        onValueChange = { dateInfo = it },
-                        label = { Text("Exp / Service Date") },
-                        placeholder = { Text("e.g. Dec 2026") },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    OutlinedTextField(
-                        value = status,
-                        onValueChange = { status = it },
-                        label = { Text("Status") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                // Notes
                 OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes / Details (टीप)") },
-                    placeholder = { Text("e.g. Cleaned & packed, 50kg bags") },
-                    modifier = Modifier.fillMaxWidth()
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text(if (isMr) "साठवणूक स्थान" else if (isHi) "भंडारण स्थान" else "Storage Location") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
             }
         },
@@ -942,43 +719,31 @@ private fun AddAgriInventoryDialog(
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
+                        val emoji = categoryOptions.find { it.first == selectedCategory }?.second ?: "📦"
                         val qty = quantityText.toDoubleOrNull() ?: 1.0
-                        val rate = priceText.toIntOrNull() ?: 0
-                        val emoji = when (category) {
-                            "Harvested Produce" -> "🌾"
-                            "Fertilizers" -> "🧪"
-                            "Seeds" -> "🌱"
-                            "Pesticides" -> "🛡️"
-                            "Machinery & Tools" -> "🚜"
-                            "Animal Feed" -> "🐄"
-                            else -> "📦"
-                        }
+                        val price = priceText.toIntOrNull() ?: 0
                         onSave(
                             AgriInventoryItem(
                                 name = name.trim(),
-                                category = category,
+                                category = selectedCategory,
                                 quantity = qty,
-                                unit = unit,
-                                pricePerUnit = rate,
-                                storageLocation = location,
-                                status = status,
-                                brandOrVariety = brandOrVariety.trim(),
-                                expiryOrServiceDate = dateInfo.trim(),
-                                notes = notes.trim(),
+                                unit = selectedUnit.trim(),
+                                pricePerUnit = price,
+                                storageLocation = if (location.isNotBlank()) location.trim() else "Farm Godown",
+                                status = "In Stock",
                                 emoji = emoji
                             )
                         )
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                enabled = name.isNotBlank()
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
             ) {
-                Text("Save Item (साठवा)", fontWeight = FontWeight.Bold)
+                Text(if (isMr) "जतन करा" else if (isHi) "सहेजें" else "Save")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text(if (isMr) "रद्द करा" else if (isHi) "रद्द करें" else "Cancel")
             }
         }
     )

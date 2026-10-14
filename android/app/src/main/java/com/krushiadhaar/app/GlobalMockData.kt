@@ -35,9 +35,26 @@ object GlobalMockData {
     private const val KEY_FARMER_CROP = "farmer_crop"
     private const val KEY_FARMER_AREA = "farmer_area"
     private const val KEY_FARMER_UNIT = "farmer_unit"
+    private const val KEY_FARMER_SOIL = "farmer_soil"
+    private const val KEY_PEST_SCANS = "pest_scans_json"
     private const val KEY_USER_ROLE = "user_role"
     private const val KEY_IS_LOGGED_IN = "is_logged_in"
     private const val KEY_AUTH_TOKEN = "auth_token"
+    private const val KEY_MARKETPLACE_LISTINGS = "marketplace_listings_json"
+
+    data class CropListingDto(
+        val name: String,
+        val farmer: String,
+        val location: String,
+        val quantityTons: Int,
+        val pricePerTon: Int,
+        val emoji: String,
+        val imageUri: String? = null,
+        val originalQuantity: Double? = null,
+        val originalUnit: String? = null,
+        val originalPrice: Int? = null,
+        val grade: String? = null
+    )
 
     private var prefs: SharedPreferences? = null
     private var appContext: Context? = null
@@ -55,11 +72,31 @@ object GlobalMockData {
     val farmerLatitude = mutableStateOf(18.1517)
     val farmerLongitude = mutableStateOf(74.5774)
     val farmerCrop = mutableStateOf("Soyabean")
+    val pestSelectedCrop = mutableStateOf("Auto-Detect")
     val farmerFarmArea = mutableStateOf("5")
     val farmerAreaUnit = mutableStateOf("Acres")
+    val farmerSoilType = mutableStateOf("Optimal Fertile Loam")
     val userRole = mutableStateOf("FARMER")
     val isLoggedIn = mutableStateOf(false)
     val authToken = mutableStateOf<String?>(null)
+
+    data class PestScanHistory(
+        val id: String = java.util.UUID.randomUUID().toString(),
+        val crop: String,
+        val diseaseName: String,
+        val scientificName: String,
+        val severity: String,
+        val confidence: Double,
+        val symptoms: String,
+        val medicines: String,
+        val estimatedCost: Double,
+        val management: String,
+        val dateText: String,
+        val emoji: String = "🌱",
+        val imageUri: String? = null
+    )
+
+    val pestScanHistoryList = mutableStateListOf<PestScanHistory>()
 
     val marketplaceListings = mutableStateListOf(
         CropListing("Sugarcane", "Ramesh Patil", "Pune, Maharashtra", 10, 2500, "\uD83C\uDF3F", Color(0xFFE8F5E9)),
@@ -134,6 +171,7 @@ object GlobalMockData {
         farmerCrop.value = sp.getString(KEY_FARMER_CROP, "Soyabean") ?: "Soyabean"
         farmerFarmArea.value = sp.getString(KEY_FARMER_AREA, "5") ?: "5"
         farmerAreaUnit.value = sp.getString(KEY_FARMER_UNIT, "Acres") ?: "Acres"
+        farmerSoilType.value = sp.getString(KEY_FARMER_SOIL, "Optimal Fertile Loam") ?: "Optimal Fertile Loam"
         userRole.value = sp.getString(KEY_USER_ROLE, "FARMER") ?: "FARMER"
 
         // Restore Auth Session
@@ -340,6 +378,92 @@ object GlobalMockData {
                 e.printStackTrace()
             }
         }
+
+        // Restore pest scan history
+        val scansJson = sp.getString(KEY_PEST_SCANS, null)
+        pestScanHistoryList.clear()
+        if (!scansJson.isNullOrEmpty()) {
+            try {
+                val listType = object : TypeToken<List<PestScanHistory>>() {}.type
+                val savedScans: List<PestScanHistory> = gson.fromJson(scansJson, listType)
+                pestScanHistoryList.addAll(savedScans)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (pestScanHistoryList.isEmpty()) {
+            pestScanHistoryList.addAll(
+                listOf(
+                    PestScanHistory(
+                        crop = "Pumpkin",
+                        diseaseName = "Downy Mildew",
+                        scientificName = "Pseudoperonospora spp.",
+                        severity = "Severe / Advanced Stage",
+                        confidence = 0.986,
+                        symptoms = "Yellow to pale angular leaf spots; gray to purplish downy growth on leaf undersides during humid conditions.",
+                        medicines = "Ridomil Gold (Metalaxyl 4% + Mancozeb 64% WP) @ 2.5g/L water, or Saaf @ 2g/L",
+                        estimatedCost = 750.0,
+                        management = "Improve airflow; reduce prolonged leaf wetness; avoid overhead irrigation where practical; remove severely affected leaves and maintain field sanitation.",
+                        dateText = "Just now",
+                        emoji = "🎃"
+                    ),
+                    PestScanHistory(
+                        crop = "Cotton",
+                        diseaseName = "Leaf Spot",
+                        scientificName = "Cercospora gossypina",
+                        severity = "Moderate",
+                        confidence = 0.942,
+                        symptoms = "Circular brown spots with purple margins on leaves.",
+                        medicines = "Copper Oxychloride 50 WP @ 3g/L or Mancozeb @ 2.5g/L",
+                        estimatedCost = 550.0,
+                        management = "Destroy infected crop residues and spray preventative fungicide.",
+                        dateText = "2 days ago",
+                        emoji = "🪴"
+                    ),
+                    PestScanHistory(
+                        crop = "Wheat",
+                        diseaseName = "Leaf Rust",
+                        scientificName = "Puccinia triticina",
+                        severity = "Severe",
+                        confidence = 0.965,
+                        symptoms = "Orange-brown pustules on leaf blades.",
+                        medicines = "Propiconazole 25 EC (Tilt) @ 1ml/L water",
+                        estimatedCost = 680.0,
+                        management = "Spray at early emergence of rust pustules and use resistant varieties.",
+                        dateText = "1 week ago",
+                        emoji = "🌾"
+                    )
+                )
+            )
+        }
+
+        // Restore marketplace listings
+        val listingsJson = sp.getString(KEY_MARKETPLACE_LISTINGS, null)
+        if (!listingsJson.isNullOrEmpty()) {
+            try {
+                val listType = object : TypeToken<List<CropListingDto>>() {}.type
+                val savedListings: List<CropListingDto> = gson.fromJson(listingsJson, listType)
+                marketplaceListings.clear()
+                marketplaceListings.addAll(savedListings.map { dto ->
+                    CropListing(
+                        name = dto.name,
+                        farmer = dto.farmer,
+                        location = dto.location,
+                        quantityTons = dto.quantityTons,
+                        pricePerTon = dto.pricePerTon,
+                        emoji = dto.emoji,
+                        emojiBg = Color(0xFFE8F5E9),
+                        imageUri = dto.imageUri,
+                        originalQuantity = dto.originalQuantity,
+                        originalUnit = dto.originalUnit,
+                        originalPrice = dto.originalPrice,
+                        grade = dto.grade
+                    )
+                })
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun persist() {
@@ -352,6 +476,23 @@ object GlobalMockData {
             putString(KEY_NOTIFICATIONS, gson.toJson(farmerNotifications.toList()))
             putString(KEY_PERSONAL_EXPENSES, gson.toJson(personalExpenses.toList()))
             putString(KEY_INVENTORY_ITEMS, gson.toJson(inventoryItems.toList()))
+            putString(KEY_PEST_SCANS, gson.toJson(pestScanHistoryList.toList()))
+            val listingsDto = marketplaceListings.map { l ->
+                CropListingDto(
+                    name = l.name,
+                    farmer = l.farmer,
+                    location = l.location,
+                    quantityTons = l.quantityTons,
+                    pricePerTon = l.pricePerTon,
+                    emoji = l.emoji,
+                    imageUri = l.imageUri,
+                    originalQuantity = l.originalQuantity,
+                    originalUnit = l.originalUnit,
+                    originalPrice = l.originalPrice,
+                    grade = l.grade
+                )
+            }
+            putString(KEY_MARKETPLACE_LISTINGS, gson.toJson(listingsDto))
             putInt(KEY_ESTIMATED_CROP_COST, estimatedCropCost.intValue)
             putString(KEY_ESTIMATED_CROP_NAME, estimatedCropName.value)
             putString(KEY_ESTIMATED_CROP_AREA, estimatedCropArea.value)
@@ -366,11 +507,17 @@ object GlobalMockData {
             putString(KEY_FARMER_CROP, farmerCrop.value)
             putString(KEY_FARMER_AREA, farmerFarmArea.value)
             putString(KEY_FARMER_UNIT, farmerAreaUnit.value)
+            putString(KEY_FARMER_SOIL, farmerSoilType.value)
             putString(KEY_USER_ROLE, userRole.value)
             putBoolean(KEY_IS_LOGGED_IN, isLoggedIn.value)
             putString(KEY_AUTH_TOKEN, authToken.value)
             apply()
         }
+    }
+
+    fun addMarketplaceListing(listing: CropListing) {
+        marketplaceListings.add(0, listing)
+        persist()
     }
 
     fun addPersonalExpense(expense: PersonalExpense) {
@@ -436,6 +583,7 @@ object GlobalMockData {
         crop: String,
         farmArea: String,
         areaUnit: String,
+        soilType: String = "Optimal Fertile Loam",
         role: String = "FARMER"
     ) {
         farmerName.value = name
@@ -448,9 +596,15 @@ object GlobalMockData {
         farmerCrop.value = crop
         farmerFarmArea.value = farmArea
         farmerAreaUnit.value = areaUnit
+        farmerSoilType.value = soilType
         userRole.value = role
         userLocation.value = "$village, $district • $state"
 
+        persist()
+    }
+
+    fun addPestScan(history: PestScanHistory) {
+        pestScanHistoryList.add(0, history)
         persist()
     }
 
@@ -493,6 +647,24 @@ object GlobalMockData {
     fun sendNegotiationMessage(farmerName: String, buyerName: String) {
         farmerNotifications.add(0, Notification("New Message: $buyerName wants to negotiate for your crop.", "Just now"))
         persist()
+    }
+
+    fun depositToWallet(amount: Int, description: String = "Deposit to Wallet") {
+        if (amount > 0) {
+            walletBalance.value += amount
+            transactions.add(0, Transaction(amount, description, true))
+            persist()
+        }
+    }
+
+    fun withdrawFromWallet(amount: Int, description: String = "Bank Withdrawal"): Boolean {
+        if (amount > 0 && walletBalance.value >= amount) {
+            walletBalance.value -= amount
+            transactions.add(0, Transaction(amount, description, false))
+            persist()
+            return true
+        }
+        return false
     }
 
     fun updateLanguage(lang: String) {

@@ -31,10 +31,11 @@ fun Step2Screen(
     var farmArea by remember { mutableStateOf(GlobalMockData.farmerFarmArea.value) }
     var areaUnit by remember { mutableStateOf(GlobalMockData.farmerAreaUnit.value) }
     var selectedCrop by remember { mutableStateOf(GlobalMockData.farmerCrop.value) }
+    var customCropName by remember { mutableStateOf("") }
 
     val crops = listOf(
         "Soyabean", "Wheat", "Sugarcane", "Cotton", "Rice", 
-        "Onion", "Potato", "Maize", "Groundnut", "Not Sown Yet"
+        "Onion", "Potato", "Maize", "Groundnut", "Pumpkin", "Tomato", "Gram", "Not Sown Yet", "Other"
     )
 
     Column(
@@ -115,6 +116,22 @@ fun Step2Screen(
                 )
             }
         }
+
+        if (selectedCrop == "Other") {
+            Spacer(modifier = Modifier.height(10.dp))
+            OutlinedTextField(
+                value = customCropName,
+                onValueChange = { customCropName = it },
+                label = { Text("Enter Other Crop Name") },
+                placeholder = { Text("e.g. Mustard, Turmeric, Ginger...") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = GreenPrimary
+                )
+            )
+        }
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
@@ -172,6 +189,11 @@ fun Step2Screen(
             onClick = {
                 val finalArea = if (farmArea.isNotBlank()) farmArea.trim() else "5"
                 val finalUnit = areaUnit
+                val finalCrop = if (selectedCrop == "Other") {
+                    customCropName.trim().ifBlank { "Other Crop" }
+                } else {
+                    selectedCrop
+                }
 
                 // Persist Complete Farmer and Farm Identity
                 GlobalMockData.saveFarmerProfile(
@@ -182,7 +204,7 @@ fun Step2Screen(
                     state = state.ifBlank { GlobalMockData.farmerState.value },
                     latitude = GlobalMockData.farmerLatitude.value,
                     longitude = GlobalMockData.farmerLongitude.value,
-                    crop = selectedCrop,
+                    crop = finalCrop,
                     farmArea = finalArea,
                     areaUnit = finalUnit,
                     role = "FARMER"

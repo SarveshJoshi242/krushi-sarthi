@@ -1,5 +1,8 @@
 package com.krushiadhaar.app.schemes
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -74,9 +79,9 @@ fun GovernmentSchemesScreen(
 
     var selectedFilter by remember { mutableStateOf("All") }
     var showEligibilityDialog by remember { mutableStateOf(false) }
-    var hasAadhaar by remember { mutableStateOf(false) }
-    var hasLandRecord by remember { mutableStateOf(false) }
-    var hasBankPassbook by remember { mutableStateOf(false) }
+    var hasAadhaar by remember { mutableStateOf(true) }
+    var hasLandRecord by remember { mutableStateOf(true) }
+    var hasBankPassbook by remember { mutableStateOf(true) }
     var applyEligibilityFilter by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
 
@@ -86,8 +91,10 @@ fun GovernmentSchemesScreen(
     if (hasBankPassbook) userDocs.add("Bank Passbook")
 
     val filteredSchemes = schemes.filter {
-        val matchesCategory = selectedFilter == "All" || it.type == selectedFilter || it.provider.contains(selectedFilter)
-        val matchesEligibility = !applyEligibilityFilter || it.requiredDocuments.all { doc -> userDocs.contains(doc) }
+        val matchesCategory = selectedFilter == "All" || it.type == selectedFilter || it.provider.contains(selectedFilter, ignoreCase = true)
+        val matchesEligibility = if (!applyEligibilityFilter) true else {
+            if (userDocs.isEmpty()) true else it.requiredDocuments.all { doc -> userDocs.contains(doc) }
+        }
         matchesCategory && matchesEligibility
     }
 
@@ -105,7 +112,7 @@ fun GovernmentSchemesScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundColor),
                 actions = {
                     TextButton(onClick = { showHistoryDialog = true }) {
-                        Text("History", color = PrimaryGreen)
+                        Text("History", color = PrimaryGreen, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -125,12 +132,47 @@ fun GovernmentSchemesScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             
-            Button(
-                onClick = { showEligibilityDialog = true },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-            ) {
-                Text(if (applyEligibilityFilter) "Eligibility Filter Active - Tap to Edit" else "Check My Eligibility based on Documents")
+            // Eligibility action banner
+            if (applyEligibilityFilter) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { showEligibilityDialog = true },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Eligibility Active (${userDocs.size} Docs)", fontSize = 13.sp)
+                    }
+                    OutlinedButton(
+                        onClick = { applyEligibilityFilter = false },
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE53935)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE53935))
+                    ) {
+                        Text("Clear", fontSize = 13.sp)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { showEligibilityDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Check My Eligibility based on Documents", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
             }
 
             Row(modifier = Modifier.padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -152,81 +194,171 @@ fun GovernmentSchemesScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = PrimaryGreen)
                 }
+            } else if (filteredSchemes.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("📋", fontSize = 40.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "No Schemes Match Current Filter",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = DarkText
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Selected documents: ${if (userDocs.isEmpty()) "None" else userDocs.joinToString(", ")}. Try checking more documents or clearing the filter.",
+                            color = GrayText,
+                            fontSize = 13.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                hasAadhaar = true
+                                hasLandRecord = true
+                                hasBankPassbook = true
+                                applyEligibilityFilter = false
+                                selectedFilter = "All"
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                        ) {
+                            Text("Reset Filters & View All Schemes")
+                        }
+                    }
+                }
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(filteredSchemes) { scheme ->
-                        SchemeCard(scheme = scheme, onLearnMoreClick = { uriHandler.openUri(scheme.link) })
+                        val isEligible = scheme.requiredDocuments.isEmpty() || scheme.requiredDocuments.all { userDocs.contains(it) }
+                        SchemeCard(
+                            scheme = scheme,
+                            isEligible = isEligible,
+                            userDocs = userDocs,
+                            onLearnMoreClick = { uriHandler.openUri(scheme.link) }
+                        )
                     }
                 }
             }
 
-        if (showEligibilityDialog) {
-            AlertDialog(
-                onDismissRequest = { showEligibilityDialog = false },
-                title = { Text("My Documents") },
-                text = {
-                    Column {
-                        Text("Select the documents you have available to check your eligibility for schemes, loans, and insurance.")
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = hasAadhaar, onCheckedChange = { hasAadhaar = it })
-                            Text("Aadhaar Card")
+            if (showEligibilityDialog) {
+                AlertDialog(
+                    onDismissRequest = { showEligibilityDialog = false },
+                    title = { Text("My Farm Documents", fontWeight = FontWeight.Bold) },
+                    text = {
+                        Column {
+                            Text("Check the documents you possess to filter verified schemes, loans, and subsidies you are eligible for.")
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { hasAadhaar = !hasAadhaar }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Checkbox(
+                                    checked = hasAadhaar,
+                                    onCheckedChange = { hasAadhaar = it },
+                                    colors = CheckboxDefaults.colors(checkedColor = PrimaryGreen)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Aadhaar Card (UIDAI)", fontSize = 14.sp)
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { hasLandRecord = !hasLandRecord }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Checkbox(
+                                    checked = hasLandRecord,
+                                    onCheckedChange = { hasLandRecord = it },
+                                    colors = CheckboxDefaults.colors(checkedColor = PrimaryGreen)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Land Record (7/12 Extract / 8A)", fontSize = 14.sp)
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { hasBankPassbook = !hasBankPassbook }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Checkbox(
+                                    checked = hasBankPassbook,
+                                    onCheckedChange = { hasBankPassbook = it },
+                                    colors = CheckboxDefaults.colors(checkedColor = PrimaryGreen)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Bank Passbook / Aadhaar Seeded Account", fontSize = 14.sp)
+                            }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = hasLandRecord, onCheckedChange = { hasLandRecord = it })
-                            Text("Land Record (7/12 etc.)")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { 
+                                applyEligibilityFilter = true
+                                showEligibilityDialog = false 
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                        ) {
+                            Text("Apply Eligibility Filter")
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = hasBankPassbook, onCheckedChange = { hasBankPassbook = it })
-                            Text("Bank Passbook")
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { 
+                            applyEligibilityFilter = false
+                            showEligibilityDialog = false 
+                        }) {
+                            Text("View All Schemes")
                         }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = { 
-                        applyEligibilityFilter = true
-                        showEligibilityDialog = false 
-                    }) { Text("Check Eligibility") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { 
-                        applyEligibilityFilter = false
-                        showEligibilityDialog = false 
-                    }) { Text("Clear Filter") }
-                }
-            )
-        }
+                )
+            }
 
-        if (showHistoryDialog) {
-            AlertDialog(
-                onDismissRequest = { showHistoryDialog = false },
-                title = { Text("Scheme Application History") },
-                text = {
-                    Column {
-                        Text("PM-Kisan Samman Nidhi", fontWeight = FontWeight.Bold)
-                        Text("Status: Approved (Active)", color = PrimaryGreen, fontSize = 12.sp)
-                        Text("Applied: 10 Jan 2026", fontSize = 12.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("Soil Health Card Scheme", fontWeight = FontWeight.Bold)
-                        Text("Status: Processing", color = Color(0xFFFF9800), fontSize = 12.sp)
-                        Text("Applied: 02 Sep 2026", fontSize = 12.sp)
+            if (showHistoryDialog) {
+                AlertDialog(
+                    onDismissRequest = { showHistoryDialog = false },
+                    title = { Text("Scheme Application History", fontWeight = FontWeight.Bold) },
+                    text = {
+                        Column {
+                            Text("PM-Kisan Samman Nidhi", fontWeight = FontWeight.Bold)
+                            Text("Status: Approved (Active)", color = PrimaryGreen, fontSize = 12.sp)
+                            Text("Applied: 10 Jan 2026", fontSize = 12.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Soil Health Card Scheme", fontWeight = FontWeight.Bold)
+                            Text("Status: Processing", color = Color(0xFFFF9800), fontSize = 12.sp)
+                            Text("Applied: 02 Sep 2026", fontSize = 12.sp)
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showHistoryDialog = false }) { Text("Close") }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showHistoryDialog = false }) { Text("Close") }
-                }
-            )
+                )
+            }
         }
-
-}
     }
 }
 
 @Composable
-fun SchemeCard(scheme: Scheme, onLearnMoreClick: () -> Unit) {
+fun SchemeCard(
+    scheme: Scheme,
+    isEligible: Boolean = true,
+    userDocs: List<String> = emptyList(),
+    onLearnMoreClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -243,7 +375,7 @@ fun SchemeCard(scheme: Scheme, onLearnMoreClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = PrimaryGreen,
+                    tint = if (isEligible) PrimaryGreen else Color(0xFFFF9800),
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -260,23 +392,21 @@ fun SchemeCard(scheme: Scheme, onLearnMoreClick: () -> Unit) {
                         fontSize = 12.sp
                     )
                 }
-                if (scheme.isActive) {
-                    Surface(
-                        color = PrimaryGreen.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = "Active",
-                            color = PrimaryGreen,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
+                Surface(
+                    color = if (isEligible) PrimaryGreen.copy(alpha = 0.12f) else Color(0xFFFFF3E0),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = if (isEligible) "Eligible" else "Docs Needed",
+                        color = if (isEligible) PrimaryGreen else Color(0xFFE65100),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = scheme.description,
@@ -286,13 +416,23 @@ fun SchemeCard(scheme: Scheme, onLearnMoreClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Required documents tag
+            if (scheme.requiredDocuments.isNotEmpty()) {
+                Text(
+                    text = "Required: " + scheme.requiredDocuments.joinToString(", "),
+                    color = GrayText,
+                    fontSize = 11.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             TextButton(
                 onClick = onLearnMoreClick,
                 contentPadding = PaddingValues(0.dp)
             ) {
-                Text("Learn More", color = PrimaryGreen, fontWeight = FontWeight.Bold)
+                Text("Learn More / Apply Online", color = PrimaryGreen, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
