@@ -54,8 +54,9 @@ class MLService(private val context: Context) {
             val options = Interpreter.Options()
             options.setNumThreads(4)
             interpreter = Interpreter(mappedByteBuffer, options)
-        } catch (e: Exception) {
-            // Model not found or error loading, we will fallback to CSV simulation
+        } catch (t: Throwable) {
+            // Model not found or native TFLite error loading (e.g. ABI mismatch on some emulators), fallback gracefully
+            interpreter = null
         }
     }
 
@@ -232,7 +233,11 @@ class MLService(private val context: Context) {
     }
 
     fun close() {
-        interpreter?.close()
+        try {
+            interpreter?.close()
+        } catch (t: Throwable) {
+            // ignore
+        }
         interpreter = null
     }
 }

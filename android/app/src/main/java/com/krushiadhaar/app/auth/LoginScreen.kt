@@ -7,6 +7,10 @@ import androidx.compose.ui.unit.dp
 import com.krushiadhaar.app.presentation.auth.LoginViewModel
 import com.krushiadhaar.app.presentation.auth.LoginUiState
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
+
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
@@ -24,8 +28,20 @@ fun LoginScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Login", style = MaterialTheme.typography.headlineMedium)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 480.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .systemBarsPadding()
+                .padding(16.dp)
+        ) {
+            Text("Login", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(
             value = phone,
@@ -98,4 +114,5 @@ fun LoginScreen(
             Text("Don't have an account? Register")
         }
     }
+}
 }

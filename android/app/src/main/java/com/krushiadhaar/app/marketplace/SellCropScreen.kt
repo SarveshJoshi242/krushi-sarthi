@@ -133,13 +133,21 @@ fun SellCropScreen(
         },
         containerColor = AppBackground
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .systemBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
             // Header Info Banner
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -639,4 +647,5 @@ fun SellCropScreen(
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
+}
 }

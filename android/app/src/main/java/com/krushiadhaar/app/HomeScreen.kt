@@ -55,37 +55,46 @@ fun HomeScreen(
         homeViewModel.refreshWeather(currentLat, currentLon, currentDistrict)
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
-            .verticalScroll(rememberScrollState())
+            .background(AppBackground),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Top Header
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .widthIn(max = 680.dp)
+                .fillMaxSize()
+                .background(AppBackground)
+                .verticalScroll(rememberScrollState())
         ) {
-            Box(
+            // Top Header
+            Row(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(GreenPrimary),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Eco, contentDescription = null, tint = Color.White)
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = AppStrings.appName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.weight(1f)
-            )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(GreenPrimary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Eco, contentDescription = null, tint = Color.White)
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = AppStrings.appName,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
 
             // Language Switcher Dropdown Pill
             val availableLangs = listOf("English", "हिंदी", "मराठी")
@@ -182,16 +191,18 @@ fun HomeScreen(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .background(GreenSurface)
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "${GlobalMockData.farmerCrop.value.uppercase()} • ${GlobalMockData.farmerFarmArea.value} ${GlobalMockData.farmerAreaUnit.value}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = GreenDark
+                        color = GreenDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -210,28 +221,28 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val icon = if (weatherState.condition.contains("Rain", true)) "🌧️" else if (weatherState.condition.contains("Cloud", true)) "☁️" else "☀️"
-                    Text(text = icon, fontSize = 32.sp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = weatherState.condition, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                    Text(text = "Feels lik...", fontSize = 10.sp, color = TextSecondary)
+                    Text(text = icon, fontSize = 28.sp)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(text = weatherState.condition, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = "Feels like", fontSize = 10.sp, color = TextSecondary)
                 }
-                Text(text = weatherState.temp, fontSize = 36.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Divider(modifier = Modifier.width(1.dp).height(40.dp), color = Color.LightGray)
+                Text(text = weatherState.temp, fontSize = 30.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Divider(modifier = Modifier.width(1.dp).height(36.dp), color = Color.LightGray.copy(alpha = 0.6f))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "💧 ${weatherState.rain}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text(text = "💧 ${weatherState.rain}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                     val expectedText = if (weatherState.rain == "0 mm" || weatherState.rain == "0.0 mm") "No rain" else "Rain"
                     Text(text = expectedText, fontSize = 10.sp, color = TextSecondary)
-                    Text(text = "expected", fontSize = 10.sp, color = TextSecondary)
+                    Text(text = "expected", fontSize = 9.sp, color = TextSecondary)
                 }
-                Divider(modifier = Modifier.width(1.dp).height(40.dp), color = Color.LightGray)
+                Divider(modifier = Modifier.width(1.dp).height(36.dp), color = Color.LightGray.copy(alpha = 0.6f))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "🌬️ ${weatherState.wind}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text(text = "🌬️ ${weatherState.wind}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Text(text = "Wind", fontSize = 10.sp, color = TextSecondary)
                 }
             }
@@ -447,6 +458,7 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
     }
+}
     
     // Bottom Sheets
     if (showPlanCropSheet) {
@@ -569,38 +581,41 @@ fun RecommendationCard(rank: String, emoji: String, name: String, suitability: S
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(emoji, fontSize = 20.sp)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
+                Text(name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GreenSurface).padding(horizontal = 8.dp, vertical = 4.dp)) {
                     Text(suitability, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = GreenDark)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(GreenPrimary), contentAlignment = Alignment.Center) {
                             Text("₹", color = Color.White, fontSize = 10.sp)
                         }
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(netReturn, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(netReturn, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("Net return", fontSize = 10.sp, color = TextSecondary, modifier = Modifier.padding(start = 20.dp))
+                    Text("Net return", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 20.dp))
                 }
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("💧", fontSize = 12.sp)
+                        Text("💧", fontSize = 11.sp)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(waterReq, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(waterReq, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("Water Req.", fontSize = 10.sp, color = TextSecondary, modifier = Modifier.padding(start = 16.dp))
+                    Text("Water Req.", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp))
                 }
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("📅", fontSize = 12.sp)
+                        Text("📅", fontSize = 11.sp)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(sowing, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(sowing, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("Recommended...", fontSize = 10.sp, color = TextSecondary, modifier = Modifier.padding(start = 16.dp))
+                    Text("Sowing", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp))
                 }
             }
         }
@@ -623,7 +638,7 @@ fun SmallRecommendationCard(modifier: Modifier = Modifier, rank: String, emoji: 
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(emoji, fontSize = 16.sp)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Spacer(modifier = Modifier.height(8.dp))
             Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GreenSurface).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -631,16 +646,16 @@ fun SmallRecommendationCard(modifier: Modifier = Modifier, rank: String, emoji: 
             }
             Spacer(modifier = Modifier.height(12.dp))
             
-            Text(netReturn, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(netReturn, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("Net return", fontSize = 8.sp, color = TextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             
-            Text(waterReq, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(waterReq, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("Water Req.", fontSize = 8.sp, color = TextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             
-            Text(sowing, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text("Recommended Sowing", fontSize = 8.sp, color = TextSecondary)
+            Text(sowing, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Recommended Sowing", fontSize = 8.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

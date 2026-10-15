@@ -49,13 +49,19 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
     val unitVal = GlobalMockData.farmerAreaUnit.value
     val soilVal = GlobalMockData.farmerSoilType.value
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
-            .verticalScroll(rememberScrollState())
+            .background(AppBackground),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Dark Green Header
+        Column(
+            modifier = Modifier
+                .widthIn(max = 640.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Dark Green Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -311,6 +317,7 @@ fun ProfileScreen(onNavigateBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
 
         Spacer(modifier = Modifier.height(32.dp))
     }
+}
 
     // ==========================================
     // EDIT PROFILE DIALOG

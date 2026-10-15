@@ -195,13 +195,17 @@ fun VoiceAssistantScreen(
                         Text(
                             text = AppStrings.voiceAssistant,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = TextPrimary
+                            fontSize = 17.sp,
+                            color = TextPrimary,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Text(
                             text = "English • हिंदी • मराठी (Gemini AI)",
                             fontSize = 11.sp,
-                            color = GreenPrimary
+                            color = GreenPrimary,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -213,7 +217,7 @@ fun VoiceAssistantScreen(
                 actions = {
                     // Language Switcher Dropdown / Action
                     Row(
-                        modifier = Modifier.padding(end = 12.dp),
+                        modifier = Modifier.padding(end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val langs = listOf("English", "हिंदी", "मराठी")
@@ -236,7 +240,7 @@ fun VoiceAssistantScreen(
                                     fontSize = 11.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) Color.White else TextSecondary,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                 )
                             }
                         }
@@ -250,7 +254,9 @@ fun VoiceAssistantScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .imePadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 // Quick suggested question chips
                 Row(
@@ -346,38 +352,45 @@ fun VoiceAssistantScreen(
         },
         containerColor = AppBackground
     ) { padding ->
-        LazyColumn(
-            state = listState,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
-            items(messages) { msg ->
-                ChatBubble(message = msg, onSpeak = { speakText(msg.text) })
-            }
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .widthIn(max = 680.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(messages) { msg ->
+                    ChatBubble(message = msg, onSpeak = { speakText(msg.text) })
+                }
 
-            if (isLoading) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = GreenPrimary, strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = if (currentLanguage.contains("Hindi", true) || currentLanguage.contains("हिंदी", true))
-                                "कृषी आधार सहायक सोच रहा है..."
-                            else if (currentLanguage.contains("Marathi", true) || currentLanguage.contains("मराठी", true))
-                                "शेतकरी आधार सहायक विचार करत आहे..."
-                            else
-                                "Krishi-Aadhar Assistant is analyzing...",
-                            fontSize = 12.sp,
-                            color = TextSecondary
-                        )
+                if (isLoading) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = GreenPrimary, strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = if (currentLanguage.contains("Hindi", true) || currentLanguage.contains("हिंदी", true))
+                                    "कृषी आधार सहायक सोच रहा है..."
+                                else if (currentLanguage.contains("Marathi", true) || currentLanguage.contains("मराठी", true))
+                                    "शेतकरी आधार सहायक विचार करत आहे..."
+                                else
+                                    "Krishi-Aadhar Assistant is analyzing...",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
                     }
                 }
             }
@@ -415,7 +428,7 @@ private fun ChatBubble(message: VoiceMessage, onSpeak: () -> Unit) {
                 containerColor = if (message.isUser) GreenPrimary else Color.White
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            modifier = Modifier.widthIn(max = 280.dp)
+            modifier = Modifier.widthIn(max = 480.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(

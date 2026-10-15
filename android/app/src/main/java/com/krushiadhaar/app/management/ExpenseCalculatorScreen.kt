@@ -173,11 +173,18 @@ fun ExpenseCalculatorScreen(
                 }
             }
 
-            when (selectedTab) {
-                0 -> WalletPassbookTab(isMr = isMr, isHi = isHi)
-                1 -> CropCostCalculatorTab(crops = crops, isMr = isMr, isHi = isHi)
-                2 -> PersonalLedgerTab(isMr = isMr, isHi = isHi)
-                3 -> FinancialTallyTab(isMr = isMr, isHi = isHi)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Box(modifier = Modifier.widthIn(max = 680.dp).fillMaxSize()) {
+                    when (selectedTab) {
+                        0 -> WalletPassbookTab(isMr = isMr, isHi = isHi)
+                        1 -> CropCostCalculatorTab(crops = crops, isMr = isMr, isHi = isHi)
+                        2 -> PersonalLedgerTab(isMr = isMr, isHi = isHi)
+                        3 -> FinancialTallyTab(isMr = isMr, isHi = isHi)
+                    }
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -38,13 +39,21 @@ fun Step2Screen(
         "Onion", "Potato", "Maize", "Groundnut", "Pumpkin", "Tomato", "Gram", "Not Sown Yet", "Other"
     )
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState())
+            .background(AppBackground),
+        contentAlignment = Alignment.TopCenter
     ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 540.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .systemBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = AppStrings.step2Subtitle,
@@ -231,4 +240,5 @@ fun Step2Screen(
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
+}
 }

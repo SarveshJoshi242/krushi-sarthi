@@ -156,102 +156,103 @@ fun SoilWaterManagementScreen(
                 }
             }
 
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
             ) {
-                // Shared Crop & Acreage Selector Card
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 680.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isMr) "शेताची माहिती (पीक व क्षेत्र)"
-                                    else if (isHi) "सक्रिय खेत एवं फसल विवरण"
-                                    else "Active Field Setup",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = TextPrimary
-                                )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = GreenSurface
+                    // Shared Crop & Acreage Selector Card
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = "$selectedCrop • $acreage Acres",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = GreenDark,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = if (isMr) "पीक निवडा (Select Crop):" else if (isHi) "फसल चुनें (Select Crop):" else "Select Crop:",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        
-                        // Horizontally scrollable row with all crops
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            crops.forEach { crop ->
-                                val isSelected = selectedCrop.equals(crop, true)
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = {
-                                        selectedCrop = crop
-                                        GlobalMockData.farmerCrop.value = crop
-                                    },
-                                    leadingIcon = if (isSelected) {
-                                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = GreenDark) }
-                                    } else null,
-                                    label = { Text(crop, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = GreenSurface,
-                                        selectedLabelColor = GreenDark
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isMr) "शेताची माहिती (पीक व क्षेत्र)"
+                                        else if (isHi) "सक्रिय खेत एवं फसल विवरण"
+                                        else "Active Field Setup",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = TextPrimary
                                     )
-                                )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = GreenSurface
+                                ) {
+                                    Text(
+                                        text = "$selectedCrop • $acreage Acres",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = GreenDark,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                        // Acreage Controls
-                        Text(
-                            text = if (isMr) "शेतीचे क्षेत्र (Area in Acres):" else if (isHi) "खेत का रकबा (Area in Acres):" else "Cultivation Area (Acres):",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = if (isMr) "पीक निवडा (Select Crop):" else if (isHi) "फसल चुनें (Select Crop):" else "Select Crop:",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            
+                            // Horizontally scrollable row with all crops
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                crops.forEach { crop ->
+                                    val isSelected = selectedCrop.equals(crop, true)
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = {
+                                            selectedCrop = crop
+                                            GlobalMockData.farmerCrop.value = crop
+                                        },
+                                        leadingIcon = if (isSelected) {
+                                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = GreenDark) }
+                                        } else null,
+                                        label = { Text(crop, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = GreenSurface,
+                                            selectedLabelColor = GreenDark
+                                        )
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
+                            // Acreage Controls
+                            Text(
+                                text = if (isMr) "शेतीचे क्षेत्र (Area in Acres):" else if (isHi) "खेत का रकबा (Area in Acres):" else "Cultivation Area (Acres):",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+
                             OutlinedTextField(
                                 value = acreage,
                                 onValueChange = { input ->
@@ -263,29 +264,37 @@ fun SoilWaterManagementScreen(
                                 label = { Text("Acres") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 singleLine = true,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp),
                                 colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = GreenPrimary)
                             )
 
-                            // Quick acre chips
-                            listOf("1.0", "2.0", "5.0", "10.0").forEach { quickAcre ->
-                                FilterChip(
-                                    selected = acreage == quickAcre,
-                                    onClick = {
-                                        acreage = quickAcre
-                                        GlobalMockData.farmerFarmArea.value = quickAcre
-                                    },
-                                    label = { Text("${quickAcre.substringBefore(".")} Ac", fontSize = 11.sp) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = GreenSurface,
-                                        selectedLabelColor = GreenDark
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Quick acre chips in scrollable row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf("1.0", "2.0", "5.0", "10.0").forEach { quickAcre ->
+                                    FilterChip(
+                                        selected = acreage == quickAcre,
+                                        onClick = {
+                                            acreage = quickAcre
+                                            GlobalMockData.farmerFarmArea.value = quickAcre
+                                        },
+                                        label = { Text("${quickAcre.substringBefore(".")} Ac", fontSize = 11.sp) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = GreenSurface,
+                                            selectedLabelColor = GreenDark
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
-                }
 
                 if (selectedTab == 0) {
                     SoilHealthTabContent(
@@ -317,6 +326,7 @@ fun SoilWaterManagementScreen(
             }
         }
     }
+}
 }
 
 @Composable
@@ -1028,7 +1038,9 @@ private fun FertilizerBagItem(
                 text = title,
                 fontSize = 10.sp,
                 color = TextSecondary,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

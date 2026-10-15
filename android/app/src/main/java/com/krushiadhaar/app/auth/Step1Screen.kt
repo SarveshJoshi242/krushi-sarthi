@@ -37,6 +37,9 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Step1Screen(
@@ -64,14 +67,24 @@ fun Step1Screen(
 
     var currentLang by remember { mutableStateOf(GlobalMockData.userLanguage.value) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val scrollState = rememberScrollState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
-            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .background(AppBackground),
+        contentAlignment = Alignment.TopCenter
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
+        Column(
+            modifier = Modifier
+                .widthIn(max = 520.dp)
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .imePadding()
+                .systemBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Spacer(modifier = Modifier.height(12.dp))
 
         // Top Row: Title + Responsive Language Selector
         Row(
@@ -342,7 +355,7 @@ fun Step1Screen(
                 .padding(vertical = 8.dp)
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Main Action Button
         Button(
@@ -435,8 +448,9 @@ fun Step1Screen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
+}
 
     // Indian Locations Selection Dialog
     if (showLocationDialog) {
@@ -449,6 +463,7 @@ fun Step1Screen(
                 color = Color.White,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .widthIn(max = 480.dp)
                     .fillMaxHeight(0.85f)
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
