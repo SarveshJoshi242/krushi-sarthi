@@ -572,6 +572,12 @@ object GlobalMockData {
         persist()
     }
 
+    fun setFarmerCrop(crop: String) {
+        farmerCrop.value = crop
+        estimatedCropName.value = crop
+        persist()
+    }
+
     fun saveFarmerProfile(
         name: String,
         phone: String,
