@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Krishi-Aadhar — Technology Stack</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background-color: #080c14;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    width: 2400px;
+    height: 1260px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 50% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content-wrapper {
+    position: relative;
+    z-index: 1;
+    padding: 30px 40px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 18px 32px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .logo-icon {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  }
+  .header-titles h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #ffffff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-titles .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  /* 6-Card Grid (3 columns x 2 rows) */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 20px;
+    margin: 18px 0;
+    flex-grow: 1;
+  }
+
+  .stack-card {
+    background: rgba(15, 23, 42, 0.85);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 18px 20px;
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    backdrop-filter: blur(8px);
+  }
+
+  .card-emerald { border-top: 4px solid #10b981; }
+  .card-blue { border-top: 4px solid #3b82f6; }
+  .card-purple { border-top: 4px solid #8b5cf6; }
+  .card-amber { border-top: 4px solid #f59e0b; }
+  .card-cyan { border-top: 4px solid #06b6d4; }
+  .card-rose { border-top: 4px solid #f43f5e; }
+
+  .stack-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 11px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 12px;
+  }
+  .stack-card-title {
+    font-size: 17.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .stack-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: ui-monospace, monospace;
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+  }
+
+  /* Tech Items Table/List */
+  .tech-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 10px;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 9px;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .tech-item:last-child {
+    margin-bottom: 0;
+  }
+  .tech-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .tech-details {
+    flex-grow: 1;
+  }
+  .tech-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tech-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .tech-version {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: ui-monospace, monospace;
+  }
+  .tech-role {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+
+  /* Footer bar */
+  .footer-bar {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+<div class="content-wrapper">
+
+  <!-- TOP HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-icon">⚡</div>
+      <div class="header-titles">
+        <h1>KRISHI-AADHAR — COMPLETE TECHNOLOGY STACK</h1>
+        <div class="subtitle">Production Frameworks, Libraries, AI Models, Protocols & Cloud Infrastructure Specifications</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px;">
+      <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; padding:7px 15px; border-radius:9999px; font-size:12.5px; font-weight:700;">
+        Full-Stack Production Ready
+      </div>
+      <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); color:#60a5fa; padding:7px 15px; border-radius:9999px; font-size:12.5px; font-weight:700;">
+        Multi-Tier Microservices
+      </div>
+    </div>
+  </div>
+
+  <!-- 6-CARD GRID -->
+  <div class="stack-grid">
+
+    <!-- 1. ANDROID CLIENT STACK -->
+    <div class="stack-card card-emerald">
+      <div class="stack-card-header">
+        <div class="stack-card-title" style="color: #34d399;">
+          <span>📱</span> Mobile Client Stack
+        </div>
+        <div class="stack-card-badge">Android Min SDK 24 / Target 34</div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🟣</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Kotlin & Coroutines</span>
+            <span class="tech-version" style="color:#34d399; background:rgba(16,185,129,0.12);">v1.9.22</span>
+          </div>
+          <div class="tech-role">First-class async threading, StateFlow, SharedFlow & reactive data streams</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🎨</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Jetpack Compose & Material 3</span>
+            <span class="tech-version" style="color:#34d399; background:rgba(16,185,129,0.12);">BOM 2024.02</span>
+          </div>
+          <div class="tech-role">Modern declarative UI, dynamic animations, dark mode & responsive layouts</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🏛️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Clean Architecture + MVVM</span>
+            <span class="tech-version">Design Pattern</span>
+          </div>
+          <div class="tech-role">Separation of concerns: Presentation -> Domain (UseCases) -> Data (Repositories)</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🌐</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Retrofit 2 & OkHttp 3</span>
+            <span class="tech-version">v2.9.0 / v4.12</span>
+          </div>
+          <div class="tech-role">REST client, AuthInterceptor, auto JWT refresh authenticator & multipart uploads</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">💬</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">WebSocket / STOMP Client</span>
+            <span class="tech-version">WSS Protocol</span>
+          </div>
+          <div class="tech-role">Bidirectional real-time P2P negotiation chat between farmers and buyers</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">💾</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Room SQLite & EncryptedPrefs</span>
+            <span class="tech-version">v2.6.1</span>
+          </div>
+          <div class="tech-role">Local offline cache (KrushiAdhaarDatabase) and AES-256 secure JWT storage</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🧠</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">TensorFlow Lite (TFLite)</span>
+            <span class="tech-version">v2.14.0</span>
+          </div>
+          <div class="tech-role">On-device edge inference runtime for offline disease pre-screening</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CORE BACKEND STACK -->
+    <div class="stack-card card-blue">
+      <div class="stack-card-header">
+        <div class="stack-card-title" style="color: #60a5fa;">
+          <span>⚙️</span> Core Backend Stack
+        </div>
+        <div class="stack-card-badge">Spring Boot 3.2.5 | Java 17 LTS</div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">☕</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Java 17 LTS</span>
+            <span class="tech-version">OpenJDK 17</span>
+          </div>
+          <div class="tech-role">Modern Java features, records, pattern matching, robust multithreading & memory model</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🍃</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Spring Boot Core</span>
+            <span class="tech-version">v3.2.5</span>
+          </div>
+          <div class="tech-role">Enterprise web framework, dependency injection, embedded Tomcat & actuators</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🛡️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Spring Security 6 & JWT</span>
+            <span class="tech-version">jjwt 0.11.5</span>
+          </div>
+          <div class="tech-role">Stateless authentication, Bearer tokens, BCrypt hashing & RBAC role access control</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🗄️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Spring Data JPA / Hibernate</span>
+            <span class="tech-version">v6.4.4</span>
+          </div>
+          <div class="tech-role">Object-Relational Mapping (ORM), repository interfaces & transactional boundaries</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">⚡</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">HikariCP Pool</span>
+            <span class="tech-version">v5.1.0</span>
+          </div>
+          <div class="tech-role">Zero-overhead, ultra-fast production database JDBC connection pooling</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🔄</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Spring WebSocket (STOMP)</span>
+            <span class="tech-version">SockJS Supported</span>
+          </div>
+          <div class="tech-role">Full-duplex message broker for live negotiation rooms & broadcast channels</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📍</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Haversine Geolocation Engine</span>
+            <span class="tech-version">Spatial Math</span>
+          </div>
+          <div class="tech-role">Exact kilometer distance computation between farms and wholesale crop buyers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. AI / ML MICROSERVICE STACK -->
+    <div class="stack-card card-purple">
+      <div class="stack-card-header">
+        <div class="stack-card-title" style="color: #c084fc;">
+          <span>🧠</span> AI & Machine Learning
+        </div>
+        <div class="stack-card-badge">FastAPI | TensorFlow 2.x</div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🐍</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Python 3.9 & Uvicorn</span>
+            <span class="tech-version" style="color:#c084fc; background:rgba(192,132,252,0.12);">v0.39.0</span>
+          </div>
+          <div class="tech-role">Asynchronous event loop runtime powering high-concurrency microservice APIs</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">⚡</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">FastAPI</span>
+            <span class="tech-version" style="color:#c084fc; background:rgba(192,132,252,0.12);">v0.128.8</span>
+          </div>
+          <div class="tech-role">Modern asynchronous web framework, Pydantic type validation & auto Swagger docs</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🔬</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">TensorFlow & Keras CNN</span>
+            <span class="tech-version" style="color:#c084fc; background:rgba(192,132,252,0.12);">v2.20.0</span>
+          </div>
+          <div class="tech-role">8-Crop Deep Learning vision model, RGB preprocessing & disease classification</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">✨</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Google Gemini 2.0 Flash</span>
+            <span class="tech-version" style="color:#c084fc; background:rgba(192,132,252,0.12);">GenAI SDK</span>
+          </div>
+          <div class="tech-role">Generative agro-advisory: active chemicals, ₹ INR cost estimation & organic remedies</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📊</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">NumPy & Pandas</span>
+            <span class="tech-version">v2.0 / v2.3</span>
+          </div>
+          <div class="tech-role">Matrix operations, APMC Mandi price aggregation & statistical trend analysis</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🖼️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Pillow (PIL)</span>
+            <span class="tech-version">v11.3.0</span>
+          </div>
+          <div class="tech-role">Image ingestion, rotation handling, cropping & tensor array transformations</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🧪</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Soil NPK & Water Engines</span>
+            <span class="tech-version">Scientific Algorithm</span>
+          </div>
+          <div class="tech-role">Stoichiometric fertilizer bag calculation (Urea/DAP/MOP) & phenology watering</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. DATABASE & CLOUD PERSISTENCE -->
+    <div class="stack-card card-amber">
+      <div class="stack-card-header">
+        <div class="stack-card-title" style="color: #fbbf24;">
+          <span>🗄️</span> Database & Storage
+        </div>
+        <div class="stack-card-badge">PostgreSQL 16 | Flyway</div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">☁️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Neon Cloud PostgreSQL</span>
+            <span class="tech-version" style="color:#fbbf24; background:rgba(245,158,11,0.12);">Serverless</span>
+          </div>
+          <div class="tech-role">Fully managed cloud SQL database with automatic scaling and instant branch clones</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🔒</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">SSL/TLS Wire Encryption</span>
+            <span class="tech-version">sslmode=require</span>
+          </div>
+          <div class="tech-role">Strict encryption for all cloud database transactions, tokens and personal identities</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📜</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Flyway Database Migrations</span>
+            <span class="tech-version">17 Migrations (V1-V17)</span>
+          </div>
+          <div class="tech-role">Version-controlled SQL evolution: auth, farms, disease, marketplace, chats, cache</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">⚡</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Weather Cache-Aside Store</span>
+            <span class="tech-version">30-Min TTL</span>
+          </div>
+          <div class="tech-role">Automated database cache reducing external weather API latency & quota usage</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🏷️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Aadhaar & Recovery Vault</span>
+            <span class="tech-version">Secure Columns</span>
+          </div>
+          <div class="tech-role">Farmer national identity authentication with fallback recovery key hashing</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📋</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Mandi & Soil Records DB</span>
+            <span class="tech-version">Indexed Schemas</span>
+          </div>
+          <div class="tech-role">Structured APMC commodity historical data, MSP benchmarks and farmer soil logs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. EXTERNAL APIS & INTEGRATIONS -->
+    <div class="stack-card card-cyan">
+      <div class="stack-card-header">
+        <div class="stack-card-title" style="color: #38bdf8;">
+          <span>🌐</span> External APIs & Protocols
+        </div>
+        <div class="stack-card-badge">REST | WSS | Cloud APIs</div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">✨</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Google Gemini 2.0 API</span>
+            <span class="tech-version">Cloud GenAI</span>
+          </div>
+          <div class="tech-role">Multi-turn generative agronomy reasoning, localized cure plans & voice assistant NLP</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🌦️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">OpenWeatherMap API</span>
+            <span class="tech-version">REST API</span>
+          </div>
+          <div class="tech-role">Hyper-local temperature, humidity, rainfall probability & agricultural risk alerts</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🏛️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">APMC Mandi Price Feeds</span>
+            <span class="tech-version">Agmarknet Sync</span>
+          </div>
+          <div class="tech-role">Real-time commodity market prices, modal rates, 7-day trends & MSP benchmarks</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📜</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Govt Schemes Database</span>
+            <span class="tech-version">National Subsidy</span>
+          </div>
+          <div class="tech-role">Pre-seeded Indian agricultural programs: PM-KISAN, PMFBY, Soil Card, PM-KUSUM</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🔒</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">HTTPS & TLS 1.3</span>
+            <span class="tech-version">End-to-End</span>
+          </div>
+          <div class="tech-role">Encrypted transport layer protecting client-to-backend and service communications</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📡</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">STOMP over WebSocket</span>
+            <span class="tech-version">RFC 7118</span>
+          </div>
+          <div class="tech-role">Frame-based text-orientated streaming protocol for real-time bilateral chats</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. DEVOPS, BUILD & ARCHITECTURE -->
+    <div class="stack-card card-rose">
+      <div class="stack-card-header">
+        <div class="stack-card-title" style="color: #fb7185;">
+          <span>🛠️</span> DevOps, Build & Tooling
+        </div>
+        <div class="stack-card-badge">Automation & Toolchain</div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🐘</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Gradle Build Tool</span>
+            <span class="tech-version" style="color:#fb7185; background:rgba(251,113,133,0.12);">v8.7</span>
+          </div>
+          <div class="tech-role">Multi-project build automation for Spring Boot backend and Android client app</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📦</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Fat JAR & APK Packaging</span>
+            <span class="tech-version">Self-Contained</span>
+          </div>
+          <div class="tech-role">Instant standalone backend executable (`backend.jar`) & pre-built Android APK</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🚀</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">One-Click Orchestration</span>
+            <span class="tech-version">START_ALL_SERVICES.bat</span>
+          </div>
+          <div class="tech-role">Concurrent dual-service launcher bootstrapping FastAPI (8000) & Spring Boot (8080)</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">💻</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Android Studio & IntelliJ</span>
+            <span class="tech-version">JetBrains IDE</span>
+          </div>
+          <div class="tech-role">Primary development environments with Android Device Emulator & profilers</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">📑</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">OpenAPI 3.0 / Swagger UI</span>
+            <span class="tech-version">Interactive Docs</span>
+          </div>
+          <div class="tech-role">Auto-generated interactive API exploration and testing at `/docs`</div>
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-icon-box">🛡️</div>
+        <div class="tech-details">
+          <div class="tech-name-row">
+            <span class="tech-name">Offline Fallback Resilience</span>
+            <span class="tech-version">Fault-Tolerant</span>
+          </div>
+          <div class="tech-role">Dual offline handling ensuring 100% crash resistance during connectivity loss</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM STATUS BAR -->
+  <div class="footer-bar">
+    <div style="display:flex; gap:24px;">
+      <div style="display:flex; align-items:center; gap:8px;"><span style="color:#34d399;">●</span> Client: Kotlin / Compose</div>
+      <div style="display:flex; align-items:center; gap:8px;"><span style="color:#60a5fa;">●</span> Backend: Spring Boot 3.2.5</div>
+      <div style="display:flex; align-items:center; gap:8px;"><span style="color:#c084fc;">●</span> AI: TensorFlow + Gemini 2.0</div>
+      <div style="display:flex; align-items:center; gap:8px;"><span style="color:#fbbf24;">●</span> DB: Neon Serverless Postgres</div>
+      <div style="display:flex; align-items:center; gap:8px;"><span style="color:#fb7185;">●</span> Build: Gradle 8.7 & Python venv</div>
+    </div>
+    <div style="font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: #64748b;">
+      Krishi-Aadhar Technology Stack Matrix • Production Verified • 2026
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

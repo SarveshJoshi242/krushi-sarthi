@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,13 +35,38 @@ import com.krushiadhaar.app.ui.theme.*
 fun BuyerDashboardScreen(
     onNavigateToMarketplace: () -> Unit,
     onNavigateToNotifications: () -> Unit,
-    onNavigateToChat: (String) -> Unit
+    onNavigateToChat: (String) -> Unit,
+    onNavigateToCommunity: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Buyer Dashboard", fontWeight = FontWeight.Bold, color = TextPrimary) },
                 actions = {
+                    val unreadCount = com.krushiadhaar.app.GlobalMockData.unreadCommunityCount.intValue
+                    Box(contentAlignment = Alignment.Center) {
+                        IconButton(onClick = onNavigateToCommunity) {
+                            Icon(Icons.Default.Groups, contentDescription = "Community", tint = GreenPrimary)
+                        }
+                        if (unreadCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-4).dp, y = 4.dp)
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE53935)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (unreadCount > 9) "9+" else "$unreadCount",
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                     IconButton(onClick = onNavigateToNotifications) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextPrimary)
                     }
@@ -65,14 +91,38 @@ fun BuyerDashboardScreen(
                 fontWeight = FontWeight.Bold,
                 color = GreenPrimary
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Krishi Charcha Community Card for Buyers
+            Card(
+                onClick = onNavigateToCommunity,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = GreenPrimary)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Groups, contentDescription = null, tint = Color.White, modifier = Modifier.size(40.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Krishi Charcha (Community)", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Post requirements & deal directly with farmers", fontSize = 12.sp, color = Color.White.copy(alpha = 0.85f))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Marketplace Module
             Card(
                 onClick = onNavigateToMarketplace,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp),
+                    .height(110.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = OrangePrimary)
             ) {
@@ -81,11 +131,11 @@ fun BuyerDashboardScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(Icons.Default.Store, contentDescription = null, tint = Color.White, modifier = Modifier.size(48.dp))
+                    Icon(Icons.Default.Store, contentDescription = null, tint = Color.White, modifier = Modifier.size(40.dp))
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text("Marketplace", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text("Browse & Buy Crops", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
+                        Text("Marketplace", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Browse & Buy Crops", fontSize = 13.sp, color = Color.White.copy(alpha = 0.8f))
                     }
                 }
             }

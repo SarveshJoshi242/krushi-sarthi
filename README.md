@@ -26,6 +26,10 @@
 
 ## 🏗️ Architecture & Technology Stack
 
+![Krishi-Aadhar System Architecture](./system_architecture.png)
+
+![Krishi-Aadhar Technology Stack](./tech_stack.png)
+
 ```
                               ┌────────────────────────────────────────┐
                               │      Android Mobile Application        │

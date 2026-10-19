@@ -39,6 +39,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToMarketplace: () -> Unit = {},
     onNavigateToPitchCrop: () -> Unit = {},
+    onNavigateToCommunity: () -> Unit = {},
     onNavigateToVoiceAssistant: () -> Unit = {},
     onNavigateToMandi: () -> Unit = {},
     onNavigateToSoilHealth: () -> Unit = {},
@@ -77,145 +78,219 @@ fun HomeScreen(
                 .background(AppBackground)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Top Header
+            // Top Header - 100% Responsive for All Screen Sizes & Form Factors
+            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+            val screenWidthDp = configuration.screenWidthDp
+            val isCompactScreen = screenWidthDp < 380
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(
+                        horizontal = if (isCompactScreen) 12.dp else 16.dp,
+                        vertical = if (isCompactScreen) 10.dp else 12.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(GreenPrimary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Eco, contentDescription = null, tint = Color.White)
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = AppStrings.appName,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-
-            // Language Switcher Dropdown Pill
-            val availableLangs = listOf("English", "हिंदी", "मराठी")
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = GreenSurface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary),
-                modifier = Modifier.clickable {
-                    val nextIdx = (availableLangs.indexOf(currentLang) + 1) % availableLangs.size
-                    val newLang = availableLangs[if (nextIdx >= 0) nextIdx else 0]
-                    currentLang = newLang
-                    GlobalMockData.updateLanguage(newLang)
-                    homeViewModel.refreshRecommendations(newLang, GlobalMockData.userLocation.value)
-                }
-            ) {
+                // 1. App Brand Logo & Title (Fixed width, never pushed or truncated)
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(end = 4.dp)
                 ) {
-                    Text(
-                        text = "🌐 $currentLang",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = GreenDark
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Direct Mic Assistant Button
-            IconButton(onClick = onNavigateToVoiceAssistant) {
-                Icon(Icons.Default.Mic, contentDescription = "Voice Assistant", tint = GreenPrimary)
-            }
-
-            IconButton(onClick = onNavigateToProfile) {
-                Icon(Icons.Outlined.Person, contentDescription = "Profile", tint = TextPrimary)
-            }
-        }
-
-        // Welcome Section
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val rawName = GlobalMockData.farmerName.value.trim()
-            val hasName = rawName.isNotBlank()
-            val displayName = if (hasName) rawName else AppStrings.farmerGreeting
-            val greetingTitle = "${AppStrings.hello}, $displayName 👋"
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = greetingTitle,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Role Badge - keeps "Farmer" neatly
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = GreenSurface,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.4f)),
-                        modifier = Modifier.padding(end = 6.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(if (isCompactScreen) 34.dp else 38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(GreenPrimary),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "👨‍🌾 ${AppStrings.farmerRole}",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = GreenDark,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        Icon(
+                            Icons.Default.Eco,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(if (isCompactScreen) 18.dp else 22.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.width(if (isCompactScreen) 8.dp else 10.dp))
+                    Text(
+                        text = AppStrings.appName,
+                        fontSize = if (isCompactScreen) 17.sp else 19.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextPrimary,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
 
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = GlobalMockData.userLocation.value,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                Spacer(modifier = Modifier.weight(1f))
+
+                // 2. Action Cluster: Language Switcher + Community Badge + Profile
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(if (isCompactScreen) 4.dp else 8.dp)
+                ) {
+                    // Language Switcher Dropdown Pill
+                    val availableLangs = listOf("English", "हिंदी", "मराठी")
+                    val displayLangLabel = when {
+                        isCompactScreen && currentLang.startsWith("Eng", true) -> "EN"
+                        isCompactScreen && currentLang.contains("हिंदी") -> "हिं"
+                        isCompactScreen && currentLang.contains("मराठी") -> "मरा"
+                        else -> currentLang
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = GreenSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.8f)),
+                        modifier = Modifier.clickable {
+                            val nextIdx = (availableLangs.indexOf(currentLang) + 1) % availableLangs.size
+                            val newLang = availableLangs[if (nextIdx >= 0) nextIdx else 0]
+                            currentLang = newLang
+                            GlobalMockData.updateLanguage(newLang)
+                            homeViewModel.refreshRecommendations(newLang, GlobalMockData.userLocation.value)
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "🌐 $displayLangLabel",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GreenDark
+                            )
+                        }
+                    }
+
+                    // Community Button with Notification Badge
+                    val unreadCommunityCount = GlobalMockData.unreadCommunityCount.intValue
+                    Box(
+                        modifier = Modifier.size(36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = onNavigateToCommunity,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Groups,
+                                contentDescription = "Community",
+                                tint = GreenPrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        if (unreadCommunityCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 2.dp, y = (-2).dp)
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE53935)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (unreadCommunityCount > 9) "9+" else "$unreadCommunityCount",
+                                    color = Color.White,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    // Profile Button
+                    IconButton(
+                        onClick = onNavigateToProfile,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Person,
+                            contentDescription = "Profile",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Box(
+
+            // Welcome Section
+            Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(GreenSurface)
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = if (isCompactScreen) 12.dp else 16.dp,
+                        vertical = 8.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
-                    Spacer(modifier = Modifier.width(3.dp))
+                val rawName = GlobalMockData.farmerName.value.trim()
+                val hasName = rawName.isNotBlank()
+                val displayName = if (hasName) rawName else AppStrings.farmerGreeting
+                val greetingTitle = "${AppStrings.hello}, $displayName 👋"
+
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "${GlobalMockData.farmerCrop.value.uppercase()} • ${GlobalMockData.farmerFarmArea.value} ${GlobalMockData.farmerAreaUnit.value}",
-                        fontSize = 11.sp,
+                        text = greetingTitle,
+                        fontSize = if (isCompactScreen) 17.sp else 19.sp,
                         fontWeight = FontWeight.Bold,
-                        color = GreenDark,
+                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Role Badge
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = GreenSurface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, GreenPrimary.copy(alpha = 0.4f)),
+                            modifier = Modifier.padding(end = 6.dp)
+                        ) {
+                            Text(
+                                text = "👨‍🌾 ${AppStrings.farmerRole}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = GreenDark,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = GlobalMockData.userLocation.value,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(GreenSurface)
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "${GlobalMockData.farmerCrop.value.uppercase()} • ${GlobalMockData.farmerFarmArea.value} ${GlobalMockData.farmerAreaUnit.value}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GreenDark,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
-        }
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -433,7 +508,7 @@ fun HomeScreen(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        // AI Voice Assistant Hero Banner
+        // Krishi AI Voice & Chat Assistant Hero Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -448,17 +523,37 @@ fun HomeScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(46.dp)
                         .clip(CircleShape)
                         .background(Color.White.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Mic, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Mic, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = AppStrings.voiceAssistant, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
-                    Text(text = "Ask questions in English, हिंदी, or मराठी", fontSize = 11.sp, color = Color.White.copy(alpha = 0.85f))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = AppStrings.voiceAssistant, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color.White.copy(alpha = 0.25f))
+                                .padding(horizontal = 5.dp, vertical = 1.dp)
+                        ) {
+                            Text(
+                                text = if (AppStrings.isHindi()) "एआई सहायक" else if (AppStrings.isMarathi()) "एआय सहाय्यक" else "AI Doctor",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                    Text(
+                        text = if (AppStrings.isHindi()) "बोलकर या लिखकर पूछें • English, हिंदी, मराठी" else if (AppStrings.isMarathi()) "बोलून किंवा लिहून विचारा • English, हिंदी, मराठी" else "Ask questions in English, हिंदी, or मराठी",
+                        fontSize = 11.sp,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
                 }
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
             }
@@ -480,9 +575,22 @@ fun HomeScreen(
         }
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Row 3: Farm PDF Certificate & Report
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            QuickActionCard(modifier = Modifier.fillMaxWidth(), emoji = "📄", title = AppStrings.pdfReport, subtitle = "Export Official Farm Health Certificate & Ledger", onClick = onNavigateToPdfReport)
+        // Row 3: Krishi Charcha Community & Farm PDF Report
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
+                emoji = "👥",
+                title = AppStrings.community,
+                subtitle = if (AppStrings.isHindi()) "किसान मंच" else if (AppStrings.isMarathi()) "शेतकरी मंच" else "Farmer & Buyer Forum",
+                onClick = onNavigateToCommunity
+            )
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
+                emoji = "📄",
+                title = AppStrings.pdfReport,
+                subtitle = "Certificate & Ledger",
+                onClick = onNavigateToPdfReport
+            )
         }
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -982,12 +1090,22 @@ fun RecommendationCard(rank: String, emoji: String, name: String, suitability: S
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(emoji, fontSize = 20.sp)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text(
+                    text = name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 2,
+                    lineHeight = 19.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GreenSurface).padding(horizontal = 8.dp, vertical = 4.dp)) {
                     Text(suitability, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = GreenDark)
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1000,7 +1118,7 @@ fun RecommendationCard(rank: String, emoji: String, name: String, suitability: S
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(netReturn, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("Net return", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 20.dp))
+                    Text(if (AppStrings.isHindi()) "शुद्ध लाभ" else if (AppStrings.isMarathi()) "निव्वळ नफा" else "Net return", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 20.dp))
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1008,15 +1126,15 @@ fun RecommendationCard(rank: String, emoji: String, name: String, suitability: S
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(waterReq, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("Water Req.", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp))
+                    Text(if (AppStrings.isHindi()) "जल आवश्यकता" else if (AppStrings.isMarathi()) "पाण्याची गरज" else "Water Req.", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp))
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("📅", fontSize = 11.sp)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(sowing, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(sowing, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = 13.sp, overflow = TextOverflow.Ellipsis)
                     }
-                    Text("Sowing", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp))
+                    Text(if (AppStrings.isHindi()) "बुवाई अवधि" else if (AppStrings.isMarathi()) "पेरणी काळ" else "Sowing", fontSize = 10.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp))
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -1064,7 +1182,16 @@ fun SmallRecommendationCard(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(emoji, fontSize = 16.sp)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = name,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 2,
+                    lineHeight = 15.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -1085,15 +1212,15 @@ fun SmallRecommendationCard(
             Spacer(modifier = Modifier.height(10.dp))
             
             Text(netReturn, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("Net return", fontSize = 8.sp, color = TextSecondary)
+            Text(if (AppStrings.isHindi()) "शुद्ध लाभ" else if (AppStrings.isMarathi()) "निव्वळ नफा" else "Net return", fontSize = 8.sp, color = TextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             
             Text(waterReq, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("Water Req.", fontSize = 8.sp, color = TextSecondary)
+            Text(if (AppStrings.isHindi()) "जल आवश्यकता" else if (AppStrings.isMarathi()) "पाण्याची गरज" else "Water Req.", fontSize = 8.sp, color = TextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             
-            Text(sowing, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("Recommended Sowing", fontSize = 8.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(sowing, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, lineHeight = 12.sp, overflow = TextOverflow.Ellipsis)
+            Text(if (AppStrings.isHindi()) "बुवाई अवधि" else if (AppStrings.isMarathi()) "पेरणी काळ" else "Sowing Period", fontSize = 8.sp, color = TextSecondary)
         }
     }
 }
@@ -1108,13 +1235,33 @@ private fun QuickActionCard(modifier: Modifier = Modifier, emoji: String, title:
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(GreenSurface), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(10.dp)).background(GreenSurface), contentAlignment = Alignment.Center) {
                 Text(text = emoji, fontSize = 22.sp)
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-            Text(text = subtitle, fontSize = 11.sp, color = TextSecondary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                fontSize = 10.sp,
+                color = TextSecondary,
+                maxLines = 2,
+                lineHeight = 13.sp,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }

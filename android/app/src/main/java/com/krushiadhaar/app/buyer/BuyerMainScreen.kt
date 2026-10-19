@@ -95,6 +95,13 @@ fun BuyerMainScreen(
                 BuyerDashboardScreen(
                     onNavigateToMarketplace = { bottomNavController.navigate("marketplace_screen") },
                     onNavigateToNotifications = { bottomNavController.navigate("notifications_screen") },
+                    onNavigateToChat = { farmer -> bottomNavController.navigate("chat_screen/${android.net.Uri.encode(farmer)}") },
+                    onNavigateToCommunity = { bottomNavController.navigate("community") }
+                )
+            }
+            composable("community") {
+                com.krushiadhaar.app.community.CommunityScreen(
+                    onNavigateBack = { bottomNavController.popBackStack() },
                     onNavigateToChat = { farmer -> bottomNavController.navigate("chat_screen/${android.net.Uri.encode(farmer)}") }
                 )
             }

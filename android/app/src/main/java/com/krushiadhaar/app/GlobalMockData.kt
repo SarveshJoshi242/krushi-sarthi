@@ -9,6 +9,9 @@ import androidx.compose.ui.graphics.Color
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.krushiadhaar.app.core.storage.TokenStorage
+import com.krushiadhaar.app.community.CommunityPost
+import com.krushiadhaar.app.community.CommunityReply
+import com.krushiadhaar.app.community.CommunityNotificationHelper
 
 object GlobalMockData {
     private const val PREFS_NAME = "krushi_adhaar_persistent_state"
@@ -23,6 +26,8 @@ object GlobalMockData {
     private const val KEY_ESTIMATED_CROP_COST = "estimated_crop_cost"
     private const val KEY_ESTIMATED_CROP_NAME = "estimated_crop_name"
     private const val KEY_ESTIMATED_CROP_AREA = "estimated_crop_area"
+    private const val KEY_COMMUNITY_POSTS = "community_posts_json"
+    private const val KEY_UNREAD_COMMUNITY_COUNT = "unread_community_count"
 
     // Farmer Profile Keys
     private const val KEY_FARMER_NAME = "farmer_name"
@@ -79,6 +84,11 @@ object GlobalMockData {
     val userRole = mutableStateOf("FARMER")
     val isLoggedIn = mutableStateOf(false)
     val authToken = mutableStateOf<String?>(null)
+
+    // Community Module State (Twitter / X for Farmers & Buyers)
+    val communityPosts = mutableStateListOf<CommunityPost>()
+    val unreadCommunityCount = androidx.compose.runtime.mutableIntStateOf(0)
+    val pendingNavigationRoute = mutableStateOf<String?>(null)
 
     data class PestScanHistory(
         val id: String = java.util.UUID.randomUUID().toString(),
@@ -464,6 +474,23 @@ object GlobalMockData {
                 e.printStackTrace()
             }
         }
+
+        // Restore Community Posts & Unread Count
+        unreadCommunityCount.intValue = sp.getInt(KEY_UNREAD_COMMUNITY_COUNT, 0)
+        val postsJson = sp.getString(KEY_COMMUNITY_POSTS, null)
+        communityPosts.clear()
+        if (!postsJson.isNullOrEmpty()) {
+            try {
+                val listType = object : TypeToken<List<CommunityPost>>() {}.type
+                val savedPosts: List<CommunityPost> = gson.fromJson(postsJson, listType)
+                communityPosts.addAll(savedPosts)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (communityPosts.isEmpty()) {
+            seedInitialCommunityPosts()
+        }
     }
 
     private fun persist() {
@@ -496,6 +523,9 @@ object GlobalMockData {
             putInt(KEY_ESTIMATED_CROP_COST, estimatedCropCost.intValue)
             putString(KEY_ESTIMATED_CROP_NAME, estimatedCropName.value)
             putString(KEY_ESTIMATED_CROP_AREA, estimatedCropArea.value)
+
+            putString(KEY_COMMUNITY_POSTS, gson.toJson(communityPosts.toList()))
+            putInt(KEY_UNREAD_COMMUNITY_COUNT, unreadCommunityCount.intValue)
 
             putString(KEY_FARMER_NAME, farmerName.value)
             putString(KEY_FARMER_PHONE, farmerPhone.value)
@@ -682,4 +712,287 @@ object GlobalMockData {
         userLocation.value = loc
         prefs?.edit()?.putString(KEY_LOCATION, loc)?.apply()
     }
+
+    private fun seedInitialCommunityPosts() {
+        val seeded = listOf(
+            CommunityPost(
+                authorName = "Ramesh Patil",
+                authorHandle = "@ramesh_farmer",
+                authorRole = "FARMER",
+                authorLocation = "Baramati, Pune",
+                authorAvatarInitials = "RP",
+                isVerified = true,
+                content = "Shifted 3 acres to drip fertigation for HD-2967 Wheat. Diesel cost dropped by ₹4,200/acre and zero water-logging during critical crown root initiation (CRI). Brother farmers, adopt fertigation early! It saves water and doubles grain weight.",
+                postType = "EXPERIENCE",
+                cropTag = "Wheat",
+                tags = listOf("#FarmerExperience", "#WaterSaving", "#Wheat2026"),
+                timestampText = "12m ago",
+                likesCount = 28,
+                isLiked = false,
+                repostsCount = 6,
+                isReposted = false,
+                repliesCount = 2,
+                replies = mutableListOf(
+                    CommunityReply(
+                        postId = "",
+                        authorName = "Suresh Kumar",
+                        authorHandle = "@suresh_k",
+                        authorRole = "FARMER",
+                        authorLocation = "Nagpur, MH",
+                        content = "Ramesh bhai, what venturi injector size did you use for 3 acres?",
+                        timestampText = "8m ago",
+                        likesCount = 3
+                    ),
+                    CommunityReply(
+                        postId = "",
+                        authorName = "Ramesh Patil",
+                        authorHandle = "@ramesh_farmer",
+                        authorRole = "FARMER",
+                        authorLocation = "Baramati, Pune",
+                        content = "Used 1.5-inch venturi with flow control valve. Works very smoothly!",
+                        timestampText = "5m ago",
+                        likesCount = 2
+                    )
+                )
+            ),
+            CommunityPost(
+                authorName = "Apex Agro Foods & Exports",
+                authorHandle = "@apex_procure",
+                authorRole = "BUYER",
+                authorLocation = "Navi Mumbai / Pune Mandi",
+                authorAvatarInitials = "AA",
+                isVerified = true,
+                content = "🚨 URGENT BUYER REQUIREMENT: Need 60 Metric Tons of Grade-A Soybean (Moisture < 10%, Foreign matter < 2%). Offering premium spot cash payment of ₹4,950/Quintal at farmgate. Immediate weighment and direct transfer to farmer bank account!",
+                postType = "BUYER_DEMAND",
+                cropTag = "Soyabean",
+                tags = listOf("#BuyerDemand", "#DirectProcurement", "#SpotCash", "#SoybeanBuyer"),
+                timestampText = "45m ago",
+                likesCount = 42,
+                isLiked = false,
+                repostsCount = 18,
+                isReposted = false,
+                repliesCount = 1,
+                demandQuantity = "60 Metric Tons",
+                offeredPrice = "₹4,950 / Quintal",
+                buyerContactPhone = "+91 98230 45678",
+                replies = mutableListOf(
+                    CommunityReply(
+                        postId = "",
+                        authorName = "Prakash Kadam",
+                        authorHandle = "@prakash_k",
+                        authorRole = "FARMER",
+                        authorLocation = "Kolhapur, MH",
+                        content = "I have 15 tons ready in godown. Will call your team.",
+                        timestampText = "20m ago",
+                        likesCount = 1
+                    )
+                )
+            ),
+            CommunityPost(
+                authorName = "Dr. Arvind Shinde",
+                authorHandle = "@dr_arvind_agri",
+                authorRole = "EXPERT",
+                authorLocation = "KVK Agriculture Extension",
+                authorAvatarInitials = "AS",
+                isVerified = true,
+                content = "💡 CRITICAL ADVISORY FOR COTTON & CHILLI: Cloudy and humid weather is triggering rapid whitefly and thrips infestation. Spray Neem Oil 10,000 ppm @ 3ml/L mixed with Fipronil 5% SC @ 1.5ml/L during early evening. Avoid spraying in direct sunlight to protect beneficial pollinators.",
+                postType = "GUIDANCE",
+                cropTag = "Cotton",
+                tags = listOf("#AgriGuidance", "#PestControl", "#CottonCare", "#FarmerTips"),
+                timestampText = "2h ago",
+                likesCount = 89,
+                isLiked = false,
+                repostsCount = 34,
+                isReposted = false,
+                repliesCount = 0
+            ),
+            CommunityPost(
+                authorName = "Balasaheb Ghadge",
+                authorHandle = "@balasaheb_organic",
+                authorRole = "FARMER",
+                authorLocation = "Nashik, Maharashtra",
+                authorAvatarInitials = "BG",
+                isVerified = true,
+                content = "Made 200 Litres of Jeevamrut using native Desi Cow dung, urine, jaggery and gram flour for Sugarcane crop. Microorganism count was incredible! Earthworm activity has doubled in my rootzone and soil is cool and porous. Zero chemical nitrogen purchased this entire month! #NaturalFarming #ZeroBudget #OrganicTips",
+                postType = "EXPERIENCE",
+                cropTag = "Sugarcane",
+                tags = listOf("#NaturalFarming", "#ZeroBudget", "#OrganicTips", "#SoilHealth"),
+                timestampText = "4h ago",
+                likesCount = 112,
+                isLiked = false,
+                repostsCount = 29,
+                isReposted = false,
+                repliesCount = 0
+            ),
+            CommunityPost(
+                authorName = "Kisan Mandi Logistics",
+                authorHandle = "@kisan_mandi_buyer",
+                authorRole = "BUYER",
+                authorLocation = "Indore / Nashik Corridor",
+                authorAvatarInitials = "KM",
+                isVerified = true,
+                content = "Looking for contract procurement of 120 Quintals of Process-Grade Red Onion (Garva variety, medium size 45-55mm, properly cured). Minimum guaranteed floor price of ₹2,200/Qtl with transport arranged directly by our logistics fleet. FPOs & farmer clusters welcome.",
+                postType = "BUYER_DEMAND",
+                cropTag = "Onion",
+                tags = listOf("#BuyerOffer", "#OnionTrade", "#DirectDeal", "#MandiContract"),
+                timestampText = "6h ago",
+                likesCount = 54,
+                isLiked = false,
+                repostsCount = 14,
+                isReposted = false,
+                repliesCount = 0,
+                demandQuantity = "120 Quintals",
+                offeredPrice = "₹2,200 / Quintal"
+            )
+        )
+        communityPosts.addAll(seeded)
+    }
+
+    fun addCommunityPost(post: CommunityPost, context: Context? = appContext) {
+        communityPosts.add(0, post)
+        farmerNotifications.add(
+            0,
+            Notification(
+                message = "🌾 Community: ${post.authorName} (${if (post.authorRole == "BUYER") "Buyer" else "Farmer"}) posted: ${post.content.take(50)}...",
+                time = "Just now"
+            )
+        )
+        unreadCommunityCount.intValue += 1
+        persist()
+        context?.let {
+            CommunityNotificationHelper.dispatchNewPostNotification(it, post)
+        }
+    }
+
+    fun toggleLikePost(postId: String) {
+        val index = communityPosts.indexOfFirst { it.id == postId }
+        if (index != -1) {
+            val item = communityPosts[index]
+            val newLiked = !item.isLiked
+            val newCount = if (newLiked) item.likesCount + 1 else maxOf(0, item.likesCount - 1)
+            communityPosts[index] = item.copy(isLiked = newLiked, likesCount = newCount)
+            persist()
+        }
+    }
+
+    fun toggleRepostPost(postId: String) {
+        val index = communityPosts.indexOfFirst { it.id == postId }
+        if (index != -1) {
+            val item = communityPosts[index]
+            val newReposted = !item.isReposted
+            val newCount = if (newReposted) item.repostsCount + 1 else maxOf(0, item.repostsCount - 1)
+            communityPosts[index] = item.copy(isReposted = newReposted, repostsCount = newCount)
+            persist()
+        }
+    }
+
+    fun toggleBookmarkPost(postId: String) {
+        val index = communityPosts.indexOfFirst { it.id == postId }
+        if (index != -1) {
+            val item = communityPosts[index]
+            communityPosts[index] = item.copy(isBookmarked = !item.isBookmarked)
+            persist()
+        }
+    }
+
+    fun addReplyToPost(postId: String, reply: CommunityReply, context: Context? = appContext) {
+        val index = communityPosts.indexOfFirst { it.id == postId }
+        if (index != -1) {
+            val item = communityPosts[index]
+            val updatedReplies = item.replies.toMutableList()
+            updatedReplies.add(reply)
+            val updatedPost = item.copy(
+                repliesCount = updatedReplies.size,
+                replies = updatedReplies
+            )
+            communityPosts[index] = updatedPost
+            unreadCommunityCount.intValue += 1
+            persist()
+
+            // Trigger notification for the new reply
+            val dummyReplyPost = CommunityPost(
+                authorName = reply.authorName,
+                authorHandle = reply.authorHandle,
+                authorRole = reply.authorRole,
+                authorLocation = reply.authorLocation,
+                content = "💬 Replied: ${reply.content}",
+                postType = "QUESTION",
+                cropTag = item.cropTag
+            )
+            context?.let {
+                CommunityNotificationHelper.dispatchNewPostNotification(it, dummyReplyPost)
+            }
+        }
+    }
+
+    fun markCommunityAsRead() {
+        unreadCommunityCount.intValue = 0
+        persist()
+    }
+
+    private var simulationIndex = 0
+
+    fun simulateIncomingCommunityPost(context: Context? = appContext) {
+        val simulatedIncomingList = listOf(
+            CommunityPost(
+                authorName = "Sukhwinder Singh",
+                authorHandle = "@sukhwinder_pb",
+                authorRole = "FARMER",
+                authorLocation = "Ludhiana, Punjab",
+                content = "🌾 Bumper harvest update! Reaped 23 Quintals/Acre on PBW-550 Wheat using Super Seeder with zero straw burning. Nitrogen efficiency increased by 30%. Happy to advise any farmer brothers!",
+                postType = "EXPERIENCE",
+                cropTag = "Wheat",
+                tags = listOf("#ZeroTillage", "#WheatHarvest", "#FarmerPride"),
+                likesCount = 14,
+                repostsCount = 5
+            ),
+            CommunityPost(
+                authorName = "Maharastra Agro Mart",
+                authorHandle = "@maha_agro_buyer",
+                authorRole = "BUYER",
+                authorLocation = "Pune Market Yard",
+                content = "🤝 SPOT CASH BUYING: Need 40 Tons of Green Moong (Mung bean) & 50 Tons of Chana (Gram). Offering ₹8,200/Qtl for Moong and ₹5,800/Qtl for Chana. Spot weighing, spot RTGS transfer!",
+                postType = "BUYER_DEMAND",
+                cropTag = "Chickpea / Gram",
+                tags = listOf("#BuyerProcurement", "#CashDeal", "#SpotCash"),
+                demandQuantity = "50 Tons",
+                offeredPrice = "₹5,800 / Quintal",
+                buyerContactPhone = "+91 97654 32109",
+                likesCount = 31,
+                repostsCount = 9
+            ),
+            CommunityPost(
+                authorName = "Anita Deshmukh",
+                authorHandle = "@anita_farmer",
+                authorRole = "FARMER",
+                authorLocation = "Satara, Maharashtra",
+                content = "💡 TIP FOR ONION & VEGETABLE GROWERS: Install 15 yellow sticky cards & 10 blue sticky cards per acre. In just 3 days, over 70% of thrips and whiteflies were trapped without a drop of pesticide! Saved ₹1,800 per spray.",
+                postType = "GUIDANCE",
+                cropTag = "Onion",
+                tags = listOf("#OrganicFarming", "#StickyTraps", "#FarmerHacks"),
+                likesCount = 47,
+                repostsCount = 12
+            ),
+            CommunityPost(
+                authorName = "Global Fresh Agro Exports",
+                authorHandle = "@global_fresh_procure",
+                authorRole = "BUYER",
+                authorLocation = "Nashik / Export Zone",
+                content = "🚨 URGENT EXPORT REQUIREMENT: Purchasing 30 Metric Tons of Export-Quality Pomegranate (Bhagwa variety, 250g+ size, spot payment @ ₹135/Kg). Truck pickup directly at orchard. DM or contact immediately!",
+                postType = "BUYER_DEMAND",
+                cropTag = "Pomegranate",
+                tags = listOf("#ExportDeal", "#PomegranateBuyer", "#SpotPayment"),
+                demandQuantity = "30 Metric Tons",
+                offeredPrice = "₹135 / Kg",
+                buyerContactPhone = "+91 91234 56780",
+                likesCount = 59,
+                repostsCount = 21
+            )
+        )
+
+        val nextPost = simulatedIncomingList[simulationIndex % simulatedIncomingList.size]
+        simulationIndex++
+        addCommunityPost(nextPost, context)
+    }
 }
+

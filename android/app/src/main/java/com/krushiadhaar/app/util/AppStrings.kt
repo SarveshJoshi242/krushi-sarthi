@@ -67,6 +67,20 @@ object AppStrings {
             else -> "AI Voice Assistant"
         }
 
+    val community: String
+        get() = when {
+            isHindi() -> "कृषी चर्चा (कम्युनिटी)"
+            isMarathi() -> "शेतकरी चर्चा (कम्युनिटी)"
+            else -> "Krishi Charcha"
+        }
+
+    val communitySubtitle: String
+        get() = when {
+            isHindi() -> "किसान व व्यापारी मंच"
+            isMarathi() -> "शेतकरी व खरेदीदार मंच"
+            else -> "Farmer & Buyer Community"
+        }
+
     val mandiPrices: String
         get() = when {
             isHindi() -> "मंडी भाव व रुझान"

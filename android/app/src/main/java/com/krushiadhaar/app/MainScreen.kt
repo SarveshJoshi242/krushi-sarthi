@@ -72,6 +72,14 @@ fun MainScreen(
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    LaunchedEffect(GlobalMockData.pendingNavigationRoute.value) {
+        val route = GlobalMockData.pendingNavigationRoute.value
+        if (route != null) {
+            bottomNavController.navigate(route)
+            GlobalMockData.pendingNavigationRoute.value = null
+        }
+    }
+
     val currentLang = GlobalMockData.userLanguage.value
     val isMr = currentLang.contains("Marathi", true) || currentLang.contains("मराठी", true)
     val isHi = currentLang.contains("Hindi", true) || currentLang.contains("हिंदी", true)
@@ -147,6 +155,7 @@ fun MainScreen(
                     onNavigateToProfile         = { bottomNavController.navigate("profile") },
                     onNavigateToMarketplace     = { bottomNavController.navigate("marketplace") },
                     onNavigateToPitchCrop       = { bottomNavController.navigate(BottomNavItem.PitchCrop.route) },
+                    onNavigateToCommunity       = { bottomNavController.navigate("community") },
                     onNavigateToVoiceAssistant  = { bottomNavController.navigate("voice_assistant") },
                     onNavigateToMandi           = { bottomNavController.navigate("mandi_prices") },
                     onNavigateToSoilHealth      = { bottomNavController.navigate("soil_water") },
@@ -301,6 +310,12 @@ fun MainScreen(
             }
             composable("pdf_report") {
                 PdfReportScreen(onNavigateBack = { bottomNavController.popBackStack() })
+            }
+            composable("community") {
+                com.krushiadhaar.app.community.CommunityScreen(
+                    onNavigateBack = { bottomNavController.popBackStack() },
+                    onNavigateToChat = { farmerName -> bottomNavController.navigate("chat_screen/${android.net.Uri.encode(farmerName)}") }
+                )
             }
         }
     }

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Krishi-Aadhar — System Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background-color: #080c14;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    width: 2400px;
+    height: 1220px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Subtle background grid */
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      radial-gradient(circle at 12% 18%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 88% 22%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 50% 85%, rgba(59, 130, 246, 0.07) 0%, transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content-wrapper {
+    position: relative;
+    z-index: 1;
+    padding: 30px 40px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 18px 32px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .logo-icon {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  }
+  .header-titles h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #ffffff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-titles .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: 3px;
+    font-weight: 500;
+  }
+  .header-tags {
+    display: flex;
+    gap: 10px;
+  }
+  .header-badge {
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.8);
+  }
+  .badge-emerald { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(16, 185, 129, 0.12); }
+  .badge-blue { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); background: rgba(59, 130, 246, 0.12); }
+  .badge-purple { color: #c084fc; border-color: rgba(192, 132, 252, 0.3); background: rgba(139, 92, 246, 0.12); }
+  .badge-amber { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); background: rgba(245, 158, 11, 0.12); }
+
+  /* Main 3-Column Architecture Layout */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 690px 110px 720px 110px 690px;
+    gap: 0;
+    align-items: stretch;
+    margin: 18px 0;
+    flex-grow: 1;
+  }
+
+  /* Pillar Cards */
+  .pillar-card {
+    background: rgba(15, 23, 42, 0.85);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    backdrop-filter: blur(8px);
+  }
+
+  .pillar-card.client-pillar {
+    border-top: 4px solid #10b981;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(15, 23, 42, 0.9) 100%);
+  }
+  .pillar-card.backend-pillar {
+    border-top: 4px solid #3b82f6;
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.06) 0%, rgba(15, 23, 42, 0.9) 100%);
+  }
+  .pillar-card.ai-pillar {
+    border-top: 4px solid #8b5cf6;
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.06) 0%, rgba(15, 23, 42, 0.9) 100%);
+  }
+
+  .pillar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 12px;
+  }
+  .pillar-title {
+    font-size: 19px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pillar-meta {
+    font-size: 12px;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* Component Boxes */
+  .component-box {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 11px;
+    padding: 11px 14px;
+    margin-bottom: 10px;
+  }
+  .box-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    margin-bottom: 7px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .label-green { color: #34d399; }
+  .label-blue { color: #60a5fa; }
+  .label-purple { color: #c084fc; }
+  .label-amber { color: #fbbf24; }
+  .label-cyan { color: #38bdf8; }
+
+  /* Feature Grid inside Component Box */
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .feature-chip {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .feature-chip.highlight {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .dot-green { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+  .dot-blue { background-color: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+  .dot-purple { background-color: #8b5cf6; box-shadow: 0 0 8px #8b5cf6; }
+  .dot-amber { background-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+
+  /* Database card inside backend */
+  .database-subcard {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.9));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    padding: 13px 15px;
+    margin-top: 6px;
+  }
+  .db-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .db-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fbbf24;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  /* Connector Columns with SVG Flow Indicators */
+  .connector-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0;
+    position: relative;
+  }
+  .connector-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    position: relative;
+  }
+  .conn-badge {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 7px;
+    padding: 6px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    width: 95px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 2;
+  }
+  .conn-rest {
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(14, 165, 233, 0.15);
+  }
+  .conn-ws {
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.4);
+    background: rgba(16, 185, 129, 0.15);
+  }
+  .conn-internal {
+    color: #c084fc;
+    border-color: rgba(192, 132, 252, 0.4);
+    background: rgba(139, 92, 246, 0.15);
+  }
+  .conn-svg-arrow {
+    width: 100%;
+    height: 18px;
+    margin: 3px 0;
+  }
+
+  /* External Cloud Services Box */
+  .cloud-subcard {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(15, 23, 42, 0.9));
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  /* Bottom Legend / Status Bar */
+  .footer-bar {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    color: #94a3b8;
+  }
+  .legend-items {
+    display: flex;
+    gap: 22px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<div class="content-wrapper">
+
+  <!-- TOP HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-icon">🌾</div>
+      <div class="header-titles">
+        <h1>KRISHI-AADHAR (कृषी आधार / शेतकरी आधार)</h1>
+        <div class="subtitle">End-to-End Smart Agriculture & Marketplace Platform — High-Level System Architecture & Data Flow</div>
+      </div>
+    </div>
+    <div class="header-tags">
+      <div class="header-badge badge-emerald">📱 Android Client</div>
+      <div class="header-badge badge-blue">⚙️ Spring Boot Core (v3.2.5)</div>
+      <div class="header-badge badge-purple">🧠 FastAPI + Gemini 2.0 AI</div>
+      <div class="header-badge badge-amber">☁️ Neon Cloud Serverless DB</div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE 3-COLUMN PILLARS WITH CONNECTOR CHANNELS -->
+  <div class="arch-grid">
+
+    <!-- 1. MOBILE CLIENT PILLAR -->
+    <div class="pillar-card client-pillar">
+      <div>
+        <div class="pillar-header">
+          <div class="pillar-title" style="color: #34d399;">
+            <span>📱</span> Mobile Client Tier
+          </div>
+          <div class="pillar-meta">Android SDK 24-34 | Kotlin 1.9</div>
+        </div>
+
+        <!-- UI / Presentation -->
+        <div class="component-box">
+          <div class="box-label label-green">
+            <span>UI & Presentation (Jetpack Compose)</span>
+            <span style="color:#64748b;">MVVM Pattern</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-green"></span>5-Tab Core Bottom Navbar</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>🏡 Home Agronomic Dashboard</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>🔬 Pest & Disease Doctor</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>🛒 Pitch Crop & Marketplace</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>💰 Wallet & Expense Budgeting</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>🏛️ Seeded Govt Scheme Catalog</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>🌱 Soil Health & Fertilizer Calculator</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>💧 Smart Rain-Delay Irrigation Hub</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>📈 APMC Mandi Price Trends</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>🎙️ Multilingual Voice Assistant (HI/MR/EN)</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>📄 Native Printable A4 PDF Reporter</div>
+          </div>
+        </div>
+
+        <!-- State & Business Logic -->
+        <div class="component-box">
+          <div class="box-label label-green">
+            <span>Domain & Flow Orchestration</span>
+            <span style="color:#64748b;">Clean Architecture</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip"><span class="dot dot-green"></span>Kotlin Coroutines & StateFlow</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>Clean Architecture UseCases</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>Field Boundary & Crop Cycle State</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>Live Real-time STOMP Chat Flow</div>
+          </div>
+        </div>
+
+        <!-- Data Layer & Networking -->
+        <div class="component-box">
+          <div class="box-label label-green">
+            <span>Network & Hardware Bridges</span>
+            <span style="color:#64748b;">Retrofit + OkHttp</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-green"></span>Retrofit 2 HTTP Client</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>OkHttp 3 Auth Interceptor</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>Automated JWT Token Refresh</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>WebSocket STOMP / SockJS</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>CameraX Image Capture</div>
+            <div class="feature-chip"><span class="dot dot-green"></span>SpeechRecognizer & Android TTS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Local Persistence & Edge ML -->
+      <div class="component-box" style="margin-bottom:0;">
+        <div class="box-label label-green">
+          <span>Local Storage & Edge AI</span>
+          <span style="color:#64748b;">Offline-Resilient</span>
+        </div>
+        <div class="chip-grid">
+          <div class="feature-chip highlight"><span class="dot dot-green"></span>Room SQLite (KrushiAdhaarDatabase)</div>
+          <div class="feature-chip"><span class="dot dot-green"></span>EncryptedSharedPreferences (TokenStorage)</div>
+          <div class="feature-chip"><span class="dot dot-green"></span>State Cache (GlobalMockData)</div>
+          <div class="feature-chip highlight"><span class="dot dot-green"></span>TensorFlow Lite Interpreter (Edge ML)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTOR 1: CLIENT TO BACKEND -->
+    <div class="connector-col">
+      <div class="connector-unit">
+        <svg class="conn-svg-arrow" viewBox="0 0 100 16">
+          <defs>
+            <marker id="arrow-rest" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#38bdf8" />
+            </marker>
+          </defs>
+          <line x1="5" y1="8" x2="95" y2="8" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4 2" marker-end="url(#arrow-rest)" />
+        </svg>
+        <div class="conn-badge conn-rest">
+          <div>HTTPS REST</div>
+          <div style="font-size: 8.5px; opacity: 0.8; font-weight: normal; margin-top:2px;">Port 8080<br>Bearer JWT</div>
+        </div>
+      </div>
+
+      <div class="connector-unit">
+        <svg class="conn-svg-arrow" viewBox="0 0 100 16">
+          <defs>
+            <marker id="arrow-ws-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#34d399" />
+            </marker>
+            <marker id="arrow-ws-l" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+              <path d="M6,0 L0,3 L6,6 Z" fill="#34d399" />
+            </marker>
+          </defs>
+          <line x1="8" y1="8" x2="92" y2="8" stroke="#34d399" stroke-width="2.5" marker-start="url(#arrow-ws-l)" marker-end="url(#arrow-ws-r)" />
+        </svg>
+        <div class="conn-badge conn-ws">
+          <div>WSS STOMP</div>
+          <div style="font-size: 8.5px; opacity: 0.8; font-weight: normal; margin-top:2px;">/ws<br>Live P2P Chat</div>
+        </div>
+      </div>
+
+      <div class="connector-unit">
+        <svg class="conn-svg-arrow" viewBox="0 0 100 16">
+          <line x1="5" y1="8" x2="95" y2="8" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4 2" marker-end="url(#arrow-rest)" />
+        </svg>
+        <div class="conn-badge conn-rest">
+          <div>Multipart</div>
+          <div style="font-size: 8.5px; opacity: 0.8; font-weight: normal; margin-top:2px;">Image Upload<br>/api/diseases</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CORE BACKEND & PERSISTENCE PILLAR -->
+    <div class="pillar-card backend-pillar">
+      <div>
+        <div class="pillar-header">
+          <div class="pillar-title" style="color: #60a5fa;">
+            <span>⚙️</span> Core Backend & Gateway Tier
+          </div>
+          <div class="pillar-meta">Spring Boot 3.2.5 | Java 17 | Port 8080</div>
+        </div>
+
+        <!-- Security & Filters -->
+        <div class="component-box">
+          <div class="box-label label-blue">
+            <span>Security & Identity Gateway</span>
+            <span style="color:#64748b;">Spring Security 6</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-blue"></span>Stateless JWT Authentication Filter</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Role-Based RBAC (FARMER, BUYER, EXPERT)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Aadhaar Verification & Recovery Keys</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Idempotent Payment Deadlines & Audit</div>
+          </div>
+        </div>
+
+        <!-- REST Controllers & WebSocket -->
+        <div class="component-box">
+          <div class="box-label label-blue">
+            <span>Domain Controllers & Endpoints</span>
+            <span style="color:#64748b;">REST API & WebSocket</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip"><span class="dot dot-blue"></span>AuthController (/api/v1/auth)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Farm & Field Management (/api/farms)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Marketplace & Orders (/api/marketplace)</div>
+            <div class="feature-chip highlight"><span class="dot dot-blue"></span>Chat & STOMP Broker (/api/chat, /ws)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Disease Diagnostic Controller (/api/diseases)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>WeatherController & Agro-Advisories</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>FarmIntelligenceController (Mandi, Soil, Water)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>FinanceController (Wallet & Cashbook)</div>
+          </div>
+        </div>
+
+        <!-- Core Services & Algorithms -->
+        <div class="component-box">
+          <div class="box-label label-blue">
+            <span>Business Logic & Service Layer</span>
+            <span style="color:#64748b;">Core Engines</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-blue"></span>Haversine Geo-Distance Calculator</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>30-Minute Smart Weather Cache Engine</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Agro-Risk Rules (Rain/Frost/Heat/Humidity)</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>Spring Data JPA & Hibernate 6 ORM</div>
+            <div class="feature-chip"><span class="dot dot-blue"></span>HikariCP High-Throughput Connection Pool</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Database Subcard -->
+      <div class="database-subcard">
+        <div class="db-header">
+          <div class="db-title">
+            <span>🗄️</span> Neon Cloud Serverless PostgreSQL (`neondb`)
+          </div>
+          <div class="pillar-meta" style="color: #fbbf24; border-color: rgba(245,158,11,0.3);">
+            SSL Required | 17 Flyway Migrations
+          </div>
+        </div>
+        <div class="chip-grid">
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>users & roles (V2)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>farms, fields & crops (V3)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>disease_scans & results (V4, V12)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>marketplace_listings & orders (V5)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>payments & idempotency (V7, V8)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>geo_coordinates lat/lon (V13)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>chat_rooms & chat_messages (V14)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>weather_cache (V15)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>schemes & mandi_prices (V16, V17)</div>
+          <div class="feature-chip" style="background: rgba(0,0,0,0.4);"><span class="dot dot-amber"></span>soil_health_records (V17)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTOR 2: BACKEND TO ML & EXTERNAL -->
+    <div class="connector-col">
+      <div class="connector-unit">
+        <svg class="conn-svg-arrow" viewBox="0 0 100 16">
+          <defs>
+            <marker id="arrow-ml" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#c084fc" />
+            </marker>
+          </defs>
+          <line x1="5" y1="8" x2="95" y2="8" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 2" marker-end="url(#arrow-ml)" />
+        </svg>
+        <div class="conn-badge conn-internal">
+          <div>HTTP REST</div>
+          <div style="font-size: 8.5px; opacity: 0.8; font-weight: normal; margin-top:2px;">Port 8000<br>/predict</div>
+        </div>
+      </div>
+
+      <div class="connector-unit">
+        <svg class="conn-svg-arrow" viewBox="0 0 100 16">
+          <line x1="5" y1="8" x2="95" y2="8" stroke="#c084fc" stroke-width="2.5" stroke-dasharray="4 2" marker-end="url(#arrow-ml)" />
+        </svg>
+        <div class="conn-badge conn-internal">
+          <div>HTTP REST</div>
+          <div style="font-size: 8.5px; opacity: 0.8; font-weight: normal; margin-top:2px;">/voice-assistant<br>/soil-health</div>
+        </div>
+      </div>
+
+      <div class="connector-unit">
+        <svg class="conn-svg-arrow" viewBox="0 0 100 16">
+          <line x1="5" y1="8" x2="95" y2="8" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4 2" marker-end="url(#arrow-rest)" />
+        </svg>
+        <div class="conn-badge conn-rest">
+          <div>JSON Sync</div>
+          <div style="font-size: 8.5px; opacity: 0.8; font-weight: normal; margin-top:2px;">Mandi & Weather<br>Telemetry</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. AI / ML MICROSERVICE & EXTERNAL CLOUD PILLAR -->
+    <div class="pillar-card ai-pillar">
+      <div>
+        <div class="pillar-header">
+          <div class="pillar-title" style="color: #c084fc;">
+            <span>🧠</span> AI / ML & External Cloud Tier
+          </div>
+          <div class="pillar-meta">FastAPI | TensorFlow | Gemini 2.0</div>
+        </div>
+
+        <!-- External Cloud APIs -->
+        <div class="cloud-subcard">
+          <div class="box-label label-cyan" style="margin-bottom: 8px;">
+            <span>🌐 External Cloud Services & Open APIs</span>
+            <span style="color:#64748b;">HTTPS / Cloud SDK</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-purple"></span>Google Gemini 2.0 Flash AI API</div>
+            <div class="feature-chip highlight"><span class="dot" style="background:#38bdf8;"></span>OpenWeatherMap Real-Time API</div>
+            <div class="feature-chip"><span class="dot" style="background:#38bdf8;"></span>APMC Mandi Commodity Market Feeds</div>
+            <div class="feature-chip"><span class="dot" style="background:#38bdf8;"></span>Indian Central Agricultural Schemes</div>
+          </div>
+        </div>
+
+        <!-- Deep Learning Vision -->
+        <div class="component-box">
+          <div class="box-label label-purple">
+            <span>Computer Vision & Deep Learning</span>
+            <span style="color:#64748b;">TensorFlow 2.x & Keras</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-purple"></span>Krushi_Aadhar_8Crop_Model (CNN)</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>224x224 RGB Normalization & Resizing</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>8+ Crop Disease Classifier</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>Confidence Scoring & Fallback Guards</div>
+          </div>
+        </div>
+
+        <!-- Generative Agro-Advisory Engine -->
+        <div class="component-box">
+          <div class="box-label label-purple">
+            <span>Generative Agro-Advisory Engine</span>
+            <span style="color:#64748b;">Google Gemini 2.0 Flash</span>
+          </div>
+          <div class="chip-grid">
+            <div class="feature-chip highlight"><span class="dot dot-purple"></span>Structured Medical Prescriptions</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>Chemical Fungicide/Pesticide Dosages</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>Market Treatment Cost Estimation (₹ INR)</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>Organic & Ayurvedic Cultural Remedies</div>
+            <div class="feature-chip"><span class="dot dot-purple"></span>Trilingual Support (Hindi, Marathi, English)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intelligence Microservice Endpoints -->
+      <div class="component-box" style="margin-bottom: 0;">
+        <div class="box-label label-purple">
+          <span>Farm Intelligence Microservices</span>
+          <span style="color:#64748b;">FastAPI / Uvicorn Port 8000</span>
+        </div>
+        <div class="chip-grid">
+          <div class="feature-chip highlight"><span class="dot dot-purple"></span>POST /predict (Vision + Advisory)</div>
+          <div class="feature-chip"><span class="dot dot-purple"></span>POST /voice-assistant (Multilingual NLP)</div>
+          <div class="feature-chip"><span class="dot dot-purple"></span>POST /soil-health (NPK Stoichiometric Calc)</div>
+          <div class="feature-chip"><span class="dot dot-purple"></span>GET /irrigation-calendar (Phenology Model)</div>
+          <div class="feature-chip"><span class="dot dot-purple"></span>GET /mandi-prices (MSP Benchmark Analytics)</div>
+          <div class="feature-chip"><span class="dot dot-purple"></span>GET /recommendations & /schemes</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BOTTOM METRIC & LEGEND BAR -->
+  <div class="footer-bar">
+    <div class="legend-items">
+      <div class="legend-item"><span class="dot dot-green"></span> Android Client Domain</div>
+      <div class="legend-item"><span class="dot dot-blue"></span> Spring Boot 3 Core Service</div>
+      <div class="legend-item"><span class="dot dot-purple"></span> AI/ML & GenAI Microservice</div>
+      <div class="legend-item"><span class="dot dot-amber"></span> Neon Cloud PostgreSQL Store</div>
+      <div class="legend-item"><span class="dot" style="background:#38bdf8;"></span> External Cloud Provider</div>
+    </div>
+    <div style="font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: #64748b;">
+      Krishi-Aadhar Architecture Specification • Production Verified • 2026
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

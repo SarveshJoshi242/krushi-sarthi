@@ -7,6 +7,8 @@
 
 ## 2. Architecture Overview
 
+![Krishi-Aadhar System Architecture](./system_architecture.png)
+
 ```
                                   +------------------------------------+
                                   |         Android Client App         |
@@ -34,6 +36,8 @@
 ---
 
 ## 3. Technology Stack
+
+![Krishi-Aadhar Technology Stack](./tech_stack.png)
 
 ### 3.1 Mobile Client (Android)
 - **Framework**: Android Jetpack Compose (Declarative UI)
