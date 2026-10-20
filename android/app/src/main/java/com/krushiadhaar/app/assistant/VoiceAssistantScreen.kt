@@ -201,7 +201,7 @@ fun VoiceAssistantScreen(
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "English • हिंदी • मराठी (Gemini AI)",
+                            text = "English • हिंदी • मराठी",
                             fontSize = 11.sp,
                             color = GreenPrimary,
                             maxLines = 1,

@@ -94,8 +94,8 @@ fun SoilWaterManagementScreen(
     )
 
     val tabTitles = remember(currentLang) {
-        if (isMr) listOf("🧪 माती आरोग्य (NPK खत गणना)", "💧 टप्प्याटप्प्याने स्मार्ट सिंचन")
-        else if (isHi) listOf("🧪 मृदा स्वास्थ्य (NPK उर्वरक गणना)", "💧 चरणबद्ध स्मार्ट सिंचाई")
+        if (isMr) listOf("🧪 माती आरोग्य (NPK)", "💧 स्मार्ट सिंचन")
+        else if (isHi) listOf("🧪 मृदा स्वास्थ्य (NPK)", "💧 स्मार्ट सिंचाई")
         else listOf("🧪 Soil Health & NPK", "💧 Step-by-Step Irrigation")
     }
 
@@ -175,15 +175,15 @@ fun SoilWaterManagementScreen(
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(14.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(20.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(Icons.Default.Eco, contentDescription = null, tint = GreenPrimary, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = if (isMr) "शेताची माहिती (पीक व क्षेत्र)"
                                         else if (isHi) "सक्रिय खेत एवं फसल विवरण"
@@ -198,30 +198,30 @@ fun SoilWaterManagementScreen(
                                     color = GreenSurface
                                 ) {
                                     Text(
-                                        text = "$selectedCrop • $acreage Acres",
+                                        text = "$selectedCrop • $acreage Ac",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = GreenDark,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = if (isMr) "पीक निवडा (Select Crop):" else if (isHi) "फसल चुनें (Select Crop):" else "Select Crop:",
-                                fontSize = 12.sp,
+                                text = if (isMr) "पीक निवडा:" else if (isHi) "फसल चुनें:" else "Select Crop:",
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextSecondary
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             
                             // Horizontally scrollable row with all crops
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 crops.forEach { crop ->
                                     val isSelected = selectedCrop.equals(crop, true)
@@ -232,9 +232,9 @@ fun SoilWaterManagementScreen(
                                             GlobalMockData.farmerCrop.value = crop
                                         },
                                         leadingIcon = if (isSelected) {
-                                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = GreenDark) }
+                                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp), tint = GreenDark) }
                                         } else null,
-                                        label = { Text(crop, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                                        label = { Text(crop, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
                                         colors = FilterChipDefaults.filterChipColors(
                                             selectedContainerColor = GreenSurface,
                                             selectedLabelColor = GreenDark
@@ -242,55 +242,62 @@ fun SoilWaterManagementScreen(
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            // Acreage Controls
+                            // Compact Acreage Row: Input + Quick Chips in one responsive row
                             Text(
-                                text = if (isMr) "शेतीचे क्षेत्र (Area in Acres):" else if (isHi) "खेत का रकबा (Area in Acres):" else "Cultivation Area (Acres):",
-                                fontSize = 12.sp,
+                                text = if (isMr) "क्षेत्र (Area in Acres):" else if (isHi) "रकबा (Area in Acres):" else "Cultivation Area:",
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextSecondary
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                            OutlinedTextField(
-                                value = acreage,
-                                onValueChange = { input ->
-                                    if (input.all { it.isDigit() || it == '.' }) {
-                                        acreage = input
-                                        GlobalMockData.farmerFarmArea.value = input
-                                    }
-                                },
-                                label = { Text("Acres") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = TextFieldDefaults.outlinedTextFieldColors(focusedBorderColor = GreenPrimary)
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            // Quick acre chips in scrollable row
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                listOf("1.0", "2.0", "5.0", "10.0").forEach { quickAcre ->
-                                    FilterChip(
-                                        selected = acreage == quickAcre,
-                                        onClick = {
-                                            acreage = quickAcre
-                                            GlobalMockData.farmerFarmArea.value = quickAcre
-                                        },
-                                        label = { Text("${quickAcre.substringBefore(".")} Ac", fontSize = 11.sp) },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = GreenSurface,
-                                            selectedLabelColor = GreenDark
-                                        )
+                                OutlinedTextField(
+                                    value = acreage,
+                                    onValueChange = { input ->
+                                        if (input.all { it.isDigit() || it == '.' }) {
+                                            acreage = input
+                                            GlobalMockData.farmerFarmArea.value = input
+                                        }
+                                    },
+                                    label = { Text("Acres", fontSize = 10.sp) },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    singleLine = true,
+                                    modifier = Modifier.width(90.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = GreenPrimary,
+                                        unfocusedBorderColor = Color.LightGray
                                     )
+                                )
+
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    listOf("1.0", "2.0", "5.0", "10.0").forEach { quickAcre ->
+                                        val isSel = acreage == quickAcre
+                                        FilterChip(
+                                            selected = isSel,
+                                            onClick = {
+                                                acreage = quickAcre
+                                                GlobalMockData.farmerFarmArea.value = quickAcre
+                                            },
+                                            label = { Text("${quickAcre.substringBefore(".")} Ac", fontSize = 11.sp) },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = GreenSurface,
+                                                selectedLabelColor = GreenDark
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -323,6 +330,8 @@ fun SoilWaterManagementScreen(
                         isHi = isHi
                     )
                 }
+
+                Spacer(modifier = Modifier.height(56.dp))
             }
         }
     }
@@ -675,28 +684,33 @@ private fun SmartIrrigationTabContent(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(22.dp)
                             .clip(CircleShape)
                             .background(GreenPrimary),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("1", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("1", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = if (isMr) "पिकाची वाढ आणि वय" else if (isHi) "फसल की वृद्धि एवं आयु" else "Step 1: Crop Growth & Age",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = TextPrimary
+                        fontSize = 14.sp,
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
                 Surface(
@@ -707,8 +721,8 @@ private fun SmartIrrigationTabContent(
                         text = "$sowingDays / $totalDays Days",
                         color = GreenDark,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                     )
                 }
             }
@@ -718,30 +732,52 @@ private fun SmartIrrigationTabContent(
                 progress = progress,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
+                    .height(7.dp)
                     .clip(RoundedCornerShape(4.dp)),
                 color = GreenPrimary,
                 trackColor = GreenSurface
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    text = "Current Stage: $currentStageName",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "Water Need: $waterCriticality",
-                    fontSize = 11.sp,
-                    color = OrangePrimary,
-                    fontWeight = FontWeight.Bold
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                    Text(
+                        text = if (isMr) "सध्याचा टप्पा:" else if (isHi) "वर्तमान चरण:" else "Current Stage:",
+                        fontSize = 10.sp,
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = currentStageName,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = OrangePrimary.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, OrangePrimary.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = waterCriticality,
+                        fontSize = 10.sp,
+                        color = OrangePrimary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Days Since Sowing (Slide to adjust):", fontSize = 11.sp, color = TextSecondary)
+            Text(
+                text = if (isMr) "पेरणीनंतरचे दिवस (समायोजित करा):" else if (isHi) "बुवाई के दिन (स्लाइड करें):" else "Days Since Sowing (Slide to adjust):",
+                fontSize = 11.sp,
+                color = TextSecondary
+            )
             Slider(
                 value = sowingDays.toFloat(),
                 onValueChange = { onSowingDaysChange(it.toInt()) },
@@ -759,38 +795,43 @@ private fun SmartIrrigationTabContent(
         ),
         border = BorderStroke(1.5.dp, if (needsWaterToday) GreenPrimary else OrangePrimary)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false).padding(end = 6.dp)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(22.dp)
                             .clip(CircleShape)
                             .background(if (needsWaterToday) GreenPrimary else OrangePrimary),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("2", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("2", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isMr) "आज पाणी द्यावे का? (Water Today?)"
-                        else if (isHi) "आज पानी देना है या नहीं? (Water Today?)"
-                        else "Step 2: Water Decision Today",
+                        text = if (isMr) "आज पाणी द्यावे का?"
+                        else if (isHi) "आज पानी देना है?"
+                        else "Step 2: Water Decision",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = TextPrimary
+                        fontSize = 14.sp,
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = if (needsWaterToday) GreenPrimary else OrangePrimary
                 ) {
                     Text(
-                        text = if (needsWaterToday) "💧 YES - WATER TODAY" else "🚫 NO WATER NEEDED",
+                        text = if (needsWaterToday) "💧 WATER TODAY" else "🚫 SKIP WATER",
                         color = Color.White,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
@@ -798,10 +839,10 @@ private fun SmartIrrigationTabContent(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             if (needsWaterToday) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
@@ -843,7 +884,7 @@ private fun SmartIrrigationTabContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Soil Moisture Probe: ${soilMoisture.roundToInt()}%", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
                 Text(if (soilMoisture < 50f) "Dry Soil" else "Moist Soil", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (soilMoisture < 50f) Color(0xFFE53935) else GreenPrimary)
@@ -863,28 +904,28 @@ private fun SmartIrrigationTabContent(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                         .background(GreenPrimary),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("3", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("3", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = if (isMr) "पाणी देण्याची सोपी पद्धत (४ पायऱ्या)"
                     else if (isHi) "सिंचाई का सरल तरीका (4 कदम)"
                     else "Step 3: Easy 4-Step Watering Guide",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     color = TextPrimary
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             ScheduleStageRow(
                 stageNumber = "1",
@@ -893,7 +934,7 @@ private fun SmartIrrigationTabContent(
                 else if (isHi) "जड़ के पास 2 इंच मिट्टी खोदकर देखें। यदि मिट्टी सूखी व भुरभुरी लगे तो ही मोटर चालू करें।"
                 else "Dig 2 inches near crop roots. If soil is dry and crumbles easily, begin scheduled watering."
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             ScheduleStageRow(
                 stageNumber = "2",
@@ -902,7 +943,7 @@ private fun SmartIrrigationTabContent(
                 else if (isHi) "सुबह 6-9 बजे या शाम 5 बजे के बाद ही पानी दें। तेज धूप में 40% पानी भाप बनकर उड़ जाता है।"
                 else "Operate pump between 6 AM - 9 AM or after 5 PM to prevent up to 40% evaporation loss."
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             ScheduleStageRow(
                 stageNumber = "3",
@@ -911,7 +952,7 @@ private fun SmartIrrigationTabContent(
                 else if (isHi) "स्क्रीन फिल्टर को साफ रखें और दबाव मीटर 1.5 - 2.0 बार पर बनाए रखें।"
                 else "Ensure sand/screen filter is backwashed and operating pressure remains at 1.5 - 2.0 kg/cm²."
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             ScheduleStageRow(
                 stageNumber = "4",
@@ -929,60 +970,78 @@ private fun SmartIrrigationTabContent(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                         .background(GreenPrimary),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("4", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("4", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (isMr) "७ दिवसांचे हवामान व पाणी वेळापत्रक"
-                    else if (isHi) "7 दिवसीय मौसम आधारित सिंचाई कैलेंडर"
-                    else "Step 4: 7-Day Weather & Irrigation Schedule",
+                    text = if (isMr) "७ दिवसांचे हवामान वेळापत्रक"
+                    else if (isHi) "7 दिवसीय मौसम सिंचाई कैलेंडर"
+                    else "Step 4: 7-Day Weather Schedule",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     color = TextPrimary
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            val weekDays = listOf(
-                Triple("Today (Day 1)", "☀️ 32°C Clear", "💧 Drip 1.5 Hours"),
-                Triple("Tomorrow (Day 2)", "☀️ 33°C Sunny", "🚫 Field Rest (No Water)"),
-                Triple("Day 3", "⛅ 30°C Partly Cloudy", "🚫 Field Rest (No Water)"),
-                Triple("Day 4", "☀️ 31°C Clear", "💧 Drip 1.5 Hours"),
-                Triple("Day 5", "⛅ 29°C Humid", "🚫 Field Rest (No Water)"),
-                Triple("Day 6", "🌧️ 25°C Rain Forecast", "🚫 Rain Day (Skip Water)"),
-                Triple("Day 7", "⛅ 28°C Post-Rain", "💧 Light 45 Min (If Dry)")
-            )
+            val weekDays = remember(isMr, isHi) {
+                if (isMr) listOf(
+                    Triple("आज (दिवस १)", "☀️ ३२°C स्वच्छ", "💧 ठिबक १.५ तास"),
+                    Triple("उद्या (दिवस २)", "☀️ ३३°C ऊन", "🚫 विश्रांती"),
+                    Triple("दिवस ३", "⛅ ३०°C ढगाळ", "🚫 विश्रांती"),
+                    Triple("दिवस ४", "☀️ ३१°C स्वच्छ", "💧 ठिबक १.५ तास"),
+                    Triple("दिवस ५", "⛅ २९°C दमट", "🚫 विश्रांती"),
+                    Triple("दिवस ६", "🌧️ २५°C पाऊस", "🌧️ पाऊस सुट्टी"),
+                    Triple("दिवस ७", "⛅ २८°C हलके ढग", "💧 हलके ४५ मिनी")
+                ) else if (isHi) listOf(
+                    Triple("आज (दिन 1)", "☀️ 32°C साफ", "💧 ड्रिप 1.5 घंटे"),
+                    Triple("कल (दिन 2)", "☀️ 33°C धूप", "🚫 विश्राम"),
+                    Triple("दिन 3", "⛅ 30°C आंशिक बादल", "🚫 विश्राम"),
+                    Triple("दिन 4", "☀️ 31°C साफ", "💧 ड्रिप 1.5 घंटे"),
+                    Triple("दिन 5", "⛅ 29°C आर्द्र", "🚫 विश्राम"),
+                    Triple("दिन 6", "🌧️ 25°C वर्षा", "🌧️ वर्षा विराम"),
+                    Triple("दिन 7", "⛅ 28°C बादल", "💧 हल्का 45 मिनट")
+                ) else listOf(
+                    Triple("Today (Day 1)", "☀️ 32°C Clear", "💧 Drip 1.5h"),
+                    Triple("Tomorrow (Day 2)", "☀️ 33°C Sunny", "🚫 Field Rest"),
+                    Triple("Day 3", "⛅ 30°C Partly Cloudy", "🚫 Field Rest"),
+                    Triple("Day 4", "☀️ 31°C Clear", "💧 Drip 1.5h"),
+                    Triple("Day 5", "⛅ 29°C Humid", "🚫 Field Rest"),
+                    Triple("Day 6", "🌧️ 25°C Rain Forecast", "🌧️ Rain Skip"),
+                    Triple("Day 7", "⛅ 28°C Post-Rain", "💧 Light 45m")
+                )
+            }
 
             weekDays.forEach { (day, weather, action) ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(day, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(day, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextPrimary)
                         Text(weather, fontSize = 11.sp, color = TextSecondary)
                     }
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (action.contains("Drip")) GreenSurface else Color(0xFFF5F5F5)
+                        color = if (action.contains("Drip") || action.contains("ड्रिप") || action.contains("ठिबक") || action.contains("Light") || action.contains("हलके") || action.contains("हल्का")) GreenSurface else Color(0xFFF5F5F5)
                     ) {
                         Text(
                             text = action,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (action.contains("Drip")) GreenDark else TextSecondary,
+                            color = if (action.contains("Drip") || action.contains("ड्रिप") || action.contains("ठिबक") || action.contains("Light") || action.contains("हलके") || action.contains("हल्का")) GreenDark else TextSecondary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }

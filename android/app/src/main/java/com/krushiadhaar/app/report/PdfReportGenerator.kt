@@ -152,7 +152,7 @@ object PdfReportGenerator {
         // Footer / Stamp
         canvas.drawLine(25f, y, 570f, y, linePaint)
         y += 20f
-        canvas.drawText("Certified by Krishi-Aadhar Intelligence System • Powered by Google Gemini & Neon DB", 100f, y, subPaint)
+        canvas.drawText("Certified by Krishi-Aadhar Intelligence System", 160f, y, subPaint)
 
         pdfDocument.finishPage(page)
 
