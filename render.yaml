@@ -33,7 +33,7 @@ services:
         fromService:
           type: web
           name: krushi-ml-service
-          property: host
+          property: hostport
       - key: GEMINI_API_KEY
         sync: false
       - key: OPENWEATHERMAP_API_KEY

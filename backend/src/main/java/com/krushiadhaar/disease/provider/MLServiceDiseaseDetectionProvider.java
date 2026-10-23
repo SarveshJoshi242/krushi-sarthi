@@ -23,6 +23,9 @@ public class MLServiceDiseaseDetectionProvider implements DiseaseDetectionProvid
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${ml.service.url:http://localhost:8000}")
+    private String mlServiceBaseUrl;
+
     public MLServiceDiseaseDetectionProvider(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
@@ -46,7 +49,11 @@ public class MLServiceDiseaseDetectionProvider implements DiseaseDetectionProvid
 
                 HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
                 
-                String serverUrl = "http://localhost:8000/predict";
+                String rawBase = mlServiceBaseUrl != null ? mlServiceBaseUrl.trim() : "http://localhost:8000";
+                if (!rawBase.startsWith("http://") && !rawBase.startsWith("https://")) {
+                    rawBase = "http://" + rawBase;
+                }
+                String serverUrl = rawBase.endsWith("/") ? rawBase + "predict" : rawBase + "/predict";
                 ResponseEntity<String> response = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
 
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
