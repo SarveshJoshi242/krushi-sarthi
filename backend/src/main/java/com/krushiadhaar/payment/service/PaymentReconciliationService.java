@@ -11,7 +11,7 @@ public class PaymentReconciliationService {
     public PaymentReconciliationService(PaymentRepository paymentRepository) {
         this.paymentRepository = paymentRepository;
     }
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 300000, initialDelay = 60000)
     public void reconcile() {
         logger.info("Running reconciliation");
     }

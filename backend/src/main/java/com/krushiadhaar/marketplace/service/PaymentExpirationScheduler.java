@@ -20,7 +20,7 @@ public class PaymentExpirationScheduler {
         this.expirationService = expirationService;
     }
 
-    @Scheduled(fixedDelayString = "")
+    @Scheduled(fixedDelayString = "${payment.expiration.fixed-delay:300000}", initialDelay = 60000)
     public void sweepExpiredOrders() {
         LocalDateTime now = LocalDateTime.now();
         List<Order> candidates = orderRepository.findExpiredCandidates("CONFIRMED", now);
