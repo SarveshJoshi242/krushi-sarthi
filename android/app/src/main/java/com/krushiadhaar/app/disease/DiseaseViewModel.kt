@@ -55,6 +55,9 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
     fun resetState() {
         _uiState.value = DiseaseUiState.Idle
         _progress.value = 0f
+    }
+
+    fun clearScannedImage() {
         com.krushiadhaar.app.GlobalMockData.capturedBitmap = null
         com.krushiadhaar.app.GlobalMockData.selectedImageUri = null
     }
@@ -77,6 +80,8 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                 val currentCrop = if (rawCrop == "Auto-Detect") null else rawCrop
                 
                 var diseaseData: DiseaseData? = null
+                var validationFailed = false
+                var validationReason = ""
 
                 // 1. Attempt to call FastAPI ML microservice (Dual-Model + HSV Pathology)
                 if (bitmap != null) {
@@ -98,14 +103,15 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                             }
 
                             val client = OkHttpClient.Builder()
-                                .connectTimeout(2, TimeUnit.SECONDS)
-                                .readTimeout(3, TimeUnit.SECONDS)
+                                .connectTimeout(15, TimeUnit.SECONDS)
+                                .readTimeout(30, TimeUnit.SECONDS)
+                                .writeTimeout(30, TimeUnit.SECONDS)
                                 .build()
 
                             // Try Android emulator loopback first, then localhost fallback
                             val urlsToTry = listOf("http://10.0.2.2:8000/predict", "http://localhost:8000/predict")
                             for (url in urlsToTry) {
-                                if (diseaseData != null) break
+                                if (diseaseData != null || validationFailed) break
                                 try {
                                     val request = Request.Builder()
                                         .url(url)
@@ -120,13 +126,9 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
 
                                             // Check image validation gate
                                             if (json.has("is_valid_image") && !json.optBoolean("is_valid_image", true)) {
-                                                val rejReason = json.optString("rejection_reason", "Invalid image: Not an agricultural plant or leaf.")
-                                                withContext(Dispatchers.Main) {
-                                                    progressJob.cancel()
-                                                    _progress.value = 1.0f
-                                                    _uiState.value = DiseaseUiState.Error("Photo Validation Rejected:\n$rejReason\n\nPlease point your camera directly at a crop leaf or plant.")
-                                                }
-                                                return@withContext
+                                                validationReason = json.optString("rejection_reason", "Invalid image: Not an agricultural plant or leaf.")
+                                                validationFailed = true
+                                                break
                                             }
 
                                             val confRaw = json.optDouble("Confidence_Score", 96.5)
@@ -148,14 +150,22 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                                             break
                                         }
                                     }
-                                } catch (_: Exception) {
-                                    // Try next candidate URL
+                                } catch (e: Exception) {
+                                    android.util.Log.w("DiseaseViewModel", "ML microservice call failed for $url: ${e.message}")
                                 }
                             }
                         }
                     } catch (netEx: Exception) {
                         netEx.printStackTrace()
                     }
+                }
+
+                // If cloud image validation rejected the photo, halt immediately without falling back to offline predictions
+                if (validationFailed) {
+                    progressJob.cancel()
+                    _progress.value = 1.0f
+                    _uiState.value = DiseaseUiState.Error("Photo Validation Rejected:\n$validationReason\n\nPlease point your camera directly at a crop leaf or plant.")
+                    return@launch
                 }
 
                 // 2. Offline Fallback to On-Device ML Service (Instant, HSV-calibrated)

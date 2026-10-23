@@ -31,10 +31,25 @@ fun PestHomeScreen(
     onUploadClick: () -> Unit = {},
     onViewRecentScan: (com.krushiadhaar.app.GlobalMockData.PestScanHistory) -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             com.krushiadhaar.app.GlobalMockData.selectedImageUri = uri.toString()
-            com.krushiadhaar.app.GlobalMockData.capturedBitmap = null
+            try {
+                val bitmap = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    val source = android.graphics.ImageDecoder.createSource(context.contentResolver, uri)
+                    android.graphics.ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                        decoder.isMutableRequired = true
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                }
+                com.krushiadhaar.app.GlobalMockData.capturedBitmap = bitmap
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             onUploadClick()
         }
     }

@@ -201,6 +201,7 @@ fun MainScreen(
                         },
                         onCancel = {
                             viewModel.resetState()
+                            viewModel.clearScannedImage()
                             bottomNavController.popBackStack("pest_home", false)
                         },
                         viewModel = viewModel
@@ -220,6 +221,7 @@ fun MainScreen(
                         onDownload = { bottomNavController.navigate("pdf_report") },
                         onBack = { 
                             viewModel.resetState()
+                            viewModel.clearScannedImage()
                             bottomNavController.popBackStack("pest_home", false)
                         },
                         viewModel = viewModel
@@ -234,6 +236,7 @@ fun MainScreen(
                         onBack = { bottomNavController.popBackStack() },
                         onDone = { 
                             viewModel.resetState()
+                            viewModel.clearScannedImage()
                             bottomNavController.popBackStack("pest_home", false)
                         },
                         viewModel = viewModel
