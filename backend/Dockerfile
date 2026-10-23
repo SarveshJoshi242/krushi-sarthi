@@ -1,5 +1,5 @@
-# Build stage using JDK 17
-FROM eclipse-temurin:17-jdk-alpine AS builder
+# Build stage using JDK 17 on Ubuntu Jammy (has full glibc & native toolchain support)
+FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /app
 COPY gradle gradle
 COPY gradlew .
@@ -8,8 +8,8 @@ RUN chmod +x gradlew && ./gradlew dependencies --no-daemon || true
 COPY src src
 RUN ./gradlew bootJar -x test --no-daemon
 
-# Run stage with JRE 17
-FROM eclipse-temurin:17-jre-alpine
+# Run stage with lightweight JRE 17
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 ENV PORT=8080
