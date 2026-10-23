@@ -3,8 +3,6 @@
 *.class
 .gradle/
 local.properties
-application.properties
-**/application.properties
 *.properties.local
 .idea/
 *.iml
