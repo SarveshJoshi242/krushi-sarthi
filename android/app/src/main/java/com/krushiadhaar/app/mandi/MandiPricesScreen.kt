@@ -56,10 +56,11 @@ fun MandiPricesScreen(
     LaunchedEffect(Unit) {
         val fetched = withContext(Dispatchers.IO) {
             try {
-                val url = URL("http://10.0.2.2:8000/mandi-prices")
+                val mlBase = com.krushiadhaar.app.BuildConfig.ML_SERVICE_URL.trimEnd('/')
+                val url = URL("$mlBase/mandi-prices")
                 val conn = url.openConnection() as HttpURLConnection
-                conn.connectTimeout = 4000
-                conn.readTimeout = 5000
+                conn.connectTimeout = 30000
+                conn.readTimeout = 30000
                 if (conn.responseCode == 200) {
                     val str = conn.inputStream.bufferedReader().readText()
                     val arr = JSONArray(str)

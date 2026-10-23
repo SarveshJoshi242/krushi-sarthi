@@ -125,13 +125,14 @@ fun VoiceAssistantScreen(
                 try {
                     val encodedQuery = URLEncoder.encode(query, "UTF-8")
                     val encodedLang = URLEncoder.encode(currentLanguage, "UTF-8")
-                    val url = URL("http://10.0.2.2:8000/voice-assistant")
+                    val mlBase = com.krushiadhaar.app.BuildConfig.ML_SERVICE_URL.trimEnd('/')
+                    val url = URL("$mlBase/voice-assistant")
                     val conn = url.openConnection() as HttpURLConnection
                     conn.requestMethod = "POST"
                     conn.doOutput = true
                     conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-                    conn.connectTimeout = 5000
-                    conn.readTimeout = 7000
+                    conn.connectTimeout = 30000
+                    conn.readTimeout = 30000
 
                     val encodedCrop = URLEncoder.encode(com.krushiadhaar.app.GlobalMockData.farmerCrop.value, "UTF-8")
                     val encodedLoc = URLEncoder.encode(com.krushiadhaar.app.GlobalMockData.userLocation.value, "UTF-8")

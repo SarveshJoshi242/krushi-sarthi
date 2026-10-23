@@ -103,9 +103,9 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                             }
 
                             val client = OkHttpClient.Builder()
-                                .connectTimeout(15, TimeUnit.SECONDS)
-                                .readTimeout(30, TimeUnit.SECONDS)
-                                .writeTimeout(30, TimeUnit.SECONDS)
+                                .connectTimeout(45, TimeUnit.SECONDS)
+                                .readTimeout(60, TimeUnit.SECONDS)
+                                .writeTimeout(60, TimeUnit.SECONDS)
                                 .build()
 
                             val baseUrl = com.krushiadhaar.app.BuildConfig.ML_SERVICE_URL.trimEnd('/')

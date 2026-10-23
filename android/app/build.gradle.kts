@@ -14,8 +14,8 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-        buildConfigField("String", "ML_SERVICE_URL", "\"http://10.0.2.2:8000/\"")
+        buildConfigField("String", "BASE_URL", "\"https://krushi-backend-y60p.onrender.com/\"")
+        buildConfigField("String", "ML_SERVICE_URL", "\"https://krushi-ml-service-6xfo.onrender.com/\"")
     }
 
     buildTypes {
