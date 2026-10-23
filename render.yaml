@@ -58,6 +58,8 @@ services:
         sync: false
       - key: OPENWEATHERMAP_API_KEY
         sync: false
+      - key: JWT_SECRET
+        generateValue: true
 
 databases:
   # 3. PostgreSQL Database (Flyway migrations, marketplace orders, and chat tables)

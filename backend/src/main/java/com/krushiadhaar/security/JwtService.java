@@ -16,7 +16,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${JWT_SECRET}")
+    @Value("${JWT_SECRET:super_secret_jwt_key_that_is_long_enough_for_hmac_sha256_algorithm_1234567890}")
     private String secretKey;
 
     @Value("${JWT_ACCESS_EXPIRATION:900000}")
