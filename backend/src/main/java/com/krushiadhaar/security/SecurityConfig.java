@@ -46,7 +46,7 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/api/health/**").permitAll()
+                .requestMatchers("/api/health/**", "/ping", "/api/ping").permitAll()
                 .requestMatchers("/api/v1/farm-intelligence/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/weather/coordinates").permitAll()

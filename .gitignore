@@ -1,6 +1,7 @@
 # Ignore files
 /build/
 *.class
+*.apk
 .gradle/
 local.properties
 *.properties.local

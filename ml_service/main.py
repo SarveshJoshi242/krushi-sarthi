@@ -10,6 +10,8 @@ import random
 import logging
 import base64
 import requests
+import threading
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -618,7 +620,56 @@ def normalize_crop_name(user_crop: Optional[str]) -> Optional[str]:
     return None
 
 
+# ==================== Keep-Alive Self Pinging ====================
+def keep_alive_worker():
+    """Background daemon to ping self and backend every 9 minutes to prevent Render free-tier sleep."""
+    time.sleep(60)  # Wait 60s for full startup before starting ping loop
+    while True:
+        # 1. Ping self to keep ML service awake
+        try:
+            self_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("SELF_URL") or "https://krushi-ml-service-6xfo.onrender.com"
+            clean_self = self_url.strip().rstrip("/")
+            if not clean_self.startswith("http://") and not clean_self.startswith("https://"):
+                clean_self = "https://" + clean_self
+            self_ping = f"{clean_self}/ping"
+            logger.info(f"Keep-alive: Self-pinging {self_ping}")
+            res = requests.get(self_ping, timeout=15)
+            logger.info(f"Keep-alive: Self-ping response status {res.status_code}")
+        except Exception as e:
+            logger.warning(f"Keep-alive: Self-ping error (non-critical): {e}")
+
+        # 2. Ping backend service to keep backend awake
+        try:
+            backend_url = os.environ.get("BACKEND_PUBLIC_URL") or "https://krushi-backend-y60p.onrender.com"
+            clean_backend = backend_url.strip().rstrip("/")
+            if not clean_backend.startswith("http://") and not clean_backend.startswith("https://"):
+                clean_backend = "https://" + clean_backend
+            backend_ping = f"{clean_backend}/api/health/ping"
+            logger.info(f"Keep-alive: Pinging backend {backend_ping}")
+            res_b = requests.get(backend_ping, timeout=15)
+            logger.info(f"Keep-alive: Backend ping response status {res_b.status_code}")
+        except Exception as e:
+            logger.warning(f"Keep-alive: Backend ping error (non-critical): {e}")
+
+        # Render free-tier sleeps after 15 mins of inactivity. Sleeping for 9 mins (540s) keeps it awake 24/7.
+        time.sleep(540)
+
+@app.on_event("startup")
+def start_keep_alive():
+    threading.Thread(target=keep_alive_worker, daemon=True, name="keep_alive_worker").start()
+    logger.info("Keep-alive self-pinging background daemon started (runs every 9 minutes).")
+
+
 # ==================== API Endpoints ====================
+
+@app.get("/ping")
+async def ping():
+    return {
+        "status": "pong",
+        "service": "krushi-ml-service",
+        "timestamp": time.time()
+    }
+
 
 @app.get("/")
 @app.get("/health")
