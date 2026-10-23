@@ -4,7 +4,8 @@ python-multipart
 pandas
 Pillow
 numpy
-tensorflow
+tensorflow-cpu
 google-generativeai
 httpx
 aiofiles
+requests

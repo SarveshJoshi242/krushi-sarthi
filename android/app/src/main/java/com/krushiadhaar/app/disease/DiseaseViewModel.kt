@@ -108,8 +108,12 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                                 .writeTimeout(30, TimeUnit.SECONDS)
                                 .build()
 
-                            // Try Android emulator loopback first, then localhost fallback
-                            val urlsToTry = listOf("http://10.0.2.2:8000/predict", "http://localhost:8000/predict")
+                            val baseUrl = com.krushiadhaar.app.BuildConfig.ML_SERVICE_URL.trimEnd('/')
+                            val urlsToTry = linkedSetOf(
+                                "$baseUrl/predict",
+                                "http://10.0.2.2:8000/predict",
+                                "http://localhost:8000/predict"
+                            ).toList()
                             for (url in urlsToTry) {
                                 if (diseaseData != null || validationFailed) break
                                 try {

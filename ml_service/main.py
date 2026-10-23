@@ -42,10 +42,18 @@ for _env_candidate in [
         except Exception:
             pass
 
-DATASET_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "..", "dataset", "Krushi_Aadhar_Disease_Info.csv")
-MAPPING_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "..", "dataset", "Krushi_Aadhar_Master_Class_Mapping.csv")
+_dataset_candidates = [
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset", "Krushi_Aadhar_Disease_Info.csv"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "Krushi_Aadhar_Disease_Info.csv"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "model", "krushi_aadhar_8crop", "dataset", "Krushi_Aadhar_Disease_Info.csv")
+]
+DATASET_PATH = next((p for p in _dataset_candidates if os.path.exists(p)), _dataset_candidates[0])
+
+_mapping_candidates = [
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset", "Krushi_Aadhar_Master_Class_Mapping.csv"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "Krushi_Aadhar_Master_Class_Mapping.csv")
+]
+MAPPING_PATH = next((p for p in _mapping_candidates if os.path.exists(p)), _mapping_candidates[0])
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 OPENWEATHERMAP_API_KEY = os.environ.get("OPENWEATHERMAP_API_KEY", "")
