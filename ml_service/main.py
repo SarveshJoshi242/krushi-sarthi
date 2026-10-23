@@ -8,6 +8,8 @@ import io
 import json
 import random
 import logging
+import base64
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -117,15 +119,126 @@ except Exception as e:
 # Maintain backward compatibility aliases
 tf_model = tf_model_55 or tf_model_8crop
 
-# ==================== Gemini API ====================
+# ==================== Gemini API & Vision Validation ====================
+GEMINI_MODELS = [
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+    "gemini-3-flash-preview",
+    "gemini-flash-latest"
+]
+
 gemini_model = None
 try:
     import google.generativeai as genai
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel('models/gemini-flash-latest')
-    logger.info("Gemini API (gemini-flash-latest) configured successfully")
+    genai.configure(api_key=GEMINI_API_KEY, transport="rest")
+    gemini_model = genai.GenerativeModel("models/gemini-flash-latest")
+    logger.info("Gemini API configured successfully")
 except Exception as e:
     logger.warning(f"Gemini API setup error: {e}")
+
+
+def call_gemini_api(prompt: str, image_bytes: Optional[bytes] = None, timeout: int = 8) -> Optional[str]:
+    """Execute generative text or multimodal vision query using Google Gemini API with model fallback."""
+    if not GEMINI_API_KEY:
+        logger.warning("Gemini API key is not configured.")
+        return None
+
+    parts = [{"text": prompt}]
+    if image_bytes:
+        try:
+            from PIL import Image
+            img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            if max(img.size) > 800:
+                img.thumbnail((800, 800))
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=85)
+            b64_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+            parts.append({
+                "inline_data": {
+                    "mime_type": "image/jpeg",
+                    "data": b64_data
+                }
+            })
+        except Exception as e:
+            logger.error(f"Image formatting error for Gemini: {e}")
+
+    payload = {"contents": [{"parts": parts}]}
+
+    for model_name in GEMINI_MODELS:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        try:
+            r = requests.post(url, json=payload, timeout=timeout)
+            if r.status_code == 200:
+                res_data = r.json()
+                candidates = res_data.get("candidates", [])
+                if candidates:
+                    text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    if text:
+                        return text
+        except Exception as e:
+            logger.debug(f"Gemini call to {model_name} failed: {e}")
+            continue
+
+    return None
+
+
+def validate_image_with_gemini(file_bytes: bytes, user_crop: Optional[str] = None) -> dict:
+    """
+    Multimodal image validation using Google Gemini.
+    Validates:
+    1. Is this a real agricultural plant, crop, leaf, stem, or harvest?
+    2. Rejects non-plant images (selfies, animals, vehicles, UI screenshots, documents, blank/noise).
+    3. Detects crop species and visible symptoms.
+    """
+    crop_hint = f" The farmer indicates the crop may be: '{user_crop}'." if user_crop else ""
+    prompt = (
+        "You are an expert agricultural botanist and computer vision validator for the Krishi-Aadhar crop disease diagnosis system.\n"
+        f"Examine the uploaded image carefully.{crop_hint}\n\n"
+        "Instructions:\n"
+        "1. Determine whether this image contains a real agricultural plant, crop, leaf, stem, or harvest suitable for pathology diagnosis.\n"
+        "2. If it is NOT an agricultural plant (for example: a human selfie, face, body, dog, cat, car, bike, room, furniture, document, drawing, chart, screenshot, UI, blank/black image, food dish, or synthetic noise), mark 'is_valid_plant' as false.\n"
+        "3. If it IS an agricultural plant/crop, identify the probable crop (e.g., Tomato, Potato, Rice, Maize, Cotton, Groundnut, Sugarcane, Brinjal, Pumpkin, Chilli, Onion, Bitter Gourd, Ridge Gourd, or other crop name) and describe the visible visual symptoms (spots, rust, mildew, blight, curl, or healthy green).\n\n"
+        "Respond STRICTLY with a valid JSON object matching this schema:\n"
+        "{\n"
+        '  "is_valid_plant": true/false,\n'
+        '  "detected_subject": "short description of what is in the image",\n'
+        '  "detected_crop": "Crop Name or null",\n'
+        '  "is_leaf_or_foliage": true/false,\n'
+        '  "visual_condition": "Healthy" or "Diseased" or "Non-Plant",\n'
+        '  "observed_symptoms": "short description of visible lesions or foliage health",\n'
+        '  "probable_disease": "detected disease name or null",\n'
+        '  "rejection_reason": "Clear explanation if rejected, or null if valid plant"\n'
+        "}\n"
+        "Do not include markdown code fence formatting or extra text outside the JSON."
+    )
+
+    raw_response = call_gemini_api(prompt, file_bytes, timeout=8)
+    if raw_response:
+        try:
+            text = raw_response.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+                text = text.rsplit("```", 1)[0]
+            val_data = json.loads(text.strip())
+            val_data["validator"] = "Gemini_Multimodal_Vision"
+            return val_data
+        except Exception as e:
+            logger.error(f"Error parsing Gemini validation response: {e}")
+
+    # Fallback to local CV if Gemini is unreachable or fails
+    local_cv = analyze_leaf_computer_vision(file_bytes)
+    is_plant = local_cv.get("is_plant", False)
+    return {
+        "is_valid_plant": is_plant,
+        "detected_subject": "Agricultural foliage" if is_plant else "Non-plant / Synthetic object",
+        "detected_crop": user_crop,
+        "is_leaf_or_foliage": is_plant,
+        "visual_condition": "Healthy" if local_cv.get("is_healthy", False) else ("Diseased" if is_plant else "Non-Plant"),
+        "observed_symptoms": local_cv.get("stage_desc", "Visual inspection"),
+        "probable_disease": None,
+        "rejection_reason": None if is_plant else "No agricultural crop foliage or chlorophyll detected in the uploaded image.",
+        "validator": "Local_Biometric_CV_Fallback"
+    }
 
 
 def preprocess_for_8crop(file_bytes: bytes) -> Optional[np.ndarray]:
@@ -332,17 +445,29 @@ def analyze_leaf_computer_vision(file_bytes: bytes) -> dict:
         dark_mask = (v < 0.22) & (v > 0.03)
         dark_ratio = float(np.sum(dark_mask) / total_pixels)
 
-        # 5. Powdery / fungal coating (whitish surface): low saturation, high brightness
-        mildew_mask = (s < 0.15) & (v > 0.75)
-        mildew_ratio = float(np.sum(mildew_mask) / total_pixels)
+        # 5. Background detection: White/light neutral surfaces (v > 0.82 and s < 0.12)
+        neutral_bg_mask = (v > 0.82) & (s < 0.12)
+        neutral_bg_ratio = float(np.sum(neutral_bg_mask) / total_pixels)
+
+        # 6. Real fungal mildew coating: ONLY valid if there is surrounding green leaf tissue
+        if green_ratio > 0.06 or (green_ratio + chlorosis_ratio) > 0.10:
+            mildew_mask = (s < 0.15) & (v > 0.75) & (~neutral_bg_mask)
+            mildew_ratio = float(np.sum(mildew_mask) / total_pixels)
+        else:
+            mildew_ratio = 0.0
 
         total_lesion_ratio = chlorosis_ratio + brown_ratio + dark_ratio + mildew_ratio
 
-        # Biologically calibrated healthy leaf test:
-        # A leaf is healthy ONLY IF lesion coverage < 3.5%, chlorosis < 2.0%, and necrosis < 2.0%
-        is_healthy = (total_lesion_ratio < 0.035) and (chlorosis_ratio < 0.02) and ((brown_ratio + dark_ratio) < 0.02)
+        # Biologically calibrated plant verification:
+        is_plant = (green_ratio >= 0.06) or ((green_ratio + chlorosis_ratio >= 0.08) and (brown_ratio + dark_ratio > 0.01))
 
-        if is_healthy:
+        # Biologically calibrated healthy leaf test:
+        is_healthy = is_plant and (total_lesion_ratio < 0.035) and (chlorosis_ratio < 0.02) and ((brown_ratio + dark_ratio) < 0.02)
+
+        if not is_plant:
+            severity = "Non-Plant"
+            stage_desc = "Image does not appear to contain plant foliage or agricultural crop tissue."
+        elif is_healthy:
             severity = "Healthy / Pest-Free"
             stage_desc = "Foliage is clean and thriving with no significant pathological lesions"
         elif total_lesion_ratio < 0.04:
@@ -362,10 +487,11 @@ def analyze_leaf_computer_vision(file_bytes: bytes) -> dict:
             "rust_ratio": brown_ratio,
             "mildew_ratio": mildew_ratio,
             "total_lesion_ratio": total_lesion_ratio,
+            "neutral_bg_ratio": neutral_bg_ratio,
             "is_healthy": is_healthy,
             "severity": severity,
             "stage_desc": stage_desc,
-            "is_plant": green_ratio > 0.08 or total_lesion_ratio > 0.05
+            "is_plant": is_plant
         }
     except Exception as e:
         logger.error(f"CV analysis error: {e}")
@@ -425,11 +551,7 @@ def get_expert_treatment_advice(disease_name: str, class_name: str) -> dict:
 
 async def get_gemini_recommendations(disease_name: str, crop_name: str = None) -> dict:
     """Get AI-powered treatment recommendations using Gemini."""
-    if gemini_model is None:
-        return get_expert_treatment_advice(disease_name, "")
-    
-    try:
-        prompt = f"""You are an Indian agricultural scientist. A farmer's {crop_name or 'crop'} has '{disease_name}'.
+    prompt = f"""You are an Indian agricultural scientist. A farmer's {crop_name or 'crop'} has '{disease_name}'.
 Provide a JSON response with:
 - "medicines": specific pesticide/fungicide trade names in India with dosages
 - "estimated_cost": number only (INR per acre)
@@ -437,17 +559,19 @@ Provide a JSON response with:
 - "organic_alternative": one organic treatment
 
 Respond ONLY with valid JSON."""
-        
-        response = gemini_model.generate_content(prompt)
-        text = response.text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-            text = text.rsplit("```", 1)[0]
-        
-        return json.loads(text)
-    except Exception as e:
-        logger.warning(f"Gemini fallback to domain expert treatment: {e}")
-        return get_expert_treatment_advice(disease_name, "")
+
+    raw_text = call_gemini_api(prompt, timeout=8)
+    if raw_text:
+        try:
+            text = raw_text.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+                text = text.rsplit("```", 1)[0]
+            return json.loads(text.strip())
+        except Exception as e:
+            logger.warning(f"Failed to parse Gemini recommendation JSON: {e}")
+
+    return get_expert_treatment_advice(disease_name, "")
 
 
 # ==================== Crop Definitions & Aliases ====================
@@ -500,7 +624,30 @@ async def health_check():
         "model_55crop_classes": len(CLASS_NAMES_55),
         "total_crops_supported": 13,
         "total_diseases_supported": len(df) if not df.empty else 55,
-        "gemini_api": "configured" if gemini_model is not None else "disabled"
+        "gemini_api": "configured" if GEMINI_API_KEY else "disabled",
+        "image_validation": "active (Gemini Multimodal Vision + CV Biometrics)"
+    }
+
+
+@app.post("/validate-image")
+async def validate_image(
+    file: UploadFile = File(...),
+    crop_name: Optional[str] = Form(None)
+):
+    """Standalone image validation endpoint using Gemini Multimodal Vision + Local CV Biometrics."""
+    file_bytes = await file.read()
+    cv_features = analyze_leaf_computer_vision(file_bytes)
+    validation = validate_image_with_gemini(file_bytes, crop_name)
+    
+    return {
+        "is_valid_image": validation.get("is_valid_plant", True),
+        "validation": validation,
+        "pathology_metrics": {
+            "green_ratio_pct": round(cv_features.get("green_ratio", 0.0) * 100, 1),
+            "lesion_surface_coverage_pct": round(cv_features.get("total_lesion_ratio", 0.0) * 100, 1),
+            "is_agricultural_leaf": cv_features.get("is_plant", False),
+            "stage_desc": cv_features.get("stage_desc", "")
+        }
     }
 
 
@@ -509,7 +656,7 @@ async def predict_disease(
     file: UploadFile = File(...),
     crop_name: Optional[str] = Form(None)
 ):
-    """Predict crop disease from an uploaded image using Krushi_Aadhar ensemble + biometric leaf pathology."""
+    """Predict crop disease from an uploaded image with Gemini Multimodal Validation + Biometric Leaf Pathology."""
     if df.empty:
         raise HTTPException(status_code=500, detail="Dataset not loaded. Cannot make prediction.")
     
@@ -518,15 +665,63 @@ async def predict_disease(
     # 1. Computer Vision Feature Extraction (HSV Pathology: Greenness, Lesions, Necrosis, Chlorosis)
     cv_features = analyze_leaf_computer_vision(file_bytes)
     
-    # 2. Run Both Neural Models
+    # 2. Strict Multimodal Image Validation using Google Gemini API (with Local CV Fallback)
+    validation = validate_image_with_gemini(file_bytes, crop_name)
+    
+    # 3. Validation Gating: Reject non-plant / non-agricultural images immediately
+    if not validation.get("is_valid_plant", True):
+        rejection_reason = (
+            validation.get("rejection_reason")
+            or "The uploaded image does not appear to contain a real agricultural crop leaf or plant."
+        )
+        detected_subject = validation.get("detected_subject") or "Non-agricultural subject"
+        
+        return {
+            "success": False,
+            "is_valid_image": False,
+            "Disease_ID": "INVALID-IMAGE",
+            "Crop": "Non-Plant",
+            "Class_Name": "Invalid_Image",
+            "Disease_Name": "Invalid Image (Non-Plant / Unrecognized Subject)",
+            "Scientific_Name": "N/A",
+            "Symptoms": rejection_reason,
+            "Management": "Please ensure the camera is pointed directly at an agricultural crop leaf, stem, or plant with good natural lighting.",
+            "Treatment": "No agricultural treatment applicable for non-crop images.",
+            "Prevention": "Avoid capturing human selfies, animals, vehicles, documents, screenshots, or unrelated indoor objects.",
+            "Severity": "N/A",
+            "Confidence_Score": 0.0,
+            "Medicines": "None",
+            "Estimated_Cost": 0,
+            "Application_Method": "N/A",
+            "Organic_Alternative": "None",
+            "rejection_reason": rejection_reason,
+            "detected_subject": detected_subject,
+            "validation": validation,
+            "pathology_metrics": {
+                "green_ratio_pct": round(cv_features.get("green_ratio", 0.0) * 100, 1),
+                "lesion_surface_coverage_pct": round(cv_features.get("total_lesion_ratio", 0.0) * 100, 1),
+                "pathology_stage": "Rejected: Non-plant subject",
+                "is_agricultural_leaf": False
+            },
+            "prediction_source": validation.get("validator", "Gemini_Multimodal_Vision_Validator")
+        }
+    
+    # 4. Run Both Neural Models
     arr_8crop = preprocess_for_8crop(file_bytes)
     res_8crop = predict_with_8crop(arr_8crop)
     
     arr_55crop = preprocess_for_55crop(file_bytes)
     res_55crop = predict_with_55crop(arr_55crop)
     
-    # 3. Determine Target Crop (Instant, Deterministic Local Routing)
+    # 5. Determine Target Crop (Prioritize User Selection -> Gemini Detected Crop -> CV/Neural Routing)
     target_crop = normalize_crop_name(crop_name)
+    
+    if target_crop is None and validation.get("detected_crop"):
+        # Check if Gemini detected a recognizable crop
+        gemini_detected_crop = normalize_crop_name(validation.get("detected_crop"))
+        if gemini_detected_crop in ALL_13_CROPS:
+            target_crop = gemini_detected_crop
+            logger.info(f"Target crop resolved via Gemini Vision validation: {target_crop}")
     
     if target_crop is None:
         # Auto-Detect mode: Analyze leaf symptomatology and neural model
@@ -538,7 +733,6 @@ async def predict_disease(
             target_crop = "Pumpkin"
             logger.info("Auto-detect: Cucurbit angular chlorosis pattern detected -> routed to Pumpkin")
         elif res_8crop and "crop_probabilities" in res_8crop:
-            # Check 8-crop model probabilities
             sorted_crops = sorted(res_8crop["crop_probabilities"].items(), key=lambda x: x[1], reverse=True)
             best_c, best_p = sorted_crops[0] if sorted_crops else ("Tomato", 0.0)
             if best_p > 0.40:
@@ -667,8 +861,24 @@ async def predict_disease(
     advice = get_expert_treatment_advice(
         disease_info.get("Disease_Name", ""), disease_info.get("Class_Name", "")
     )
-    
+
+    # Cross-validation check between CNN prediction and Gemini visual assessment
+    gemini_probable = (validation.get("probable_disease") or "").lower()
+    gemini_symptoms = (validation.get("observed_symptoms") or "").lower()
+    pred_disease = disease_info.get("Disease_Name", "").lower()
+    pred_class = disease_info.get("Class_Name", "").lower()
+
+    cross_agreed = False
+    if is_healthy_leaf and validation.get("visual_condition") == "Healthy":
+        cross_agreed = True
+    elif any(k in gemini_probable or k in gemini_symptoms for k in [pred_disease, pred_class] if len(k) > 3):
+        cross_agreed = True
+    elif not is_healthy_leaf and validation.get("visual_condition") == "Diseased":
+        cross_agreed = True
+
     return {
+        "success": True,
+        "is_valid_image": True,
         **disease_info,
         "Confidence_Score": confidence,
         "Medicines": advice.get("medicines", "Consult local Krishi Vigyan Kendra (KVK) officer"),
@@ -681,12 +891,23 @@ async def predict_disease(
             "pathology_stage": cv_features["stage_desc"],
             "is_agricultural_leaf": cv_features["is_plant"]
         },
+        "validation": {
+            "is_valid_plant": True,
+            "validator": validation.get("validator", "Gemini_Multimodal_Vision"),
+            "detected_subject": validation.get("detected_subject", "Agricultural plant foliage"),
+            "detected_crop": validation.get("detected_crop"),
+            "visual_condition": validation.get("visual_condition", "Diseased"),
+            "observed_symptoms": validation.get("observed_symptoms", ""),
+            "probable_disease_visual": validation.get("probable_disease"),
+            "cross_validation_agreement": cross_agreed
+        },
         "prediction_source": prediction_source,
         "active_models": [
             "Krushi_Aadhar_8Crop_MobileNetV3Large (Brinjal, Cotton, Groundnut, Maize, Potato, Rice, Sugarcane, Tomato)",
             "Krushi_Aadhar_Cucurbit_Pathology_Engine (Pumpkin, Bitter Gourd, Ridge Gourd)",
             "Krushi_Aadhar_Solanaceae_Allium_Engine (Chilli, Onion)",
-            "CV_Biometric_Pathology_Engine"
+            "CV_Biometric_Pathology_Engine",
+            "Gemini_Multimodal_Vision_Validator"
         ]
     }
 
@@ -699,11 +920,7 @@ async def get_recommendations(
     language: str = "English"
 ):
     """Get AI-powered crop recommendations using Gemini."""
-    if gemini_model is None:
-        return get_default_recommendations(currentMonth)
-    
-    try:
-        prompt = f"""You are an Indian agricultural advisor. Generate crop recommendations for a farmer.
+    prompt = f"""You are an Indian agricultural advisor. Generate crop recommendations for a farmer.
 
 Conditions:
 - Weather: {weatherCondition}
@@ -723,17 +940,19 @@ Provide exactly 3 crop recommendations as a JSON array. Each object must have:
 - "farmingTechnique": recommended technique
 
 Respond ONLY with valid JSON array, no markdown."""
-        
-        response = gemini_model.generate_content(prompt)
-        text = response.text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-            text = text.rsplit("```", 1)[0]
-        
-        return json.loads(text)
-    except Exception as e:
-        logger.error(f"Gemini recommendations error: {e}")
-        return get_default_recommendations(currentMonth)
+
+    raw = call_gemini_api(prompt, timeout=8)
+    if raw:
+        try:
+            text = raw.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+                text = text.rsplit("```", 1)[0]
+            return json.loads(text.strip())
+        except Exception as e:
+            logger.error(f"Gemini recommendations parsing error: {e}")
+            
+    return get_default_recommendations(currentMonth)
 
 
 @app.get("/schemes")
@@ -743,11 +962,7 @@ async def get_schemes(
     language: str = "English"
 ):
     """Get government agricultural schemes using Gemini."""
-    if gemini_model is None:
-        return get_default_schemes()
-    
-    try:
-        prompt = f"""List the top 5 current Indian government agricultural schemes relevant to:
+    prompt = f"""List the top 5 current Indian government agricultural schemes relevant to:
 - Location: {location}
 - Crop: {crop}
 - Language: {language}
@@ -762,17 +977,19 @@ Return a JSON array. Each object must have:
 - "type": one of "Scheme", "Insurance", "Subsidy", "Credit", "Market"
 
 Respond ONLY with valid JSON array, no markdown."""
-        
-        response = gemini_model.generate_content(prompt)
-        text = response.text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-            text = text.rsplit("```", 1)[0]
-        
-        return json.loads(text)
-    except Exception as e:
-        logger.error(f"Gemini schemes error: {e}")
-        return get_default_schemes()
+
+    raw = call_gemini_api(prompt, timeout=8)
+    if raw:
+        try:
+            text = raw.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+                text = text.rsplit("```", 1)[0]
+            return json.loads(text.strip())
+        except Exception as e:
+            logger.error(f"Gemini schemes parsing error: {e}")
+
+    return get_default_schemes()
 
 
 @app.get("/expenses")
@@ -782,11 +999,7 @@ async def get_expenses(
     language: str = "English"
 ):
     """Get estimated farming expenses using Gemini."""
-    if gemini_model is None:
-        return get_default_expenses()
-    
-    try:
-        prompt = f"""Estimate farming expenses for growing {crop} on {area} in India.
+    prompt = f"""Estimate farming expenses for growing {crop} on {area} in India.
 
 Return a JSON array of expense categories. Each object must have:
 - "category": expense category name
@@ -796,17 +1009,19 @@ Return a JSON array of expense categories. Each object must have:
 Include: Seeds, Fertilizers, Pesticides, Labor, Machinery, Irrigation, Miscellaneous.
 
 Respond ONLY with valid JSON array, no markdown."""
-        
-        response = gemini_model.generate_content(prompt)
-        text = response.text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-            text = text.rsplit("```", 1)[0]
-        
-        return json.loads(text)
-    except Exception as e:
-        logger.error(f"Gemini expenses error: {e}")
-        return get_default_expenses()
+
+    raw = call_gemini_api(prompt, timeout=8)
+    if raw:
+        try:
+            text = raw.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+                text = text.rsplit("```", 1)[0]
+            return json.loads(text.strip())
+        except Exception as e:
+            logger.error(f"Gemini expenses parsing error: {e}")
+
+    return get_default_expenses()
 
 
 @app.post("/voice-assistant")
@@ -890,22 +1105,14 @@ async def voice_assistant(
         else:
             return f"Krishi-Aadhar Assistant: Ensure balanced NPK fertilizer application, morning drip irrigation, and timely plant protection for maximum yield."
 
-    if gemini_model is None:
-        return {
-            "response": get_rule_based_voice_response(query, target_lang, crop),
-            "language": target_lang,
-            "query": query
-        }
+    context_parts = []
+    if crop:
+        context_parts.append(f"Crop: {crop}")
+    if location:
+        context_parts.append(f"Location: {location}")
+    ctx_desc = " | ".join(context_parts) if context_parts else "India"
 
-    try:
-        context_parts = []
-        if crop:
-            context_parts.append(f"Crop: {crop}")
-        if location:
-            context_parts.append(f"Location: {location}")
-        ctx_desc = " | ".join(context_parts) if context_parts else "India"
-
-        prompt = f"""You are 'Krishi-Aadhar Sahayak', an expert multilingual agricultural voice assistant for Indian farmers.
+    prompt = f"""You are 'Krishi-Aadhar Sahayak', an expert multilingual agricultural voice assistant for Indian farmers.
 Farmer Context: {ctx_desc}
 Farmer's Question: "{query}"
 Language requested: {target_lang} (strictly reply in {target_lang} script).
@@ -920,20 +1127,19 @@ Guidelines:
 
 Respond ONLY with the text to be spoken to the farmer."""
 
-        response = gemini_model.generate_content(prompt)
-        reply_text = response.text.strip()
+    gemini_reply = call_gemini_api(prompt, timeout=8)
+    if gemini_reply and gemini_reply.strip():
         return {
-            "response": reply_text,
+            "response": gemini_reply.strip(),
             "language": target_lang,
             "query": query
         }
-    except Exception as e:
-        logger.error(f"Voice assistant error: {e}")
-        return {
-            "response": get_rule_based_voice_response(query, target_lang, crop),
-            "language": target_lang,
-            "query": query
-        }
+
+    return {
+        "response": get_rule_based_voice_response(query, target_lang, crop),
+        "language": target_lang,
+        "query": query
+    }
 
 
 @app.get("/mandi-prices")

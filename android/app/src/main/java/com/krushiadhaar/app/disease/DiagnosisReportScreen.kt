@@ -1,5 +1,6 @@
 package com.krushiadhaar.app.disease
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +33,9 @@ fun DiagnosisReportScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val data = (uiState as? DiseaseUiState.Success)?.data
+
+    BackHandler(onBack = onBack)
+
     Scaffold(
         topBar = {
             TopAppBar(

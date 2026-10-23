@@ -177,6 +177,13 @@ class MLService(private val context: Context) {
         val necroticRatio = brownRatio + darkRatio
         val totalLesions = chlorosisRatio + necroticRatio + (if (sampleCount > 0) mildewCount.toFloat() / sampleCount else 0f)
 
+        val greenRatio = if (sampleCount > 0) greenCount.toFloat() / sampleCount else 0.05f
+        val isPlant = (greenRatio >= 0.05f) || ((greenRatio + chlorosisRatio >= 0.07f) && necroticRatio > 0.01f)
+        if (!isPlant) {
+            // Rejects non-plant images (screenshots, faces, vehicles, blank backgrounds)
+            return null
+        }
+
         val isHealthy = (totalLesions < 0.035f && chlorosisRatio < 0.02f && necroticRatio < 0.02f)
 
         // Resolve Crop

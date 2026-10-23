@@ -1,8 +1,10 @@
 package com.krushiadhaar.app.disease
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -34,12 +36,15 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 @Composable
 fun PestAnalysisScreen(
     onAnalysisComplete: () -> Unit = {},
+    onCancel: () -> Unit = {},
     viewModel: DiseaseViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val progress by viewModel.progress.collectAsState()
     val context = LocalContext.current
     var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    BackHandler(onBack = onCancel)
 
     LaunchedEffect(Unit) {
         val bitmap = if (com.krushiadhaar.app.GlobalMockData.capturedBitmap != null) {
@@ -129,6 +134,41 @@ fun PestAnalysisScreen(
             color = Color.LightGray
         )
     }
+
+        IconButton(
+            onClick = onCancel,
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+                .align(Alignment.TopStart)
+        ) {
+            Icon(Icons.Default.ArrowBack, contentDescription = "Cancel", tint = Color.White)
+        }
+    }
+
+    if (uiState is DiseaseUiState.Error) {
+        val errorMsg = (uiState as DiseaseUiState.Error).message
+        AlertDialog(
+            onDismissRequest = onCancel,
+            title = {
+                Text(
+                    text = if (errorMsg.contains("Validation Rejected", true)) "Photo Validation Issue" else "Analysis Notice",
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = TextPrimary
+                )
+            },
+            text = {
+                Text(errorMsg, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            },
+            confirmButton = {
+                Button(
+                    onClick = onCancel,
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                ) {
+                    Text("Try Again", color = Color.White)
+                }
+            }
+        )
     }
 }
 

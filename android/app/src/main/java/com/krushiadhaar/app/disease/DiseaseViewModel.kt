@@ -55,6 +55,8 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
     fun resetState() {
         _uiState.value = DiseaseUiState.Idle
         _progress.value = 0f
+        com.krushiadhaar.app.GlobalMockData.capturedBitmap = null
+        com.krushiadhaar.app.GlobalMockData.selectedImageUri = null
     }
 
     fun analyzeImage(bitmap: android.graphics.Bitmap?) {
@@ -115,6 +117,18 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                                         val bodyStr = response.body?.string()
                                         if (!bodyStr.isNullOrBlank()) {
                                             val json = JSONObject(bodyStr)
+
+                                            // Check image validation gate
+                                            if (json.has("is_valid_image") && !json.optBoolean("is_valid_image", true)) {
+                                                val rejReason = json.optString("rejection_reason", "Invalid image: Not an agricultural plant or leaf.")
+                                                withContext(Dispatchers.Main) {
+                                                    progressJob.cancel()
+                                                    _progress.value = 1.0f
+                                                    _uiState.value = DiseaseUiState.Error("Photo Validation Rejected:\n$rejReason\n\nPlease point your camera directly at a crop leaf or plant.")
+                                                }
+                                                return@withContext
+                                            }
+
                                             val confRaw = json.optDouble("Confidence_Score", 96.5)
                                             val confDecimal = if (confRaw > 1.0) confRaw / 100.0 else confRaw
                                             
@@ -202,7 +216,7 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
                     )
                     _uiState.value = DiseaseUiState.Success(finalResult)
                 } else {
-                    _uiState.value = DiseaseUiState.Error("Could not analyze image")
+                    _uiState.value = DiseaseUiState.Error("Photo Validation Rejected:\nImage does not contain recognizable agricultural crop foliage.\n\nPlease upload a clear, focused photo of a plant leaf.")
                 }
             } catch (e: Exception) {
                 _progress.value = 1.0f
@@ -213,6 +227,8 @@ class DiseaseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun loadHistoricalReport(scan: com.krushiadhaar.app.GlobalMockData.PestScanHistory) {
+        com.krushiadhaar.app.GlobalMockData.capturedBitmap = null
+        com.krushiadhaar.app.GlobalMockData.selectedImageUri = null
         _uiState.value = DiseaseUiState.Success(
             DiseaseData(
                 disease_name = scan.diseaseName,

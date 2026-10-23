@@ -1,5 +1,6 @@
 package com.krushiadhaar.app.disease
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,10 +25,13 @@ import androidx.compose.runtime.getValue
 @Composable
 fun TreatmentGuideScreen(
     onBack: () -> Unit = {},
+    onDone: () -> Unit = onBack,
     viewModel: DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val data = (uiState as? DiseaseUiState.Success)?.data
+
+    BackHandler(onBack = onBack)
 
     Scaffold(
         topBar = {
@@ -112,7 +116,7 @@ fun TreatmentGuideScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
-                onClick = onBack,
+                onClick = onDone,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                 shape = RoundedCornerShape(12.dp)

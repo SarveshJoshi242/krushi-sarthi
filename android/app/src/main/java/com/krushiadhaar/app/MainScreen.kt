@@ -180,7 +180,10 @@ fun MainScreen(
                         },
                         onViewRecentScan = { scan ->
                             viewModel.loadHistoricalReport(scan)
-                            bottomNavController.navigate("pest_report")
+                            bottomNavController.navigate("pest_report") {
+                                popUpTo("pest_home") { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -190,7 +193,16 @@ fun MainScreen(
                     }
                     val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
                     PestAnalysisScreen(
-                        onAnalysisComplete = { bottomNavController.navigate("pest_report") },
+                        onAnalysisComplete = { 
+                            bottomNavController.navigate("pest_report") {
+                                popUpTo("pest_home") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
+                        onCancel = {
+                            viewModel.resetState()
+                            bottomNavController.popBackStack("pest_home", false)
+                        },
                         viewModel = viewModel
                     )
                 }
@@ -200,9 +212,16 @@ fun MainScreen(
                     }
                     val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
                     DiagnosisReportScreen(
-                        onViewTreatment = { bottomNavController.navigate("pest_treatment") },
+                        onViewTreatment = { 
+                            bottomNavController.navigate("pest_treatment") {
+                                launchSingleTop = true
+                            }
+                        },
                         onDownload = { bottomNavController.navigate("pdf_report") },
-                        onBack = { bottomNavController.popBackStack() },
+                        onBack = { 
+                            viewModel.resetState()
+                            bottomNavController.popBackStack("pest_home", false)
+                        },
                         viewModel = viewModel
                     )
                 }
@@ -212,7 +231,11 @@ fun MainScreen(
                     }
                     val viewModel: com.krushiadhaar.app.disease.DiseaseViewModel = androidx.lifecycle.viewmodel.compose.viewModel(parentEntry)
                     TreatmentGuideScreen(
-                        onBack = { bottomNavController.popBackStack("pest_home", false) },
+                        onBack = { bottomNavController.popBackStack() },
+                        onDone = { 
+                            viewModel.resetState()
+                            bottomNavController.popBackStack("pest_home", false)
+                        },
                         viewModel = viewModel
                     )
                 }

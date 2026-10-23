@@ -53,9 +53,26 @@ public class MLServiceDiseaseDetectionProvider implements DiseaseDetectionProvid
                     JsonNode root = objectMapper.readTree(response.getBody());
                     
                     DetectionResult result = new DetectionResult();
+
+                    boolean isValidImage = root.path("is_valid_image").asBoolean(true);
+                    if (!isValidImage) {
+                        result.setDiseaseName("Invalid Image (Non-Plant)");
+                        result.setConfidence(BigDecimal.ZERO);
+                        result.setSeverity("N/A");
+                        String rejection = root.path("rejection_reason").asText(root.path("Symptoms").asText("Uploaded image is not a recognizable crop leaf."));
+                        result.setRecommendation(
+                                "PHOTO VALIDATION REJECTED:\n" + rejection +
+                                "\n\nPlease focus the camera directly on an agricultural crop leaf or plant with clear lighting."
+                        );
+                        result.setMedicines("None");
+                        result.setEstimatedCost(BigDecimal.ZERO);
+                        return result;
+                    }
+
                     result.setDiseaseName(root.path("Disease_Name").asText());
                     result.setConfidence(new BigDecimal(root.path("Confidence_Score").asText()));
-                    result.setSeverity("Moderate"); // Not in CSV explicitly, so default
+                    String severity = root.path("Severity").asText("Moderate");
+                    result.setSeverity(severity.isBlank() ? "Moderate" : severity);
                     result.setRecommendation(
                             "Symptoms: " + root.path("Symptoms").asText() + 
                             "\nTreatment: " + root.path("Treatment").asText() +
